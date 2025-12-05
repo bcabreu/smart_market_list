@@ -32,6 +32,9 @@ class Recipe extends HiveObject {
   @HiveField(8)
   bool isFavorite;
 
+  @HiveField(9, defaultValue: 2)
+  final int servings;
+
   Recipe({
     String? id,
     required this.name,
@@ -42,5 +45,6 @@ class Recipe extends HiveObject {
     this.difficulty = 'Médio',
     this.likes = 0,
     this.isFavorite = false,
+    this.servings = 2,
   }) : id = id ?? const Uuid().v4();
 }
