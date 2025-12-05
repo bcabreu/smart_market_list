@@ -6,6 +6,8 @@ import 'package:smart_market_list/providers/shopping_notes_provider.dart';
 import 'package:smart_market_list/ui/screens/shopping_notes/widgets/shopping_note_card.dart';
 import 'package:smart_market_list/ui/screens/shopping_notes/modals/add_note_modal.dart';
 
+import 'package:smart_market_list/ui/widgets/pulse_fab.dart';
+
 class ShoppingNotesScreen extends ConsumerWidget {
   const ShoppingNotesScreen({super.key});
 
@@ -222,7 +224,7 @@ class ShoppingNotesScreen extends ConsumerWidget {
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton: PulseFloatingActionButton(
         onPressed: () {
           showModalBottomSheet(
             context: context,
@@ -231,8 +233,7 @@ class ShoppingNotesScreen extends ConsumerWidget {
             builder: (context) => const AddNoteModal(),
           );
         },
-        backgroundColor: AppColors.secondary,
-        child: const Icon(Icons.add),
+        color: AppColors.secondary,
       ),
     );
   }

@@ -3,8 +3,13 @@ import 'package:smart_market_list/core/theme/app_colors.dart';
 
 class PulseFloatingActionButton extends StatefulWidget {
   final VoidCallback onPressed;
+  final Color color;
 
-  const PulseFloatingActionButton({super.key, required this.onPressed});
+  const PulseFloatingActionButton({
+    super.key, 
+    required this.onPressed,
+    this.color = AppColors.primary,
+  });
 
   @override
   State<PulseFloatingActionButton> createState() => _PulseFloatingActionButtonState();
@@ -57,7 +62,7 @@ class _PulseFloatingActionButtonState extends State<PulseFloatingActionButton>
                 height: 56,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: AppColors.primary.withOpacity(0.4),
+                  color: widget.color.withOpacity(0.4),
                 ),
               ),
             ),
@@ -68,7 +73,7 @@ class _PulseFloatingActionButtonState extends State<PulseFloatingActionButton>
             height: 56,
             child: FloatingActionButton(
               onPressed: widget.onPressed,
-              backgroundColor: AppColors.primary,
+              backgroundColor: widget.color,
               elevation: 0,
               shape: const CircleBorder(),
               child: const Icon(Icons.add, color: Colors.white, size: 28),
