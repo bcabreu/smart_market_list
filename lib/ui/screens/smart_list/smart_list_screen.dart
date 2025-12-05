@@ -35,366 +35,396 @@ class SmartListScreen extends ConsumerWidget {
             SmartListHeader(list: currentList),
             BudgetInfoCard(list: currentList),
             Expanded(
-              child: ListView(
-                padding: const EdgeInsets.all(16),
-                children: [
-                  if (uncheckedItems.isEmpty && checkedItems.isEmpty)
-                    const Center(
-                      child: Padding(
-                        padding: EdgeInsets.only(top: 40),
-                        child: Text(
-                          'Sua lista está vazia.\nAdicione itens para começar!',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(color: AppColors.mutedForeground),
-                        ),
-                      ),
-                    ),
-                    
-                  // Grouped Unchecked Items
-                  ..._buildGroupedItems(context, uncheckedItems, service, currentList.id),
-                      
-                  if (checkedItems.isNotEmpty) ...[
-                    Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 24),
-                      child: Row(
+              child: (uncheckedItems.isEmpty && checkedItems.isEmpty)
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          // Left Divider
-                          Expanded(
-                            child: Container(
-                              height: 4,
-                              decoration: BoxDecoration(
-                                color: Theme.of(context).brightness == Brightness.dark 
-                                    ? Colors.grey[800] 
-                                    : Colors.grey[300],
-                                borderRadius: BorderRadius.circular(2),
-                              ),
+                          Container(
+                            padding: const EdgeInsets.all(24),
+                            decoration: BoxDecoration(
+                              color: AppColors.primary.withOpacity(0.1),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.add_shopping_cart_rounded,
+                              size: 48,
+                              color: AppColors.primary,
                             ),
                           ),
-                          
-                          const SizedBox(width: 16),
-                          
-                          // Title
+                          const SizedBox(height: 24),
                           Text(
-                            'Finalizados (${checkedItems.length})',
+                            'Sua lista está vazia',
                             style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              color: Theme.of(context).brightness == Brightness.dark 
-                                  ? Colors.white 
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: Theme.of(context).brightness == Brightness.dark
+                                  ? Colors.white
                                   : Colors.black87,
                             ),
                           ),
-                          
-                          const SizedBox(width: 16),
-
-                          // Restore Button
-                          InkWell(
-                            onTap: () {
-                              HapticFeedback.mediumImpact();
-                              showDialog(
-                                context: context,
-                                builder: (context) => Dialog(
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(24),
-                                  ),
-                                  backgroundColor: Theme.of(context).cardColor,
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(24),
-                                    child: Column(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        // Icon
-                                        Container(
-                                          padding: const EdgeInsets.all(16),
-                                          decoration: BoxDecoration(
-                                            color: const Color(0xFFE0F2F1), // Teal 50
-                                            shape: BoxShape.circle,
-                                          ),
-                                          child: const Icon(
-                                            Icons.refresh_rounded,
-                                            size: 32,
-                                            color: Color(0xFF009688), // Teal 500
-                                          ),
-                                        ),
-                                        const SizedBox(height: 16),
-                                        
-                                        // Title
-                                        Text(
-                                          'Restaurar Itens?',
-                                          style: TextStyle(
-                                            fontSize: 20,
-                                            fontWeight: FontWeight.bold,
-                                            color: Theme.of(context).brightness == Brightness.dark 
-                                                ? Colors.white 
-                                                : Colors.black87,
-                                          ),
-                                          textAlign: TextAlign.center,
-                                        ),
-                                        const SizedBox(height: 8),
-                                        
-                                        // Message
-                                        Text(
-                                          'Todos os itens finalizados voltarão para a lista de compras.',
-                                          style: TextStyle(
-                                            fontSize: 14,
-                                            color: Theme.of(context).brightness == Brightness.dark 
-                                                ? Colors.grey[400] 
-                                                : Colors.grey[600],
-                                          ),
-                                          textAlign: TextAlign.center,
-                                        ),
-                                        const SizedBox(height: 24),
-                                        
-                                        // Buttons
-                                        Row(
-                                          children: [
-                                            Expanded(
-                                              child: TextButton(
-                                                onPressed: () => Navigator.pop(context),
-                                                style: TextButton.styleFrom(
-                                                  padding: const EdgeInsets.symmetric(vertical: 12),
-                                                  shape: RoundedRectangleBorder(
-                                                    borderRadius: BorderRadius.circular(12),
-                                                  ),
-                                                ),
-                                                child: Text(
-                                                  'Cancelar',
-                                                  style: TextStyle(
-                                                    color: Theme.of(context).brightness == Brightness.dark 
-                                                        ? Colors.grey[400] 
-                                                        : Colors.grey[600],
-                                                    fontWeight: FontWeight.w600,
-                                                  ),
-                                                ),
-                                              ),
-                                            ),
-                                            const SizedBox(width: 12),
-                                            Expanded(
-                                              child: ElevatedButton(
-                                                onPressed: () {
-                                                  Navigator.pop(context);
-                                                  service.restoreCompletedItems(currentList.id);
-                                                },
-                                                style: ElevatedButton.styleFrom(
-                                                  backgroundColor: const Color(0xFF009688), // Teal 500
-                                                  foregroundColor: Colors.white,
-                                                  padding: const EdgeInsets.symmetric(vertical: 12),
-                                                  elevation: 0,
-                                                  shape: RoundedRectangleBorder(
-                                                    borderRadius: BorderRadius.circular(12),
-                                                  ),
-                                                ),
-                                                child: const Text(
-                                                  'Restaurar',
-                                                  style: TextStyle(fontWeight: FontWeight.bold),
-                                                ),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              );
-                            },
-                            borderRadius: BorderRadius.circular(12),
-                            child: Container(
-                              padding: const EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFE0F2F1), // Teal 50
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: const Color(0xFFB2DFDB)), // Teal 100
-                              ),
-                              child: const Icon(
-                                Icons.refresh,
-                                size: 20,
-                                color: Color(0xFF009688), // Teal 500
-                              ),
-                            ),
-                          ),
-
-                          const SizedBox(width: 8),
-
-                          // Delete All Button
-                          InkWell(
-                            onTap: () {
-                              HapticFeedback.mediumImpact();
-                              showDialog(
-                                context: context,
-                                builder: (context) => Dialog(
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(24),
-                                  ),
-                                  backgroundColor: Theme.of(context).cardColor,
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(24),
-                                    child: Column(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        // Icon
-                                        Container(
-                                          padding: const EdgeInsets.all(16),
-                                          decoration: BoxDecoration(
-                                            color: const Color(0xFFFFEBEE), // Red 50
-                                            shape: BoxShape.circle,
-                                          ),
-                                          child: const Icon(
-                                            Icons.delete_forever_rounded,
-                                            size: 32,
-                                            color: Color(0xFFE57373), // Red 300
-                                          ),
-                                        ),
-                                        const SizedBox(height: 16),
-                                        
-                                        // Title
-                                        Text(
-                                          'Limpar Concluídos?',
-                                          style: TextStyle(
-                                            fontSize: 20,
-                                            fontWeight: FontWeight.bold,
-                                            color: Theme.of(context).brightness == Brightness.dark 
-                                                ? Colors.white 
-                                                : Colors.black87,
-                                          ),
-                                          textAlign: TextAlign.center,
-                                        ),
-                                        const SizedBox(height: 8),
-                                        
-                                        // Message
-                                        Text(
-                                          'Todos os itens marcados como concluídos serão removidos permanentemente.',
-                                          style: TextStyle(
-                                            fontSize: 14,
-                                            color: Theme.of(context).brightness == Brightness.dark 
-                                                ? Colors.grey[400] 
-                                                : Colors.grey[600],
-                                          ),
-                                          textAlign: TextAlign.center,
-                                        ),
-                                        const SizedBox(height: 24),
-                                        
-                                        // Buttons
-                                        Row(
-                                          children: [
-                                            Expanded(
-                                              child: TextButton(
-                                                onPressed: () => Navigator.pop(context),
-                                                style: TextButton.styleFrom(
-                                                  padding: const EdgeInsets.symmetric(vertical: 12),
-                                                  shape: RoundedRectangleBorder(
-                                                    borderRadius: BorderRadius.circular(12),
-                                                  ),
-                                                ),
-                                                child: Text(
-                                                  'Cancelar',
-                                                  style: TextStyle(
-                                                    color: Theme.of(context).brightness == Brightness.dark 
-                                                        ? Colors.grey[400] 
-                                                        : Colors.grey[600],
-                                                    fontWeight: FontWeight.w600,
-                                                  ),
-                                                ),
-                                              ),
-                                            ),
-                                            const SizedBox(width: 12),
-                                            Expanded(
-                                              child: ElevatedButton(
-                                                onPressed: () {
-                                                  Navigator.pop(context);
-                                                  service.removeCompletedItems(currentList.id);
-                                                },
-                                                style: ElevatedButton.styleFrom(
-                                                  backgroundColor: const Color(0xFFEF5350), // Red 400
-                                                  foregroundColor: Colors.white,
-                                                  padding: const EdgeInsets.symmetric(vertical: 12),
-                                                  elevation: 0,
-                                                  shape: RoundedRectangleBorder(
-                                                    borderRadius: BorderRadius.circular(12),
-                                                  ),
-                                                ),
-                                                child: const Text(
-                                                  'Limpar',
-                                                  style: TextStyle(fontWeight: FontWeight.bold),
-                                                ),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              );
-                            },
-                            borderRadius: BorderRadius.circular(12),
-                            child: Container(
-                              padding: const EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFFFEBEE), // Red 50
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: const Color(0xFFFFCDD2)), // Red 100
-                              ),
-                              child: const Icon(
-                                Icons.delete_outline,
-                                size: 20,
-                                color: Color(0xFFE57373), // Red 300
-                              ),
-                            ),
-                          ),
-
-                          const SizedBox(width: 16),
-
-                          // Right Divider
-                          Expanded(
-                            child: Container(
-                              height: 4,
-                              decoration: BoxDecoration(
-                                color: Theme.of(context).brightness == Brightness.dark 
-                                    ? Colors.grey[800] 
-                                    : Colors.grey[300],
-                                borderRadius: BorderRadius.circular(2),
-                              ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Adicione itens para começar suas compras.',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: Theme.of(context).brightness == Brightness.dark
+                                  ? Colors.grey[400]
+                                  : Colors.grey[600],
                             ),
                           ),
                         ],
                       ),
-                    ),
-                    ...checkedItems.map((item) => Opacity(
-                          opacity: 0.6,
-                          child: ShoppingItemCard(
-                            key: ValueKey(item.id),
-                            item: item,
-                            onCheckChanged: (val) {
-                              final newItem = item.copyWith(
-                                checked: val,
-                                statusChangedAt: DateTime.now(),
-                              );
-                              service.updateItem(currentList.id, newItem);
-                            },
-                            onPriceChanged: (val) {
-                              final newItem = item.copyWith(price: val);
-                              service.updateItem(currentList.id, newItem);
-                            },
-                            onDelete: () => service.removeItem(currentList.id, item.id),
-                            onEdit: () {
-                              showModalBottomSheet(
-                                context: context,
-                                isScrollControlled: true,
-                                backgroundColor: Colors.transparent,
-                                builder: (context) => AddItemModal(
-                                  itemToEdit: item,
-                                  onAdd: (updatedItem) {
-                                    service.updateItem(currentList.id, updatedItem);
+                    )
+                  : ListView(
+                      padding: const EdgeInsets.all(16),
+                      children: [
+                        // Grouped Unchecked Items
+                        ..._buildGroupedItems(context, uncheckedItems, service, currentList.id),
+                            
+                        if (checkedItems.isNotEmpty) ...[
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 24),
+                            child: Row(
+                              children: [
+                                // Left Divider
+                                Expanded(
+                                  child: Container(
+                                    height: 4,
+                                    decoration: BoxDecoration(
+                                      color: Theme.of(context).brightness == Brightness.dark 
+                                          ? Colors.grey[800] 
+                                          : Colors.grey[300],
+                                      borderRadius: BorderRadius.circular(2),
+                                    ),
+                                  ),
+                                ),
+                                
+                                const SizedBox(width: 16),
+                                
+                                // Title
+                                Text(
+                                  'Finalizados (${checkedItems.length})',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                    color: Theme.of(context).brightness == Brightness.dark 
+                                        ? Colors.white 
+                                        : Colors.black87,
+                                  ),
+                                ),
+                                
+                                const SizedBox(width: 16),
+
+                                // Restore Button
+                                InkWell(
+                                  onTap: () {
+                                    HapticFeedback.mediumImpact();
+                                    showDialog(
+                                      context: context,
+                                      builder: (context) => Dialog(
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(24),
+                                        ),
+                                        backgroundColor: Theme.of(context).cardColor,
+                                        child: Padding(
+                                          padding: const EdgeInsets.all(24),
+                                          child: Column(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              // Icon
+                                              Container(
+                                                padding: const EdgeInsets.all(16),
+                                                decoration: BoxDecoration(
+                                                  color: const Color(0xFFE0F2F1), // Teal 50
+                                                  shape: BoxShape.circle,
+                                                ),
+                                                child: const Icon(
+                                                  Icons.refresh_rounded,
+                                                  size: 32,
+                                                  color: Color(0xFF009688), // Teal 500
+                                                ),
+                                              ),
+                                              const SizedBox(height: 16),
+                                              
+                                              // Title
+                                              Text(
+                                                'Restaurar Itens?',
+                                                style: TextStyle(
+                                                  fontSize: 20,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: Theme.of(context).brightness == Brightness.dark 
+                                                      ? Colors.white 
+                                                      : Colors.black87,
+                                                ),
+                                                textAlign: TextAlign.center,
+                                              ),
+                                              const SizedBox(height: 8),
+                                              
+                                              // Message
+                                              Text(
+                                                'Todos os itens finalizados voltarão para a lista de compras.',
+                                                style: TextStyle(
+                                                  fontSize: 14,
+                                                  color: Theme.of(context).brightness == Brightness.dark 
+                                                      ? Colors.grey[400] 
+                                                      : Colors.grey[600],
+                                                ),
+                                                textAlign: TextAlign.center,
+                                              ),
+                                              const SizedBox(height: 24),
+                                              
+                                              // Buttons
+                                              Row(
+                                                children: [
+                                                  Expanded(
+                                                    child: TextButton(
+                                                      onPressed: () => Navigator.pop(context),
+                                                      style: TextButton.styleFrom(
+                                                        padding: const EdgeInsets.symmetric(vertical: 12),
+                                                        shape: RoundedRectangleBorder(
+                                                          borderRadius: BorderRadius.circular(12),
+                                                        ),
+                                                      ),
+                                                      child: Text(
+                                                        'Cancelar',
+                                                        style: TextStyle(
+                                                          color: Theme.of(context).brightness == Brightness.dark 
+                                                              ? Colors.grey[400] 
+                                                              : Colors.grey[600],
+                                                          fontWeight: FontWeight.w600,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  const SizedBox(width: 12),
+                                                  Expanded(
+                                                    child: ElevatedButton(
+                                                      onPressed: () {
+                                                        Navigator.pop(context);
+                                                        service.restoreCompletedItems(currentList.id);
+                                                      },
+                                                      style: ElevatedButton.styleFrom(
+                                                        backgroundColor: const Color(0xFF009688), // Teal 500
+                                                        foregroundColor: Colors.white,
+                                                        padding: const EdgeInsets.symmetric(vertical: 12),
+                                                        elevation: 0,
+                                                        shape: RoundedRectangleBorder(
+                                                          borderRadius: BorderRadius.circular(12),
+                                                        ),
+                                                      ),
+                                                      child: const Text(
+                                                        'Restaurar',
+                                                        style: TextStyle(fontWeight: FontWeight.bold),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: Container(
+                                    padding: const EdgeInsets.all(8),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFE0F2F1), // Teal 50
+                                      borderRadius: BorderRadius.circular(12),
+                                      border: Border.all(color: const Color(0xFFB2DFDB)), // Teal 100
+                                    ),
+                                    child: const Icon(
+                                      Icons.refresh,
+                                      size: 20,
+                                      color: Color(0xFF009688), // Teal 500
+                                    ),
+                                  ),
+                                ),
+
+                                const SizedBox(width: 8),
+
+                                // Delete All Button
+                                InkWell(
+                                  onTap: () {
+                                    HapticFeedback.mediumImpact();
+                                    showDialog(
+                                      context: context,
+                                      builder: (context) => Dialog(
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(24),
+                                        ),
+                                        backgroundColor: Theme.of(context).cardColor,
+                                        child: Padding(
+                                          padding: const EdgeInsets.all(24),
+                                          child: Column(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              // Icon
+                                              Container(
+                                                padding: const EdgeInsets.all(16),
+                                                decoration: BoxDecoration(
+                                                  color: const Color(0xFFFFEBEE), // Red 50
+                                                  shape: BoxShape.circle,
+                                                ),
+                                                child: const Icon(
+                                                  Icons.delete_forever_rounded,
+                                                  size: 32,
+                                                  color: Color(0xFFE57373), // Red 300
+                                                ),
+                                              ),
+                                              const SizedBox(height: 16),
+                                              
+                                              // Title
+                                              Text(
+                                                'Limpar Concluídos?',
+                                                style: TextStyle(
+                                                  fontSize: 20,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: Theme.of(context).brightness == Brightness.dark 
+                                                      ? Colors.white 
+                                                      : Colors.black87,
+                                                ),
+                                                textAlign: TextAlign.center,
+                                              ),
+                                              const SizedBox(height: 8),
+                                              
+                                              // Message
+                                              Text(
+                                                'Todos os itens marcados como concluídos serão removidos permanentemente.',
+                                                style: TextStyle(
+                                                  fontSize: 14,
+                                                  color: Theme.of(context).brightness == Brightness.dark 
+                                                      ? Colors.grey[400] 
+                                                      : Colors.grey[600],
+                                                ),
+                                                textAlign: TextAlign.center,
+                                              ),
+                                              const SizedBox(height: 24),
+                                              
+                                              // Buttons
+                                              Row(
+                                                children: [
+                                                  Expanded(
+                                                    child: TextButton(
+                                                      onPressed: () => Navigator.pop(context),
+                                                      style: TextButton.styleFrom(
+                                                        padding: const EdgeInsets.symmetric(vertical: 12),
+                                                        shape: RoundedRectangleBorder(
+                                                          borderRadius: BorderRadius.circular(12),
+                                                        ),
+                                                      ),
+                                                      child: Text(
+                                                        'Cancelar',
+                                                        style: TextStyle(
+                                                          color: Theme.of(context).brightness == Brightness.dark 
+                                                              ? Colors.grey[400] 
+                                                              : Colors.grey[600],
+                                                          fontWeight: FontWeight.w600,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  const SizedBox(width: 12),
+                                                  Expanded(
+                                                    child: ElevatedButton(
+                                                      onPressed: () {
+                                                        Navigator.pop(context);
+                                                        service.removeCompletedItems(currentList.id);
+                                                      },
+                                                      style: ElevatedButton.styleFrom(
+                                                        backgroundColor: const Color(0xFFEF5350), // Red 400
+                                                        foregroundColor: Colors.white,
+                                                        padding: const EdgeInsets.symmetric(vertical: 12),
+                                                        elevation: 0,
+                                                        shape: RoundedRectangleBorder(
+                                                          borderRadius: BorderRadius.circular(12),
+                                                        ),
+                                                      ),
+                                                      child: const Text(
+                                                        'Limpar',
+                                                        style: TextStyle(fontWeight: FontWeight.bold),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: Container(
+                                    padding: const EdgeInsets.all(8),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFFFEBEE), // Red 50
+                                      borderRadius: BorderRadius.circular(12),
+                                      border: Border.all(color: const Color(0xFFFFCDD2)), // Red 100
+                                    ),
+                                    child: const Icon(
+                                      Icons.delete_outline,
+                                      size: 20,
+                                      color: Color(0xFFE57373), // Red 300
+                                    ),
+                                  ),
+                                ),
+
+                                const SizedBox(width: 16),
+
+                                // Right Divider
+                                Expanded(
+                                  child: Container(
+                                    height: 4,
+                                    decoration: BoxDecoration(
+                                      color: Theme.of(context).brightness == Brightness.dark 
+                                          ? Colors.grey[800] 
+                                          : Colors.grey[300],
+                                      borderRadius: BorderRadius.circular(2),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          ...checkedItems.map((item) => Opacity(
+                                opacity: 0.6,
+                                child: ShoppingItemCard(
+                                  key: ValueKey(item.id),
+                                  item: item,
+                                  onCheckChanged: (val) {
+                                    final newItem = item.copyWith(
+                                      checked: val,
+                                      statusChangedAt: DateTime.now(),
+                                    );
+                                    service.updateItem(currentList.id, newItem);
+                                  },
+                                  onPriceChanged: (val) {
+                                    final newItem = item.copyWith(price: val);
+                                    service.updateItem(currentList.id, newItem);
+                                  },
+                                  onDelete: () => service.removeItem(currentList.id, item.id),
+                                  onEdit: () {
+                                    showModalBottomSheet(
+                                      context: context,
+                                      isScrollControlled: true,
+                                      backgroundColor: Colors.transparent,
+                                      builder: (context) => AddItemModal(
+                                        itemToEdit: item,
+                                        onAdd: (updatedItem) {
+                                          service.updateItem(currentList.id, updatedItem);
+                                        },
+                                      ),
+                                    );
                                   },
                                 ),
-                              );
-                            },
-                          ),
-                        )),
-                  ],
-                ],
-              ),
+                              )),
+                        ],
+                      ],
+                    ),
             ),
           ],
         ),
