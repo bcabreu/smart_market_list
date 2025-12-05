@@ -227,24 +227,42 @@ class _SmartListHeaderState extends ConsumerState<SmartListHeader> {
                     SizedBox(
                       width: 40,
                       height: 40,
-                      child: Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          CircularProgressIndicator(
-                            value: percentage,
-                            backgroundColor: isDark ? Colors.grey[800] : Colors.grey[200],
-                            valueColor: const AlwaysStoppedAnimation<Color>(AppColors.primary),
-                            strokeWidth: 4,
-                          ),
-                          Text(
-                            '${(percentage * 100).toInt()}%',
-                            style: const TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.primary,
-                            ),
-                          ),
-                        ],
+                      child: TweenAnimationBuilder<double>(
+                        tween: Tween<double>(begin: 0, end: percentage),
+                        duration: const Duration(milliseconds: 800),
+                        curve: Curves.easeOutCubic,
+                        builder: (context, value, child) {
+                          final isOverBudget = value > 1.0;
+                          final color = isOverBudget ? const Color(0xFFEF5350) : AppColors.primary; // Red 400 or Primary
+                          
+                          return Stack(
+                            alignment: Alignment.center,
+                            children: [
+                              CircularProgressIndicator(
+                                value: 1,
+                                backgroundColor: Colors.transparent,
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  isDark ? Colors.grey[800]! : Colors.grey[200]!
+                                ),
+                                strokeWidth: 4,
+                              ),
+                              CircularProgressIndicator(
+                                value: value.clamp(0.0, 1.0),
+                                backgroundColor: Colors.transparent,
+                                valueColor: AlwaysStoppedAnimation<Color>(color),
+                                strokeWidth: 4,
+                              ),
+                              Text(
+                                '${(value * 100).toInt()}%',
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                  color: color,
+                                ),
+                              ),
+                            ],
+                          );
+                        },
                       ),
                     ),
                     const SizedBox(width: 12),

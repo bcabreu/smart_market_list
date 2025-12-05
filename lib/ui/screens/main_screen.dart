@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:animations/animations.dart';
 import 'package:flutter/services.dart';
 import 'package:smart_market_list/core/theme/app_colors.dart';
 import 'package:smart_market_list/ui/screens/smart_list/smart_list_screen.dart';
@@ -16,6 +17,7 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   int _currentIndex = 0;
+  int _previousIndex = 0;
 
   final List<Widget> _screens = [
     const SmartListScreen(),
@@ -28,6 +30,7 @@ class _MainScreenState extends State<MainScreen> {
     if (_currentIndex != index) {
       HapticFeedback.selectionClick();
       setState(() {
+        _previousIndex = _currentIndex;
         _currentIndex = index;
       });
     }
@@ -36,9 +39,23 @@ class _MainScreenState extends State<MainScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: IndexedStack(
-        index: _currentIndex,
-        children: _screens,
+      body: PageTransitionSwitcher(
+        duration: const Duration(milliseconds: 500),
+        reverse: _currentIndex < _previousIndex,
+        transitionBuilder: (
+          Widget child,
+          Animation<double> animation,
+          Animation<double> secondaryAnimation,
+        ) {
+          return SharedAxisTransition(
+            animation: animation,
+            secondaryAnimation: secondaryAnimation,
+            transitionType: SharedAxisTransitionType.horizontal,
+            fillColor: Theme.of(context).scaffoldBackgroundColor,
+            child: child,
+          );
+        },
+        child: _screens[_currentIndex],
       ),
       bottomNavigationBar: CustomBottomNavigation(
         currentIndex: _currentIndex,

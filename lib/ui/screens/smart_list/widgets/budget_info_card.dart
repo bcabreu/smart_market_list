@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:smart_market_list/core/theme/app_colors.dart';
 import 'package:smart_market_list/data/models/shopping_list.dart';
 import 'package:smart_market_list/providers/shopping_list_provider.dart';
+import 'package:intl/intl.dart';
 
 class BudgetInfoCard extends ConsumerStatefulWidget {
   final ShoppingList list;
@@ -13,23 +14,30 @@ class BudgetInfoCard extends ConsumerStatefulWidget {
   ConsumerState<BudgetInfoCard> createState() => _BudgetInfoCardState();
 }
 
+
 class _BudgetInfoCardState extends ConsumerState<BudgetInfoCard> {
   bool _isEditing = false;
   late TextEditingController _controller;
   final FocusNode _focusNode = FocusNode();
+  final _currencyFormat = NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$');
+  final _numberFormat = NumberFormat.decimalPattern('pt_BR');
 
   @override
   void initState() {
     super.initState();
-    _controller = TextEditingController(text: widget.list.budget.toStringAsFixed(2));
+    _controller = TextEditingController(text: _formatBudget(widget.list.budget));
     _focusNode.addListener(_onFocusChange);
+  }
+
+  String _formatBudget(double value) {
+    return _numberFormat.format(value);
   }
 
   @override
   void didUpdateWidget(BudgetInfoCard oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.list.budget != oldWidget.list.budget && !_isEditing) {
-      _controller.text = widget.list.budget.toStringAsFixed(2);
+      _controller.text = _formatBudget(widget.list.budget);
     }
   }
 
@@ -50,7 +58,7 @@ class _BudgetInfoCardState extends ConsumerState<BudgetInfoCard> {
   void _startEditing() {
     setState(() {
       _isEditing = true;
-      _controller.text = widget.list.budget.toStringAsFixed(2);
+      _controller.text = _formatBudget(widget.list.budget);
     });
     _focusNode.requestFocus();
   }
@@ -112,14 +120,24 @@ class _BudgetInfoCardState extends ConsumerState<BudgetInfoCard> {
                 ),
               ),
               const SizedBox(height: 2),
-              Text(
-                'R\$ ${widget.list.totalSpent.toStringAsFixed(2)}',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.w500,
-                  color: valueColor,
-                  letterSpacing: -1,
-                ),
+              TweenAnimationBuilder<double>(
+                tween: Tween<double>(begin: 0, end: widget.list.totalSpent),
+                duration: const Duration(milliseconds: 800),
+                curve: Curves.easeOutCubic,
+                builder: (context, value, child) {
+                  final isOverBudget = widget.list.budget > 0 && value > widget.list.budget;
+                  final color = isOverBudget ? const Color(0xFFEF5350) : valueColor;
+
+                  return Text(
+                    _currencyFormat.format(value),
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.w500,
+                      color: color,
+                      letterSpacing: -1,
+                    ),
+                  );
+                },
               ),
             ],
           ),
@@ -199,7 +217,7 @@ class _BudgetInfoCardState extends ConsumerState<BudgetInfoCard> {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Text(
-                            'R\$ ${widget.list.budget.toStringAsFixed(2)}',
+                            _currencyFormat.format(widget.list.budget),
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w500,
