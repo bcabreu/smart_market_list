@@ -20,6 +20,7 @@ void main() async {
   final box = await Hive.openBox<ShoppingList>('shopping_lists');
   await Hive.openBox<ShoppingNote>('shopping_notes');
   await Hive.openBox<Recipe>('recipes');
+  await Hive.openBox<List<String>>('categories');
   
   // Migration: Ensure all lists use ID as key
   final keys = box.keys.toList();

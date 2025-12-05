@@ -7,6 +7,7 @@ import 'package:smart_market_list/ui/screens/smart_list/widgets/shopping_item_ca
 import 'package:smart_market_list/ui/screens/smart_list/widgets/smart_list_header.dart';
 import 'package:smart_market_list/ui/screens/smart_list/widgets/budget_info_card.dart';
 import 'package:smart_market_list/ui/screens/smart_list/modals/add_item_modal.dart';
+import 'package:smart_market_list/ui/widgets/pulse_fab.dart';
 
 class SmartListScreen extends ConsumerWidget {
   const SmartListScreen({super.key});
@@ -103,7 +104,7 @@ class SmartListScreen extends ConsumerWidget {
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton: PulseFloatingActionButton(
         onPressed: () {
           showModalBottomSheet(
             context: context,
@@ -116,7 +117,6 @@ class SmartListScreen extends ConsumerWidget {
             ),
           );
         },
-        child: const Icon(Icons.add),
       ),
     );
   }
