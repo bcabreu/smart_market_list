@@ -26,18 +26,21 @@ class ShoppingListService {
   Future<void> addItem(String listId, ShoppingItem item) async {
     final list = _box.get(listId);
     if (list != null) {
-      list.items.add(item);
-      await list.save();
+      final newItems = List<ShoppingItem>.from(list.items)..add(item);
+      final newList = list.copyWith(items: newItems);
+      await _box.put(listId, newList);
     }
   }
 
   Future<void> updateItem(String listId, ShoppingItem item) async {
     final list = _box.get(listId);
     if (list != null) {
-      final index = list.items.indexWhere((i) => i.id == item.id);
+      final newItems = List<ShoppingItem>.from(list.items);
+      final index = newItems.indexWhere((i) => i.id == item.id);
       if (index != -1) {
-        list.items[index] = item;
-        await list.save();
+        newItems[index] = item;
+        final newList = list.copyWith(items: newItems);
+        await _box.put(listId, newList);
       }
     }
   }
@@ -45,8 +48,35 @@ class ShoppingListService {
   Future<void> removeItem(String listId, String itemId) async {
     final list = _box.get(listId);
     if (list != null) {
-      list.items.removeWhere((i) => i.id == itemId);
-      await list.save();
+      final newItems = List<ShoppingItem>.from(list.items)..removeWhere((i) => i.id == itemId);
+      final newList = list.copyWith(items: newItems);
+      await _box.put(listId, newList);
+    }
+  }
+
+  Future<void> restoreCompletedItems(String listId) async {
+    final list = _box.get(listId);
+    if (list != null) {
+      final newItems = list.items.map((item) {
+        if (item.checked) {
+          return item.copyWith(
+            checked: false,
+            statusChangedAt: DateTime.now(),
+          );
+        }
+        return item;
+      }).toList();
+      final newList = list.copyWith(items: newItems);
+      await _box.put(listId, newList);
+    }
+  }
+
+  Future<void> removeCompletedItems(String listId) async {
+    final list = _box.get(listId);
+    if (list != null) {
+      final newItems = List<ShoppingItem>.from(list.items)..removeWhere((i) => i.checked);
+      final newList = list.copyWith(items: newItems);
+      await _box.put(listId, newList);
     }
   }
 }

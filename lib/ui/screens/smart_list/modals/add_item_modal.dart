@@ -8,26 +8,43 @@ import 'package:smart_market_list/core/theme/app_colors.dart';
 import 'package:smart_market_list/data/models/shopping_item.dart';
 import 'package:smart_market_list/providers/autocomplete_provider.dart';
 import 'package:smart_market_list/providers/categories_provider.dart';
+import 'package:smart_market_list/data/models/product_suggestion.dart';
 
 class AddItemModal extends ConsumerStatefulWidget {
   final Function(ShoppingItem) onAdd;
+  final ShoppingItem? itemToEdit;
 
-  const AddItemModal({super.key, required this.onAdd});
+  const AddItemModal({super.key, required this.onAdd, this.itemToEdit});
 
   @override
   ConsumerState<AddItemModal> createState() => _AddItemModalState();
 }
 
 class _AddItemModalState extends ConsumerState<AddItemModal> {
-  final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _qtyController = TextEditingController();
-  final TextEditingController _priceController = TextEditingController();
-  final TextEditingController _newCategoryController = TextEditingController();
+  late TextEditingController _nameController;
+  late TextEditingController _qtyController;
+  late TextEditingController _priceController;
+  late TextEditingController _newCategoryController;
   
   String _selectedCategory = 'outros';
   bool _isCreatingCategory = false;
   String? _imagePath;
   final ImagePicker _picker = ImagePicker();
+
+  @override
+  void initState() {
+    super.initState();
+    final item = widget.itemToEdit;
+    _nameController = TextEditingController(text: item?.name ?? '');
+    _qtyController = TextEditingController(text: item?.quantity ?? '');
+    _priceController = TextEditingController(text: item?.price.toStringAsFixed(2).replaceAll('.', ',') ?? '');
+    _newCategoryController = TextEditingController();
+    
+    if (item != null) {
+      _selectedCategory = item.category;
+      _imagePath = item.imageUrl.isNotEmpty ? item.imageUrl : null;
+    }
+  }
 
   @override
   void dispose() {
@@ -47,14 +64,16 @@ class _AddItemModalState extends ConsumerState<AddItemModal> {
     }
   }
 
-  void _addItem() {
+  void _submit() {
     if (_nameController.text.isNotEmpty) {
       final item = ShoppingItem(
+        id: widget.itemToEdit?.id, // Preserve ID if editing
         name: _nameController.text,
         quantity: _qtyController.text.isEmpty ? '1 un' : _qtyController.text,
         price: double.tryParse(_priceController.text.replaceAll('.', '').replaceAll(',', '.')) ?? 0.0,
         category: _selectedCategory,
         imageUrl: _imagePath ?? '',
+        checked: widget.itemToEdit?.checked ?? false, // Preserve checked status
       );
       widget.onAdd(item);
       Navigator.pop(context);
@@ -90,7 +109,7 @@ class _AddItemModalState extends ConsumerState<AddItemModal> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Adicionar Item',
+                      widget.itemToEdit != null ? 'Editar Item' : 'Adicionar Item',
                       style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
@@ -128,32 +147,30 @@ class _AddItemModalState extends ConsumerState<AddItemModal> {
                   // Name Field with Autocomplete
                   _buildLabel('Nome do Item', Icons.inventory_2_outlined, isDark),
                   const SizedBox(height: 8),
-                  Autocomplete<String>(
+                  Autocomplete<ProductSuggestion>(
                     optionsBuilder: (TextEditingValue textEditingValue) {
                       if (textEditingValue.text.length < 2) {
-                        return const Iterable<String>.empty();
+                        return const Iterable<ProductSuggestion>.empty();
                       }
-                      return suggestions.where((String option) {
-                        return option.toLowerCase().contains(textEditingValue.text.toLowerCase());
+                      return suggestions.where((ProductSuggestion option) {
+                        return option.name.toLowerCase().contains(textEditingValue.text.toLowerCase());
                       });
                     },
-                    onSelected: (String selection) {
-                      _nameController.text = selection;
+                    displayStringForOption: (ProductSuggestion option) => option.name,
+                    onSelected: (ProductSuggestion selection) {
+                      _nameController.text = selection.name;
+                      _qtyController.text = selection.defaultQuantity;
+                      setState(() {
+                        _selectedCategory = selection.category;
+                        if (selection.imageUrl.isNotEmpty) {
+                          _imagePath = selection.imageUrl;
+                        }
+                      });
                     },
                     fieldViewBuilder: (context, controller, focusNode, onFieldSubmitted) {
-                      // Sync external controller with internal one if needed, 
-                      // but here we just use the internal one for the value and keep our _nameController updated manually or via listener if complex.
-                      // Actually, Autocomplete uses its own controller. We need to extract the value on save.
-                      // A better approach for simple usage:
                       if (controller.text != _nameController.text && _nameController.text.isNotEmpty && controller.text.isEmpty) {
                          controller.text = _nameController.text;
                       }
-                      
-                      // Bind the internal controller to our _nameController listener to keep them in sync? 
-                      // No, simpler: just use the controller provided here for the UI, and read from it on submit.
-                      // But we need to access it in _addItem. 
-                      // Let's assign the passed controller to our _nameController reference? No, that breaks lifecycle.
-                      // We'll just listen to it.
                       controller.addListener(() {
                         _nameController.text = controller.text;
                       });
@@ -169,26 +186,110 @@ class _AddItemModalState extends ConsumerState<AddItemModal> {
                       return Align(
                         alignment: Alignment.topLeft,
                         child: Material(
-                          elevation: 4,
-                          borderRadius: BorderRadius.circular(12),
+                          elevation: 8,
+                          borderRadius: BorderRadius.circular(20),
+                          color: Colors.transparent,
                           child: Container(
                             width: MediaQuery.of(context).size.width - 48,
-                            constraints: const BoxConstraints(maxHeight: 200),
+                            constraints: const BoxConstraints(maxHeight: 300),
                             decoration: BoxDecoration(
-                              color: isDark ? const Color(0xFF2C2C2C) : Theme.of(context).cardColor,
-                              borderRadius: BorderRadius.circular(12),
+                              color: isDark ? const Color(0xFF2C2C2C) : Colors.white,
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(color: isDark ? Colors.grey[800]! : Colors.grey[200]!),
                             ),
-                            child: ListView.builder(
-                              padding: EdgeInsets.zero,
-                              shrinkWrap: true,
-                              itemCount: options.length,
-                              itemBuilder: (BuildContext context, int index) {
-                                final String option = options.elementAt(index);
-                                return ListTile(
-                                  title: Text(option, style: TextStyle(color: textColor)),
-                                  onTap: () => onSelected(option),
-                                );
-                              },
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.all(16),
+                                  child: Row(
+                                    children: [
+                                      const Icon(Icons.auto_awesome, size: 16, color: Color(0xFFFFD700)), // Gold star
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        'Sugestões (clique para preencher)',
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w500,
+                                          color: isDark ? Colors.grey[400] : Colors.grey[600],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const Divider(height: 1),
+                                Flexible(
+                                  child: ListView.separated(
+                                    padding: EdgeInsets.zero,
+                                    shrinkWrap: true,
+                                    itemCount: options.length,
+                                    separatorBuilder: (context, index) => const Divider(height: 1, indent: 70),
+                                    itemBuilder: (BuildContext context, int index) {
+                                      final ProductSuggestion option = options.elementAt(index);
+                                      return InkWell(
+                                        onTap: () => onSelected(option),
+                                        child: Padding(
+                                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                          child: Row(
+                                            children: [
+                                              // Image
+                                              Container(
+                                                width: 48,
+                                                height: 48,
+                                                decoration: BoxDecoration(
+                                                  borderRadius: BorderRadius.circular(12),
+                                                  color: Colors.grey[200],
+                                                  image: option.imageUrl.isNotEmpty
+                                                      ? DecorationImage(
+                                                          image: CachedNetworkImageProvider(option.imageUrl),
+                                                          fit: BoxFit.cover,
+                                                        )
+                                                      : null,
+                                                ),
+                                                child: option.imageUrl.isEmpty
+                                                    ? Icon(Icons.image, color: Colors.grey[400], size: 24)
+                                                    : null,
+                                              ),
+                                              const SizedBox(width: 16),
+                                              // Text Info
+                                              Expanded(
+                                                child: Column(
+                                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                                  children: [
+                                                    Text(
+                                                      option.name,
+                                                      style: TextStyle(
+                                                        fontSize: 16,
+                                                        fontWeight: FontWeight.bold,
+                                                        color: textColor,
+                                                      ),
+                                                    ),
+                                                    const SizedBox(height: 4),
+                                                    Text(
+                                                      '${option.category[0].toUpperCase()}${option.category.substring(1)} • ${option.defaultQuantity}',
+                                                      style: TextStyle(
+                                                        fontSize: 13,
+                                                        color: isDark ? Colors.grey[400] : Colors.grey[600],
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                              // Arrow
+                                              Icon(
+                                                Icons.arrow_forward,
+                                                size: 16,
+                                                color: const Color(0xFF4DB6AC),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ),
@@ -442,7 +543,9 @@ class _AddItemModalState extends ConsumerState<AddItemModal> {
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(12),
                             image: DecorationImage(
-                              image: FileImage(File(_imagePath!)),
+                              image: _imagePath!.startsWith('http') 
+                                  ? CachedNetworkImageProvider(_imagePath!) as ImageProvider
+                                  : FileImage(File(_imagePath!)),
                               fit: BoxFit.cover,
                             ),
                           ),
@@ -552,7 +655,7 @@ class _AddItemModalState extends ConsumerState<AddItemModal> {
                     child: Material(
                       color: Colors.transparent,
                       child: InkWell(
-                        onTap: _addItem,
+                        onTap: _submit,
                         borderRadius: BorderRadius.circular(16),
                         child: Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -565,15 +668,19 @@ class _AddItemModalState extends ConsumerState<AddItemModal> {
                                   color: Colors.white.withOpacity(0.2),
                                   shape: BoxShape.circle,
                                 ),
-                                child: const Icon(Icons.add, size: 24, color: Colors.white),
+                                child: Icon(
+                                  widget.itemToEdit != null ? Icons.save : Icons.add, 
+                                  size: 24, 
+                                  color: Colors.white
+                                ),
                               ),
                               const SizedBox(width: 16),
-                              const Column(
+                              Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    'Adicionar Item',
+                                    widget.itemToEdit != null ? 'Editar Item' : 'Adicionar Item',
                                     style: TextStyle(
                                       fontSize: 18,
                                       fontWeight: FontWeight.bold,

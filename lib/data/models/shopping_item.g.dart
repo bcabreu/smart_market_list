@@ -24,13 +24,15 @@ class ShoppingItemAdapter extends TypeAdapter<ShoppingItem> {
       category: fields[4] as String,
       checked: fields[5] as bool,
       imageUrl: fields[6] as String,
+      createdAt: fields[7] as DateTime?,
+      statusChangedAt: fields[8] as DateTime?,
     );
   }
 
   @override
   void write(BinaryWriter writer, ShoppingItem obj) {
     writer
-      ..writeByte(7)
+      ..writeByte(9)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -44,7 +46,11 @@ class ShoppingItemAdapter extends TypeAdapter<ShoppingItem> {
       ..writeByte(5)
       ..write(obj.checked)
       ..writeByte(6)
-      ..write(obj.imageUrl);
+      ..write(obj.imageUrl)
+      ..writeByte(7)
+      ..write(obj.createdAt)
+      ..writeByte(8)
+      ..write(obj.statusChangedAt);
   }
 
   @override

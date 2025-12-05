@@ -26,6 +26,12 @@ class ShoppingItem extends HiveObject {
   @HiveField(6)
   String imageUrl;
 
+  @HiveField(7)
+  final DateTime createdAt;
+
+  @HiveField(8)
+  final DateTime? statusChangedAt;
+
   ShoppingItem({
     String? id,
     required this.name,
@@ -34,7 +40,10 @@ class ShoppingItem extends HiveObject {
     this.category = 'outros',
     this.checked = false,
     this.imageUrl = '',
-  }) : id = id ?? const Uuid().v4();
+    DateTime? createdAt,
+    this.statusChangedAt,
+  }) : id = id ?? const Uuid().v4(),
+       createdAt = createdAt ?? DateTime.now();
 
   ShoppingItem copyWith({
     String? id,
@@ -44,6 +53,8 @@ class ShoppingItem extends HiveObject {
     String? category,
     bool? checked,
     String? imageUrl,
+    DateTime? createdAt,
+    DateTime? statusChangedAt,
   }) {
     return ShoppingItem(
       id: id ?? this.id,
@@ -53,6 +64,8 @@ class ShoppingItem extends HiveObject {
       category: category ?? this.category,
       checked: checked ?? this.checked,
       imageUrl: imageUrl ?? this.imageUrl,
+      createdAt: createdAt ?? this.createdAt,
+      statusChangedAt: statusChangedAt ?? this.statusChangedAt,
     );
   }
 }
