@@ -64,11 +64,18 @@ class _AddItemModalState extends ConsumerState<AddItemModal> {
   @override
   Widget build(BuildContext context) {
     final suggestions = ref.watch(itemSuggestionsProvider);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final backgroundColor = isDark ? const Color(0xFF1E1E1E) : Theme.of(context).scaffoldBackgroundColor;
+    final inputFillColor = isDark ? const Color(0xFF2C2C2C) : Colors.grey[100];
+    final textColor = isDark ? Colors.white : Colors.black87;
+    final labelColor = isDark ? Colors.grey[400] : Colors.grey[700];
+    final hintColor = isDark ? Colors.grey[600] : Colors.grey[500];
+    final iconColor = isDark ? Colors.grey[400] : Colors.grey[600];
 
     return Container(
       height: MediaQuery.of(context).size.height * 0.9,
       decoration: BoxDecoration(
-        color: Theme.of(context).scaffoldBackgroundColor,
+        color: backgroundColor,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       ),
       child: Column(
@@ -82,11 +89,12 @@ class _AddItemModalState extends ConsumerState<AddItemModal> {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       'Adicionar Item',
                       style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
+                        color: textColor,
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -94,7 +102,7 @@ class _AddItemModalState extends ConsumerState<AddItemModal> {
                       'Preencha os campos',
                       style: TextStyle(
                         fontSize: 14,
-                        color: Colors.grey[600],
+                        color: labelColor,
                       ),
                     ),
                   ],
@@ -102,10 +110,10 @@ class _AddItemModalState extends ConsumerState<AddItemModal> {
                 IconButton(
                   onPressed: () => Navigator.pop(context),
                   style: IconButton.styleFrom(
-                    backgroundColor: Colors.grey[100],
+                    backgroundColor: isDark ? const Color(0xFF333333) : Colors.grey[100],
                     shape: const CircleBorder(),
                   ),
-                  icon: const Icon(Icons.close, size: 20),
+                  icon: Icon(Icons.close, size: 20, color: textColor),
                 ),
               ],
             ),
@@ -118,7 +126,7 @@ class _AddItemModalState extends ConsumerState<AddItemModal> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Name Field with Autocomplete
-                  _buildLabel('Nome do Item', Icons.inventory_2_outlined),
+                  _buildLabel('Nome do Item', Icons.inventory_2_outlined, isDark),
                   const SizedBox(height: 8),
                   Autocomplete<String>(
                     optionsBuilder: (TextEditingValue textEditingValue) {
@@ -153,7 +161,8 @@ class _AddItemModalState extends ConsumerState<AddItemModal> {
                       return TextField(
                         controller: controller,
                         focusNode: focusNode,
-                        decoration: _inputDecoration('Ex: Tomate, Pão, Leite...'),
+                        style: TextStyle(color: textColor),
+                        decoration: _inputDecoration('Ex: Tomate, Pão, Leite...', isDark),
                       );
                     },
                     optionsViewBuilder: (context, onSelected, options) {
@@ -166,7 +175,7 @@ class _AddItemModalState extends ConsumerState<AddItemModal> {
                             width: MediaQuery.of(context).size.width - 48,
                             constraints: const BoxConstraints(maxHeight: 200),
                             decoration: BoxDecoration(
-                              color: Theme.of(context).cardColor,
+                              color: isDark ? const Color(0xFF2C2C2C) : Theme.of(context).cardColor,
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: ListView.builder(
@@ -176,7 +185,7 @@ class _AddItemModalState extends ConsumerState<AddItemModal> {
                               itemBuilder: (BuildContext context, int index) {
                                 final String option = options.elementAt(index);
                                 return ListTile(
-                                  title: Text(option),
+                                  title: Text(option, style: TextStyle(color: textColor)),
                                   onTap: () => onSelected(option),
                                 );
                               },
@@ -190,26 +199,27 @@ class _AddItemModalState extends ConsumerState<AddItemModal> {
                   const SizedBox(height: 20),
 
                   // Quantity Field
-                  _buildLabel('Quantidade', Icons.local_offer_outlined),
+                  _buildLabel('Quantidade', Icons.local_offer_outlined, isDark),
                   const SizedBox(height: 8),
                   TextField(
                     controller: _qtyController,
-                    decoration: _inputDecoration('Ex: 1kg, 2 litros, 500g...'),
+                    style: TextStyle(color: textColor),
+                    decoration: _inputDecoration('Ex: 1kg, 2 litros, 500g...', isDark),
                   ),
 
                   const SizedBox(height: 20),
 
                   // Price Field
-                  _buildLabel('Preço (opcional)', Icons.attach_money),
+                  _buildLabel('Preço (opcional)', Icons.attach_money, isDark),
                   const SizedBox(height: 8),
                   Row(
                     children: [
-                      const Text(
+                      Text(
                         'R\$',
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
-                          color: Colors.black87,
+                          color: textColor,
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -217,7 +227,8 @@ class _AddItemModalState extends ConsumerState<AddItemModal> {
                         child: TextField(
                           controller: _priceController,
                           keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                          decoration: _inputDecoration('0,00'),
+                          style: TextStyle(color: textColor),
+                          decoration: _inputDecoration('0,00', isDark),
                         ),
                       ),
                     ],
@@ -226,11 +237,11 @@ class _AddItemModalState extends ConsumerState<AddItemModal> {
                   const SizedBox(height: 20),
 
                   // Category Field
-                  _buildLabel('Categoria', Icons.category_outlined),
+                  _buildLabel('Categoria', Icons.category_outlined, isDark),
                   const SizedBox(height: 8),
                   Container(
                     decoration: BoxDecoration(
-                      border: Border.all(color: Colors.grey[300]!),
+                      color: inputFillColor,
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Material(
@@ -326,13 +337,13 @@ class _AddItemModalState extends ConsumerState<AddItemModal> {
                               const SizedBox(width: 12),
                               Text(
                                 _selectedCategory[0].toUpperCase() + _selectedCategory.substring(1),
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 16,
-                                  color: Colors.black87,
+                                  color: textColor,
                                 ),
                               ),
                               const Spacer(),
-                              Icon(Icons.keyboard_arrow_down, color: Colors.grey[600]),
+                              Icon(Icons.keyboard_arrow_down, color: iconColor),
                             ],
                           ),
                         ),
@@ -348,10 +359,12 @@ class _AddItemModalState extends ConsumerState<AddItemModal> {
                         Expanded(
                           child: TextField(
                             controller: _newCategoryController,
+                            style: TextStyle(color: textColor),
                             decoration: InputDecoration(
                               hintText: 'Nome da nova categoria',
+                              hintStyle: TextStyle(color: hintColor),
                               filled: true,
-                              fillColor: Colors.grey[50],
+                              fillColor: inputFillColor,
                               contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
@@ -405,10 +418,10 @@ class _AddItemModalState extends ConsumerState<AddItemModal> {
                           child: Container(
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
-                              color: Colors.grey[100],
+                              color: isDark ? const Color(0xFF333333) : Colors.grey[100],
                               borderRadius: BorderRadius.circular(12),
                             ),
-                            child: const Icon(Icons.close, color: Colors.black87),
+                            child: Icon(Icons.close, color: textColor),
                           ),
                         ),
                       ],
@@ -418,7 +431,7 @@ class _AddItemModalState extends ConsumerState<AddItemModal> {
                   const SizedBox(height: 20),
 
                   // Photo Field
-                  _buildLabel('Foto do Produto (opcional)', Icons.camera_alt_outlined),
+                  _buildLabel('Foto do Produto (opcional)', Icons.camera_alt_outlined, isDark),
                   const SizedBox(height: 8),
                   if (_imagePath != null)
                     Stack(
@@ -462,25 +475,25 @@ class _AddItemModalState extends ConsumerState<AddItemModal> {
                           context: context,
                           backgroundColor: Colors.transparent,
                           builder: (context) => Container(
-                            decoration: const BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                            decoration: BoxDecoration(
+                              color: isDark ? const Color(0xFF2C2C2C) : Colors.white,
+                              borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
                             ),
                             child: SafeArea(
                               child: Column(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   ListTile(
-                                    leading: const Icon(Icons.camera_alt),
-                                    title: const Text('Tirar foto'),
+                                    leading: Icon(Icons.camera_alt, color: textColor),
+                                    title: Text('Tirar foto', style: TextStyle(color: textColor)),
                                     onTap: () {
                                       Navigator.pop(context);
                                       _pickImage(ImageSource.camera);
                                     },
                                   ),
                                   ListTile(
-                                    leading: const Icon(Icons.photo_library),
-                                    title: const Text('Escolher da galeria'),
+                                    leading: Icon(Icons.photo_library, color: textColor),
+                                    title: Text('Escolher da galeria', style: TextStyle(color: textColor)),
                                     onTap: () {
                                       Navigator.pop(context);
                                       _pickImage(ImageSource.gallery);
@@ -494,7 +507,7 @@ class _AddItemModalState extends ConsumerState<AddItemModal> {
                       },
                       borderRadius: BorderRadius.circular(16),
                       child: CustomPaint(
-                        painter: _DashedBorderPainter(color: Colors.grey[300]!),
+                        painter: _DashedBorderPainter(color: isDark ? Colors.grey[700]! : Colors.grey[300]!),
                         child: Container(
                           height: 120,
                           width: double.infinity,
@@ -502,11 +515,11 @@ class _AddItemModalState extends ConsumerState<AddItemModal> {
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(Icons.camera_alt_outlined, size: 32, color: Colors.grey[600]),
+                              Icon(Icons.camera_alt_outlined, size: 32, color: iconColor),
                               const SizedBox(height: 8),
                               Text(
                                 'Tirar foto ou escolher da galeria',
-                                style: TextStyle(color: Colors.grey[600], fontSize: 14),
+                                style: TextStyle(color: labelColor, fontSize: 14),
                               ),
                             ],
                           ),
@@ -595,16 +608,16 @@ class _AddItemModalState extends ConsumerState<AddItemModal> {
     );
   }
 
-  Widget _buildLabel(String text, IconData icon) {
+  Widget _buildLabel(String text, IconData icon, bool isDark) {
     return Row(
       children: [
-        Icon(icon, size: 16, color: Colors.grey[600]),
+        Icon(icon, size: 16, color: isDark ? Colors.grey[400] : Colors.grey[600]),
         const SizedBox(width: 8),
         Text(
           text,
           style: TextStyle(
             fontSize: 14,
-            color: Colors.grey[700],
+            color: isDark ? Colors.grey[400] : Colors.grey[700],
             fontWeight: FontWeight.w500,
           ),
         ),
@@ -612,12 +625,16 @@ class _AddItemModalState extends ConsumerState<AddItemModal> {
     );
   }
 
-  InputDecoration _inputDecoration(String hint, {String? prefix}) {
+  InputDecoration _inputDecoration(String hint, bool isDark, {String? prefix}) {
+    final fillColor = isDark ? const Color(0xFF2C2C2C) : Colors.grey[100];
+    final hintColor = isDark ? Colors.grey[600] : Colors.grey[500];
+    
     return InputDecoration(
       hintText: hint,
       prefixText: prefix,
+      hintStyle: TextStyle(color: hintColor),
       filled: true,
-      fillColor: Colors.grey[100], // Light grey background
+      fillColor: fillColor,
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
