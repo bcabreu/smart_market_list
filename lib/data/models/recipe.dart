@@ -47,4 +47,30 @@ class Recipe extends HiveObject {
     this.isFavorite = false,
     this.servings = 2,
   }) : id = id ?? const Uuid().v4();
+
+  Recipe copyWith({
+    String? id,
+    String? name,
+    String? imageUrl,
+    List<String>? ingredients,
+    List<String>? instructions,
+    int? prepTime,
+    String? difficulty,
+    int? likes,
+    bool? isFavorite,
+    int? servings,
+  }) {
+    return Recipe(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      imageUrl: imageUrl ?? this.imageUrl,
+      ingredients: ingredients ?? this.ingredients,
+      instructions: instructions ?? this.instructions,
+      prepTime: prepTime ?? this.prepTime,
+      difficulty: difficulty ?? this.difficulty,
+      likes: likes ?? this.likes,
+      isFavorite: isFavorite ?? this.isFavorite,
+      servings: servings ?? this.servings,
+    );
+  }
 }
