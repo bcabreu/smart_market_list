@@ -1,5 +1,8 @@
+import 'dart:io';
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:smart_market_list/core/theme/app_colors.dart';
 import 'package:smart_market_list/data/models/shopping_item.dart';
@@ -18,35 +21,68 @@ class AddNoteModal extends ConsumerStatefulWidget {
 class _AddNoteModalState extends ConsumerState<AddNoteModal> {
   final _formKey = GlobalKey<FormState>();
   final _storeController = TextEditingController();
-  final _addressController = TextEditingController();
-  DateTime _selectedDate = DateTime.now();
-  final List<ShoppingItem> _items = [];
-
-  // Temporary item controllers
-  final _itemNameController = TextEditingController();
-  final _itemPriceController = TextEditingController();
+  final _totalController = TextEditingController();
+  String? _imagePath;
+  final ImagePicker _picker = ImagePicker();
 
   @override
   void dispose() {
     _storeController.dispose();
-    _addressController.dispose();
-    _itemNameController.dispose();
-    _itemPriceController.dispose();
+    _totalController.dispose();
     super.dispose();
   }
 
-  void _addItem() {
-    if (_itemNameController.text.isNotEmpty && _itemPriceController.text.isNotEmpty) {
+  Future<void> _pickImage() async {
+    final XFile? image = await _picker.pickImage(source: ImageSource.camera);
+    if (image != null) {
       setState(() {
-        _items.add(ShoppingItem(
-          name: _itemNameController.text,
-          price: double.tryParse(_itemPriceController.text.replaceAll(',', '.')) ?? 0.0,
-          quantity: '1 un',
-        ));
-        _itemNameController.clear();
-        _itemPriceController.clear();
+        _imagePath = image.path;
       });
     }
+  }
+
+  Future<void> _pickImageGallery() async {
+    final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+    if (image != null) {
+      setState(() {
+        _imagePath = image.path;
+      });
+    }
+  }
+
+  void _showImageSourceOptions() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        decoration: BoxDecoration(
+          color: Theme.of(context).scaffoldBackgroundColor,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.camera_alt),
+              title: const Text('Tirar Foto'),
+              onTap: () {
+                Navigator.pop(context);
+                _pickImage();
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_library),
+              title: const Text('Escolher da Galeria'),
+              onTap: () {
+                Navigator.pop(context);
+                _pickImageGallery();
+              },
+            ),
+            const SizedBox(height: 20),
+          ],
+        ),
+      ),
+    );
   }
 
   void _saveNote() {
@@ -63,11 +99,24 @@ class _AddNoteModalState extends ConsumerState<AddNoteModal> {
         return;
       }
 
+      // Parse total value
+      String cleanValue = _totalController.text.replaceAll('R\$', '').replaceAll('.', '').replaceAll(',', '.').trim();
+      double totalValue = double.tryParse(cleanValue) ?? 0.0;
+
+      // Create a single item representing the total purchase
+      final items = [
+        ShoppingItem(
+          name: 'Compra Geral',
+          price: totalValue,
+          quantity: '1',
+        )
+      ];
+
       final note = ShoppingNote(
         storeName: _storeController.text,
-        date: _selectedDate,
-        address: _addressController.text,
-        items: _items,
+        date: DateTime.now(),
+        items: items,
+        photoUrl: _imagePath,
       );
 
       ref.read(shoppingNotesServiceProvider).createNote(note);
@@ -77,188 +126,283 @@ class _AddNoteModalState extends ConsumerState<AddNoteModal> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final inputFillColor = isDark ? const Color(0xFF2C2C2C) : const Color(0xFFF5F5F5);
+    final borderColor = isDark ? Colors.grey[800]! : Colors.grey[300]!;
+
     return Container(
-      height: MediaQuery.of(context).size.height * 0.9,
       decoration: BoxDecoration(
         color: Theme.of(context).scaffoldBackgroundColor,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      child: Column(
-        children: [
-          // Header
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  'Nova Nota de Compra',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.close),
-                  onPressed: () => Navigator.pop(context),
-                ),
-              ],
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Header
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Nova Nota',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Registre sua compra',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: isDark ? Colors.grey[400] : Colors.grey[600],
+                        ),
+                      ),
+                    ],
+                  ),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: isDark ? Colors.grey[800] : Colors.grey[100],
+                      shape: BoxShape.circle,
+                    ),
+                    child: IconButton(
+                      icon: const Icon(Icons.close, size: 20),
+                      onPressed: () => Navigator.pop(context),
+                      color: isDark ? Colors.grey[400] : Colors.grey[600],
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-          const Divider(height: 1),
-          
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
+            
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
               child: Form(
                 key: _formKey,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    // Store Name
+                    _buildLabel('Nome do Mercado', Icons.store_outlined, isDark),
+                    const SizedBox(height: 8),
                     TextFormField(
                       controller: _storeController,
-                      decoration: const InputDecoration(
-                        labelText: 'Estabelecimento',
-                        prefixIcon: Icon(Icons.store),
+                      decoration: InputDecoration(
+                        hintText: 'Ex: Supermercado Central',
+                        filled: true,
+                        fillColor: inputFillColor,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                       ),
                       validator: (value) => value?.isEmpty ?? true ? 'Obrigatório' : null,
                     ),
-                    const SizedBox(height: 16),
-                    
-                    InkWell(
-                      onTap: () async {
-                        final date = await showDatePicker(
-                          context: context,
-                          initialDate: _selectedDate,
-                          firstDate: DateTime(2020),
-                          lastDate: DateTime.now(),
-                        );
-                        if (date != null) {
-                          setState(() => _selectedDate = date);
-                        }
-                      },
-                      child: InputDecorator(
-                        decoration: const InputDecoration(
-                          labelText: 'Data',
-                          prefixIcon: Icon(Icons.calendar_today),
-                        ),
-                        child: Text(DateFormat('dd/MM/yyyy').format(_selectedDate)),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    
-                    TextFormField(
-                      controller: _addressController,
-                      decoration: const InputDecoration(
-                        labelText: 'Endereço (Opcional)',
-                        prefixIcon: Icon(Icons.location_on),
-                      ),
-                    ),
                     const SizedBox(height: 24),
-                    
-                    // Items Section
-                    const Text(
-                      'Itens Comprados',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                    ),
+
+                    // Total Value
+                    _buildLabel('Valor Total', Icons.attach_money, isDark),
                     const SizedBox(height: 8),
-                    
-                    // Add Item Row
                     Row(
                       children: [
-                        Expanded(
-                          flex: 2,
-                          child: TextField(
-                            controller: _itemNameController,
-                            decoration: const InputDecoration(hintText: 'Item'),
+                        Text(
+                          'R\$',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: isDark ? Colors.white : Colors.black87,
                           ),
                         ),
-                        const SizedBox(width: 8),
+                        const SizedBox(width: 12),
                         Expanded(
-                          child: TextField(
-                            controller: _itemPriceController,
-                            keyboardType: TextInputType.number,
-                            decoration: const InputDecoration(hintText: 'R\$'),
+                          child: TextFormField(
+                            controller: _totalController,
+                            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                            decoration: InputDecoration(
+                              hintText: '0,00',
+                              filled: true,
+                              fillColor: inputFillColor,
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide.none,
+                              ),
+                              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                            ),
+                            validator: (value) => value?.isEmpty ?? true ? 'Obrigatório' : null,
                           ),
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.add_circle, color: AppColors.primary),
-                          onPressed: _addItem,
                         ),
                       ],
                     ),
-                    const SizedBox(height: 16),
-                    
-                    // Items List
-                    ..._items.map((item) => ListTile(
-                      dense: true,
-                      contentPadding: EdgeInsets.zero,
-                      title: Text(item.name),
-                      trailing: Text(
-                        'R\$ ${item.price.toStringAsFixed(2)}',
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                    )),
-                    
-                    const SizedBox(height: 16),
-                    const Divider(),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 8),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Text(
-                            'Total',
-                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    const SizedBox(height: 24),
+
+                    // Photo Upload
+                    _buildLabel('Foto da Nota (opcional)', Icons.camera_alt_outlined, isDark),
+                    const SizedBox(height: 8),
+                    GestureDetector(
+                      onTap: _showImageSourceOptions,
+                      child: CustomPaint(
+                        painter: DashedBorderPainter(color: borderColor),
+                        child: Container(
+                          width: double.infinity,
+                          height: 160,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(12),
                           ),
-                          Text(
-                            'R\$ ${_items.fold(0.0, (sum, item) => sum + item.price).toStringAsFixed(2)}',
-                            style: const TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.secondary,
-                            ),
-                          ),
-                        ],
+                          child: _imagePath != null
+                              ? ClipRRect(
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: Image.file(
+                                    File(_imagePath!),
+                                    fit: BoxFit.cover,
+                                  ),
+                                )
+                              : Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      Icons.camera_alt_rounded,
+                                      size: 48,
+                                      color: isDark ? Colors.grey[600] : Colors.grey[400],
+                                    ),
+                                    const SizedBox(height: 12),
+                                    Text(
+                                      'Tirar foto ou escolher da galeria',
+                                      style: TextStyle(
+                                        color: isDark ? Colors.grey[500] : Colors.grey[500],
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                        ),
                       ),
                     ),
+                    const SizedBox(height: 32),
                   ],
                 ),
               ),
             ),
-          ),
-          
-          // Footer Actions
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: () => Navigator.pop(context),
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      side: const BorderSide(color: Colors.grey),
-                      foregroundColor: Colors.grey,
+
+            // Save Button
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 0, 24, 0),
+              child: SizedBox(
+                width: double.infinity,
+                height: 56,
+                child: ElevatedButton(
+                  onPressed: _saveNote,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.secondary,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
                     ),
-                    child: const Text('Cancelar'),
+                    elevation: 0,
+                  ),
+                  child: const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.add, size: 24),
+                      SizedBox(width: 8),
+                      Text(
+                        'Salvar Nota',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: _saveNote,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.secondary,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                    ),
-                    icon: const Icon(Icons.save),
-                    label: const Text('Salvar'),
-                  ),
-                ),
-              ],
+              ),
             ),
-          ),
-        ],
+            // Add safe area padding and extra spacing for bottom
+            SizedBox(
+              height: MediaQuery.of(context).viewInsets.bottom + 
+                     MediaQuery.of(context).padding.bottom + 
+                     24,
+            ),
+          ],
+        ),
       ),
     );
   }
+
+  Widget _buildLabel(String text, IconData icon, bool isDark) {
+    return Row(
+      children: [
+        Icon(
+          icon,
+          size: 18,
+          color: isDark ? Colors.grey[400] : Colors.grey[600],
+        ),
+        const SizedBox(width: 8),
+        Text(
+          text,
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+            color: isDark ? Colors.grey[400] : Colors.grey[600],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class DashedBorderPainter extends CustomPainter {
+  final Color color;
+  final double strokeWidth;
+  final double dashWidth;
+  final double dashSpace;
+  final double radius;
+
+  DashedBorderPainter({
+    required this.color,
+    this.strokeWidth = 1.5,
+    this.dashWidth = 6,
+    this.dashSpace = 4,
+    this.radius = 12,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = strokeWidth
+      ..style = PaintingStyle.stroke;
+
+    final rrect = RRect.fromRectAndRadius(
+      Rect.fromLTWH(0, 0, size.width, size.height),
+      Radius.circular(radius),
+    );
+
+    final path = Path()..addRRect(rrect);
+    
+    final Path dashPath = Path();
+    double distance = 0.0;
+    
+    for (final PathMetric pathMetric in path.computeMetrics()) {
+      while (distance < pathMetric.length) {
+        dashPath.addPath(
+          pathMetric.extractPath(distance, distance + dashWidth),
+          Offset.zero,
+        );
+        distance += dashWidth + dashSpace;
+      }
+    }
+
+    canvas.drawPath(dashPath, paint);
+  }
+
+  @override
+  bool shouldRepaint(DashedBorderPainter oldDelegate) => 
+      color != oldDelegate.color || strokeWidth != oldDelegate.strokeWidth;
 }
