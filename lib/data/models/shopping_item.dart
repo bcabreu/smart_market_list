@@ -37,6 +37,7 @@ class ShoppingItem extends HiveObject {
   }) : id = id ?? const Uuid().v4();
 
   ShoppingItem copyWith({
+    String? id,
     String? name,
     String? quantity,
     double? price,
@@ -45,7 +46,7 @@ class ShoppingItem extends HiveObject {
     String? imageUrl,
   }) {
     return ShoppingItem(
-      id: id,
+      id: id ?? this.id,
       name: name ?? this.name,
       quantity: quantity ?? this.quantity,
       price: price ?? this.price,

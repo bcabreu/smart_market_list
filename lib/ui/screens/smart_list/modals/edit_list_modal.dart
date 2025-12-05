@@ -16,17 +16,18 @@ class EditListModal extends ConsumerStatefulWidget {
 
 class _EditListModalState extends ConsumerState<EditListModal> {
   final _nameController = TextEditingController();
-  final _budgetController = TextEditingController();
   String _selectedEmoji = '🛒';
 
-  final List<String> _emojis = ['🛒', '🏠', '🎉', '🥩', '🥦', '💊', '🎁', '✈️'];
+  final List<String> _emojis = [
+    '🛒', '🥩', '🎄', '🎂', '🎉', '🏖️', '🍕', 
+    '☕', '🥗', '🍰', '🎁', '🏠'
+  ];
 
   @override
   void initState() {
     super.initState();
     if (widget.list != null) {
       _nameController.text = widget.list!.name;
-      _budgetController.text = widget.list!.budget.toStringAsFixed(2);
       _selectedEmoji = widget.list!.emoji;
     }
   }
@@ -34,14 +35,12 @@ class _EditListModalState extends ConsumerState<EditListModal> {
   @override
   void dispose() {
     _nameController.dispose();
-    _budgetController.dispose();
     super.dispose();
   }
 
   void _save() {
     if (_nameController.text.isNotEmpty) {
       final name = _nameController.text;
-      final budget = double.tryParse(_budgetController.text.replaceAll(',', '.')) ?? 0.0;
       
       final service = ref.read(shoppingListServiceProvider);
 
@@ -51,7 +50,7 @@ class _EditListModalState extends ConsumerState<EditListModal> {
           id: widget.list!.id,
           name: name,
           emoji: _selectedEmoji,
-          budget: budget,
+          budget: widget.list!.budget, // Keep existing budget
           items: widget.list!.items,
           createdAt: widget.list!.createdAt,
         );
@@ -59,10 +58,10 @@ class _EditListModalState extends ConsumerState<EditListModal> {
       } else {
         // Create
         final newList = ShoppingList(
-          id: Uuid().v4(),
+          id: const Uuid().v4(),
           name: name,
           emoji: _selectedEmoji,
-          budget: budget,
+          budget: 0.0, // Default to 0
           items: [],
           createdAt: DateTime.now(),
         );
@@ -75,6 +74,12 @@ class _EditListModalState extends ConsumerState<EditListModal> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final backgroundColor = isDark ? const Color(0xFF1E1E1E) : Colors.white;
+    final inputColor = isDark ? const Color(0xFF2C2C2C) : const Color(0xFFF5F5F5);
+    final textColor = isDark ? Colors.white : Colors.black87;
+    final subtitleColor = isDark ? Colors.grey[400] : Colors.grey[600];
+
     return Container(
       padding: EdgeInsets.only(
         bottom: MediaQuery.of(context).viewInsets.bottom + 24,
@@ -83,80 +88,184 @@ class _EditListModalState extends ConsumerState<EditListModal> {
         right: 24,
       ),
       decoration: BoxDecoration(
-        color: Theme.of(context).scaffoldBackgroundColor,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        color: backgroundColor,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            widget.list != null ? 'Editar Lista' : 'Nova Lista',
-            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          // Header with Close Button
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    widget.list != null ? 'Editar Lista' : 'Nova Lista',
+                    style: TextStyle(
+                      fontSize: 24, 
+                      fontWeight: FontWeight.bold,
+                      color: textColor,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Crie uma lista personalizada',
+                    style: TextStyle(
+                      fontSize: 14, 
+                      color: subtitleColor,
+                    ),
+                  ),
+                ],
+              ),
+              InkWell(
+                onTap: () => Navigator.pop(context),
+                borderRadius: BorderRadius.circular(20),
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: isDark ? Colors.grey[800] : Colors.grey[200],
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(Icons.close, size: 20, color: subtitleColor),
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 32),
           
           // Emoji Selector
-          SizedBox(
-            height: 60,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              itemCount: _emojis.length,
-              separatorBuilder: (_, __) => const SizedBox(width: 12),
-              itemBuilder: (context, index) {
-                final emoji = _emojis[index];
-                final isSelected = emoji == _selectedEmoji;
-                return GestureDetector(
-                  onTap: () => setState(() => _selectedEmoji = emoji),
-                  child: Container(
-                    width: 50,
-                    height: 50,
-                    decoration: BoxDecoration(
-                      color: isSelected ? AppColors.primary.withOpacity(0.2) : Colors.transparent,
-                      shape: BoxShape.circle,
-                      border: isSelected ? Border.all(color: AppColors.primary, width: 2) : null,
-                    ),
-                    alignment: Alignment.center,
-                    child: Text(emoji, style: const TextStyle(fontSize: 24)),
+          Text(
+            'Escolha um emoji',
+            style: TextStyle(
+              fontSize: 14,
+              color: subtitleColor,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 12,
+            runSpacing: 12,
+            children: _emojis.map((emoji) {
+              final isSelected = emoji == _selectedEmoji;
+              return GestureDetector(
+                onTap: () => setState(() => _selectedEmoji = emoji),
+                child: Container(
+                  width: 50,
+                  height: 50,
+                  decoration: BoxDecoration(
+                    color: isSelected 
+                        ? AppColors.primary.withOpacity(0.15) 
+                        : (isDark ? Colors.grey[800] : const Color(0xFFF5F5F5)),
+                    borderRadius: BorderRadius.circular(16), // Rounded square/squircle
+                    border: isSelected ? Border.all(color: AppColors.primary, width: 2) : null,
                   ),
-                );
-              },
-            ),
+                  alignment: Alignment.center,
+                  child: Text(emoji, style: const TextStyle(fontSize: 24)),
+                ),
+              );
+            }).toList(),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 32),
 
-          TextField(
-            controller: _nameController,
-            decoration: const InputDecoration(
-              labelText: 'Nome da Lista',
-              prefixIcon: Icon(Icons.edit),
+          // Name Input
+          Row(
+            children: [
+              Icon(Icons.list, size: 20, color: subtitleColor),
+              const SizedBox(width: 8),
+              Text(
+                'Nome da Lista',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: subtitleColor,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Container(
+            decoration: BoxDecoration(
+              color: inputColor,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: Colors.transparent), // Placeholder for focus border if needed
+            ),
+            child: TextField(
+              controller: _nameController,
+              style: TextStyle(color: textColor),
+              decoration: InputDecoration(
+                hintText: 'Ex: Churrasco do Final de Semana',
+                hintStyle: TextStyle(color: Colors.grey[500]),
+                border: InputBorder.none,
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: const BorderSide(color: AppColors.primary, width: 2),
+                ),
+              ),
             ),
           ),
-          const SizedBox(height: 16),
-          
-          TextField(
-            controller: _budgetController,
-            keyboardType: TextInputType.number,
-            decoration: const InputDecoration(
-              labelText: 'Orçamento (R\$)',
-              prefixIcon: Icon(Icons.attach_money),
-            ),
-          ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 32),
 
+          // Create Button
           SizedBox(
             width: double.infinity,
+            height: 80, // Large button
             child: ElevatedButton(
               onPressed: _save,
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,
                 foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 16),
+                elevation: 0,
+                padding: const EdgeInsets.symmetric(horizontal: 24),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(24),
                 ),
               ),
-              child: Text(widget.list != null ? 'Salvar Alterações' : 'Criar Lista'),
+              child: Row(
+                children: [
+                  // Plus Icon Circle
+                  Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.2),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.add, color: Colors.white, size: 24),
+                  ),
+                  const SizedBox(width: 16),
+                  
+                  // Text
+                  Expanded(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          widget.list != null ? 'Salvar Alterações' : 'Criar Lista',
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          widget.list != null ? 'Atualizar detalhes' : 'Começar a planejar',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.white.withOpacity(0.8),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // Arrow Icon
+                  const Icon(Icons.arrow_forward, color: Colors.white),
+                ],
+              ),
             ),
           ),
         ],

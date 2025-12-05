@@ -5,6 +5,7 @@ import 'package:smart_market_list/data/models/shopping_item.dart';
 import 'package:smart_market_list/providers/shopping_list_provider.dart';
 import 'package:smart_market_list/ui/screens/smart_list/widgets/shopping_item_card.dart';
 import 'package:smart_market_list/ui/screens/smart_list/widgets/smart_list_header.dart';
+import 'package:smart_market_list/ui/screens/smart_list/widgets/budget_info_card.dart';
 import 'package:smart_market_list/ui/screens/smart_list/modals/add_item_modal.dart';
 
 class SmartListScreen extends ConsumerWidget {
@@ -29,6 +30,7 @@ class SmartListScreen extends ConsumerWidget {
         child: Column(
           children: [
             SmartListHeader(list: currentList),
+            BudgetInfoCard(list: currentList),
             Expanded(
               child: ListView(
                 padding: const EdgeInsets.all(16),

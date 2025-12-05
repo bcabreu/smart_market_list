@@ -21,8 +21,21 @@ void main() async {
   await Hive.openBox<ShoppingNote>('shopping_notes');
   await Hive.openBox<Recipe>('recipes');
   
+  // Migration: Ensure all lists use ID as key
+  final keys = box.keys.toList();
+  for (var key in keys) {
+    if (key is int) {
+      final list = box.get(key);
+      if (list != null) {
+        await box.delete(key);
+        await box.put(list.id, list);
+      }
+    }
+  }
+
   if (box.isEmpty) {
-    await box.add(ShoppingList(name: 'Compras do Mês', emoji: '🛒', budget: 500.0));
+    final defaultList = ShoppingList(name: 'Compras do Mês', emoji: '🛒', budget: 500.0);
+    await box.put(defaultList.id, defaultList);
   }
 
   runApp(const ProviderScope(child: SmartMarketListApp()));

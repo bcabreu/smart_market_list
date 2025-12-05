@@ -38,4 +38,22 @@ class ShoppingList extends HiveObject {
   double get totalSpent => items.fold(0.0, (sum, item) => sum + (item.checked ? item.price : 0.0));
   double get totalEstimated => items.fold(0.0, (sum, item) => sum + item.price);
   double get percentage => budget > 0 ? (totalSpent / budget) * 100 : 0;
+
+  ShoppingList copyWith({
+    String? id,
+    String? name,
+    String? emoji,
+    double? budget,
+    List<ShoppingItem>? items,
+    DateTime? createdAt,
+  }) {
+    return ShoppingList(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      emoji: emoji ?? this.emoji,
+      budget: budget ?? this.budget,
+      items: items ?? this.items,
+      createdAt: createdAt ?? this.createdAt,
+    );
+  }
 }

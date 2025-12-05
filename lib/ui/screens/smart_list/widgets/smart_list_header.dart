@@ -7,234 +7,294 @@ import 'package:smart_market_list/providers/shopping_list_provider.dart';
 import 'package:smart_market_list/ui/screens/smart_list/modals/edit_list_modal.dart';
 import 'package:smart_market_list/providers/shopping_list_provider.dart';
 
-class SmartListHeader extends ConsumerWidget {
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:smart_market_list/core/theme/app_colors.dart';
+import 'package:smart_market_list/data/models/shopping_list.dart';
+import 'package:smart_market_list/providers/shopping_list_provider.dart';
+import 'package:smart_market_list/ui/screens/smart_list/modals/edit_list_modal.dart';
+import 'package:smart_market_list/ui/screens/smart_list/widgets/list_selector_dropdown.dart';
+import 'package:uuid/uuid.dart';
+
+class SmartListHeader extends ConsumerStatefulWidget {
   final ShoppingList list;
 
   const SmartListHeader({super.key, required this.list});
 
-  Color _getBudgetColor(double percentage) {
-    if (percentage < 60) return AppColors.budgetSafe;
-    if (percentage < 85) return AppColors.budgetWarning;
-    return AppColors.budgetDanger;
+  @override
+  ConsumerState<SmartListHeader> createState() => _SmartListHeaderState();
+}
+
+class _SmartListHeaderState extends ConsumerState<SmartListHeader> {
+  final LayerLink _layerLink = LayerLink();
+  bool _isOpen = false;
+  bool _hideHeader = false;
+
+  void _toggleDropdown() {
+    if (_isOpen) {
+      _closeDropdown();
+    } else {
+      _openDropdown();
+    }
+  }
+
+  void _duplicateList(ShoppingList list) {
+    final service = ref.read(shoppingListServiceProvider);
+    final newList = ShoppingList(
+      id: const Uuid().v4(),
+      name: '${list.name} (Cópia)',
+      emoji: list.emoji,
+      budget: list.budget,
+      items: list.items.map((i) => i.copyWith(id: const Uuid().v4())).toList(),
+      createdAt: DateTime.now(),
+    );
+    service.createList(newList);
+  }
+
+  void _deleteList(ShoppingList list) {
+    // Prevent deleting the last list or the currently selected one if it's the only one
+    // But for now, just delete. If current list is deleted, provider should handle or we switch.
+    final service = ref.read(shoppingListServiceProvider);
+    service.deleteList(list.id);
+    
+    // If we deleted the current list, switch to another one or create a default one
+    if (widget.list.id == list.id) {
+       // Logic to switch list is handled by the parent or provider usually, 
+       // but here we might need to ensure we don't show a deleted list.
+       // The stream builder in SmartListScreen will update.
+    }
+  }
+
+  Future<void> _openDropdown() async {
+    final lists = ref.read(shoppingListsProvider).value ?? [];
+    
+    setState(() {
+      _isOpen = true;
+      _hideHeader = true;
+    });
+
+    await Navigator.of(context).push(
+      PageRouteBuilder(
+        opaque: false,
+        barrierDismissible: true,
+        barrierColor: Colors.transparent,
+        pageBuilder: (context, animation, secondaryAnimation) {
+          return Stack(
+            children: [
+              // Dropdown content (Behind Header Copy)
+              Positioned(
+                width: MediaQuery.of(context).size.width - 32,
+                child: CompositedTransformFollower(
+                  link: _layerLink,
+                  showWhenUnlinked: false,
+                  offset: const Offset(16, 96), // 16px left margin, 96px top (16 margin + 72 height + 8 gap)
+                  child: SlideTransition(
+                    position: Tween<Offset>(
+                      begin: const Offset(0, -0.1),
+                      end: Offset.zero,
+                    ).animate(CurvedAnimation(
+                      parent: animation,
+                      curve: Curves.easeOutCubic,
+                    )),
+                    child: FadeTransition(
+                      opacity: animation,
+                      child: ListSelectorDropdown(
+                        selectedListId: widget.list.id,
+                        onSelect: (id) {
+                          ref.read(currentListIdProvider.notifier).state = id;
+                          Navigator.of(context).pop();
+                        },
+                        onUpdate: (updatedList) {
+                          final service = ref.read(shoppingListServiceProvider);
+                          service.updateList(updatedList);
+                        },
+                        onDuplicate: (list) {
+                          _duplicateList(list);
+                        },
+                        onDelete: (list) {
+                          _deleteList(list);
+                        },
+                        onDismiss: _closeDropdown,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+
+              // Header Copy (On Top)
+              Positioned(
+                width: MediaQuery.of(context).size.width - 32,
+                child: CompositedTransformFollower(
+                  link: _layerLink,
+                  showWhenUnlinked: false,
+                  offset: const Offset(16, 16), // Match the original header's margin position
+                  child: _buildHeaderVisual(context, ref, forceOpen: true),
+                ),
+              ),
+            ],
+          );
+        },
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          return child; // Animations are handled inside pageBuilder for specific elements
+        },
+      ),
+    );
+
+    if (mounted) {
+      setState(() {
+        _isOpen = false;
+        _hideHeader = false;
+      });
+    }
+  }
+
+  void _closeDropdown() {
+    Navigator.of(context).pop();
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final percentage = list.percentage;
-    final budgetColor = _getBudgetColor(percentage);
-    final listsAsync = ref.watch(shoppingListsProvider);
-    final currentListId = ref.watch(currentListIdProvider);
-    final service = ref.read(shoppingListServiceProvider);
+  void dispose() {
+    super.dispose();
+  }
+
+  Widget _buildHeaderVisual(BuildContext context, WidgetRef ref, {bool forceOpen = false}) {
+    final uncheckedCount = widget.list.items.where((i) => !i.checked).length;
+    final percentage = widget.list.percentage / 100;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
+    final cardColor = isDark 
+        ? const Color(0xFF1E2C2C)
+        : const Color(0xFFE0F7FA).withOpacity(0.5);
+    final borderColor = isDark
+        ? const Color(0xFF2C4A4A)
+        : const Color(0xFFB2EBF2);
+    final titleColor = isDark ? Colors.white : Colors.black87;
+    final subtitleColor = isDark ? Colors.grey[400] : Colors.grey[600];
+    final iconColor = isDark ? Colors.grey[400] : Colors.grey[700];
 
     return Container(
-      padding: const EdgeInsets.fromLTRB(20, 60, 20, 20),
+      height: 72, // Fixed height for consistency
       decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
-        borderRadius: const BorderRadius.vertical(bottom: Radius.circular(32)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 5),
-          ),
-        ],
+        color: cardColor,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: borderColor, width: 1),
       ),
-      child: Column(
-        children: [
-          // List Selector Row
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: listsAsync.when(
-                  data: (lists) {
-                    if (lists.isEmpty) return const SizedBox();
-                    return PopupMenuButton<String>(
-                      initialValue: list.id,
-                      onSelected: (id) {
-                        if (id == 'new') {
-                          showModalBottomSheet(
-                            context: context,
-                            isScrollControlled: true,
-                            backgroundColor: Colors.transparent,
-                            builder: (context) => const EditListModal(),
-                          );
-                        } else {
-                          ref.read(currentListIdProvider.notifier).state = id;
-                        }
-                      },
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: _toggleDropdown,
+          borderRadius: BorderRadius.circular(24),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Row(
+              children: [
+                Text(
+                  widget.list.emoji,
+                  style: const TextStyle(fontSize: 28),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        widget.list.name,
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: titleColor,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 4),
+                      Row(
                         children: [
-                          Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: AppColors.primary.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Text(
-                              list.emoji,
-                              style: const TextStyle(fontSize: 24),
-                            ),
+                          Icon(Icons.auto_awesome, size: 12, color: AppColors.primary),
+                          const SizedBox(width: 4),
+                          Text(
+                            '$uncheckedCount itens restantes',
+                            style: TextStyle(fontSize: 12, color: subtitleColor),
                           ),
-                          const SizedBox(width: 12),
-                          Flexible(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text(
-                                  'Lista Atual',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: AppColors.mutedForeground,
-                                  ),
-                                ),
-                                Row(
-                                  children: [
-                                    Flexible(
-                                      child: Text(
-                                        list.name,
-                                        style: const TextStyle(
-                                          fontSize: 18,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ),
-                                    const Icon(Icons.keyboard_arrow_down, color: AppColors.primary),
-                                  ],
-                                ),
-                              ],
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SizedBox(
+                      width: 40,
+                      height: 40,
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          CircularProgressIndicator(
+                            value: percentage,
+                            backgroundColor: isDark ? Colors.grey[800] : Colors.grey[200],
+                            valueColor: const AlwaysStoppedAnimation<Color>(AppColors.primary),
+                            strokeWidth: 4,
+                          ),
+                          Text(
+                            '${(percentage * 100).toInt()}%',
+                            style: const TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.primary,
                             ),
                           ),
                         ],
                       ),
-                      itemBuilder: (context) => [
-                        ...lists.map((l) => PopupMenuItem(
-                          value: l.id,
-                          child: Row(
-                            children: [
-                              Text(l.emoji),
-                              const SizedBox(width: 8),
-                              Text(l.name),
-                              if (l.id == list.id) ...[
-                                const Spacer(),
-                                const Icon(Icons.check, color: AppColors.primary, size: 16),
-                              ],
-                            ],
-                          ),
-                        )),
-                        const PopupMenuDivider(),
-                        const PopupMenuItem(
-                          value: 'new',
-                          child: Row(
-                            children: [
-                              Icon(Icons.add, color: AppColors.primary),
-                              SizedBox(width: 8),
-                              Text('Nova Lista', style: TextStyle(color: AppColors.primary)),
-                            ],
-                          ),
-                        ),
-                      ],
-                    );
-                  },
-                  loading: () => const CircularProgressIndicator(),
-                  error: (_, __) => const SizedBox(),
-                ),
-              ),
-              IconButton(
-                icon: const Icon(Icons.edit_outlined),
-                onPressed: () {
-                  showModalBottomSheet(
-                    context: context,
-                    isScrollControlled: true,
-                    backgroundColor: Colors.transparent,
-                    builder: (context) => EditListModal(list: list),
-                  );
-                },
-              ),
-              // Percentage Badge
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  color: budgetColor.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Text(
-                  '${percentage.toInt()}%',
-                  style: TextStyle(
-                    color: budgetColor,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          
-          // Budget Info
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Orçamento',
-                    style: TextStyle(
-                      color: AppColors.mutedForeground,
-                      fontSize: 12,
                     ),
-                  ),
-                  InkWell(
-                    onTap: () {
-                      // TODO: Edit budget
-                    },
-                    child: Text(
-                      'R\$ ${list.budget.toStringAsFixed(2)}',
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
+                    const SizedBox(width: 12),
+                    InkWell(
+                      onTap: () {
+                        if (_isOpen) _closeDropdown();
+                        showModalBottomSheet(
+                          context: context,
+                          isScrollControlled: true,
+                          backgroundColor: Colors.transparent,
+                          builder: (context) => const EditListModal(),
+                        );
+                      },
+                      borderRadius: BorderRadius.circular(20),
+                      child: Container(
+                        width: 36,
+                        height: 36,
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withOpacity(0.15),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(Icons.add, color: AppColors.primary, size: 20),
                       ),
                     ),
-                  ),
-                ],
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    'Gasto',
-                    style: TextStyle(
-                      color: AppColors.mutedForeground,
-                      fontSize: 12,
+                    const SizedBox(width: 8),
+                    AnimatedRotation(
+                      duration: const Duration(milliseconds: 200),
+                      turns: (forceOpen || _isOpen) ? 0.5 : 0,
+                      child: Icon(Icons.keyboard_arrow_down, color: AppColors.primary, size: 24),
                     ),
-                  ),
-                  Text(
-                    'R\$ ${list.totalSpent.toStringAsFixed(2)}',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: budgetColor,
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          
-          // Progress Bar
-          ClipRRect(
-            borderRadius: BorderRadius.circular(4),
-            child: LinearProgressIndicator(
-              value: percentage / 100,
-              backgroundColor: AppColors.muted,
-              valueColor: AlwaysStoppedAnimation<Color>(budgetColor),
-              minHeight: 8,
+                  ],
+                ),
+              ],
             ),
           ),
-        ],
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return CompositedTransformTarget(
+      link: _layerLink,
+      child: Container(
+        margin: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+        child: Opacity(
+          opacity: _hideHeader ? 0.0 : 1.0,
+          child: _buildHeaderVisual(context, ref),
+        ),
       ),
     );
   }

@@ -16,7 +16,7 @@ class ShoppingListService {
   }
 
   Future<void> updateList(ShoppingList list) async {
-    await list.save();
+    await _box.put(list.id, list);
   }
 
   Future<void> deleteList(String id) async {
