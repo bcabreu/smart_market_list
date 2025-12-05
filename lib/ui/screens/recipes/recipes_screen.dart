@@ -7,7 +7,7 @@ import 'package:smart_market_list/ui/screens/recipes/widgets/recipe_card.dart';
 import 'package:smart_market_list/ui/screens/recipes/modals/recipe_detail_modal.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:smart_market_list/data/models/recipe.dart';
-
+import 'package:smart_market_list/ui/common/animations/staggered_entry.dart';
 import 'package:smart_market_list/providers/shopping_list_provider.dart';
 
 class RecipesScreen extends ConsumerWidget {
@@ -286,21 +286,24 @@ class RecipesScreen extends ConsumerWidget {
                               final recipe = entry.key;
                               final matchData = entry.value;
                               
-                              return RecipeCard(
-                                recipe: recipe,
-                                matchCount: matchData['matchCount'] as int,
-                                missingCount: matchData['missingCount'] as int,
-                                onTap: () {
-                                  showModalBottomSheet(
-                                    context: context,
-                                    isScrollControlled: true,
-                                    backgroundColor: Colors.transparent,
-                                    builder: (context) => RecipeDetailModal(recipe: recipe),
-                                  );
-                                },
-                                onFavorite: () async {
-                                  await service.toggleFavorite(recipe.id);
-                                },
+                              return StaggeredEntry(
+                                index: index,
+                                child: RecipeCard(
+                                  recipe: recipe,
+                                  matchCount: matchData['matchCount'] as int,
+                                  missingCount: matchData['missingCount'] as int,
+                                  onTap: () {
+                                    showModalBottomSheet(
+                                      context: context,
+                                      isScrollControlled: true,
+                                      backgroundColor: Colors.transparent,
+                                      builder: (context) => RecipeDetailModal(recipe: recipe),
+                                    );
+                                  },
+                                  onFavorite: () async {
+                                    await service.toggleFavorite(recipe.id);
+                                  },
+                                ),
                               );
                             },
                           ),
@@ -357,21 +360,24 @@ class RecipesScreen extends ConsumerWidget {
                               final recipe = entry.key;
                               final matchData = entry.value;
 
-                              return RecipeCard(
-                                recipe: recipe,
-                                matchCount: matchData['matchCount'] as int,
-                                missingCount: matchData['missingCount'] as int,
-                                onTap: () {
-                                  showModalBottomSheet(
-                                    context: context,
-                                    isScrollControlled: true,
-                                    backgroundColor: Colors.transparent,
-                                    builder: (context) => RecipeDetailModal(recipe: recipe),
-                                  );
-                                },
-                                onFavorite: () async {
-                                  await service.toggleFavorite(recipe.id);
-                                },
+                              return StaggeredEntry(
+                                index: index,
+                                child: RecipeCard(
+                                  recipe: recipe,
+                                  matchCount: matchData['matchCount'] as int,
+                                  missingCount: matchData['missingCount'] as int,
+                                  onTap: () {
+                                    showModalBottomSheet(
+                                      context: context,
+                                      isScrollControlled: true,
+                                      backgroundColor: Colors.transparent,
+                                      builder: (context) => RecipeDetailModal(recipe: recipe),
+                                    );
+                                  },
+                                  onFavorite: () async {
+                                    await service.toggleFavorite(recipe.id);
+                                  },
+                                ),
                               );
                             },
                           ),
