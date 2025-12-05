@@ -87,17 +87,17 @@ class _AddNoteModalState extends ConsumerState<AddNoteModal> {
 
   void _saveNote() {
     if (_formKey.currentState!.validate()) {
-      final isPremium = ref.read(isPremiumProvider);
+      // final isPremium = ref.read(isPremiumProvider);
       
-      if (!isPremium) {
-        showModalBottomSheet(
-          context: context,
-          isScrollControlled: true,
-          backgroundColor: Colors.transparent,
-          builder: (context) => const PaywallModal(),
-        );
-        return;
-      }
+      // if (!isPremium) {
+      //   showModalBottomSheet(
+      //     context: context,
+      //     isScrollControlled: true,
+      //     backgroundColor: Colors.transparent,
+      //     builder: (context) => const PaywallModal(),
+      //   );
+      //   return;
+      // }
 
       // Parse total value
       String cleanValue = _totalController.text.replaceAll('R\$', '').replaceAll('.', '').replaceAll(',', '.').trim();

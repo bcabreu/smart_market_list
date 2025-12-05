@@ -1,3 +1,4 @@
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_flutter/hive_flutter.dart';
@@ -11,6 +12,7 @@ import 'ui/screens/main_screen.dart';
 
 void main() async {
   await Hive.initFlutter();
+  await initializeDateFormatting('pt_BR', null);
   
   Hive.registerAdapter(ShoppingItemAdapter());
   Hive.registerAdapter(ShoppingListAdapter());
