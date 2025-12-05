@@ -19,10 +19,11 @@ class RecipesScreen extends ConsumerWidget {
     final service = ref.watch(recipesServiceProvider);
     final shoppingListsAsync = ref.watch(shoppingListsProvider);
 
-    // Get active list items (assuming first list is active for now, or use a selectedListProvider if available)
-    // For now, we'll take all items from all lists or just the first one.
-    // Let's assume the first list is the active one as per previous context.
-    final activeItems = shoppingListsAsync.value?.expand((list) => list.items).map((i) => i.name.toLowerCase()).toSet() ?? {};
+    // Get target list (current or first)
+    final targetList = ref.watch(currentListProvider) ?? shoppingListsAsync.value?.firstOrNull;
+    
+    // Get active items ONLY from the target (active) list
+    final activeItems = targetList?.items.map((i) => i.name.toLowerCase()).toSet() ?? {};
 
     return Scaffold(
       body: SafeArea(
@@ -224,34 +225,49 @@ class RecipesScreen extends ConsumerWidget {
                         SliverToBoxAdapter(
                           child: Padding(
                             padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
-                            child: Row(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Icon(Icons.check_circle_outline, color: Colors.green, size: 20),
-                                const SizedBox(width: 8),
-                                Text(
-                                  'Você Pode Fazer Agora',
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                    color: Theme.of(context).brightness == Brightness.dark
-                                        ? Colors.white
-                                        : Colors.black87,
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                                  decoration: BoxDecoration(
-                                    color: Colors.green.withOpacity(0.1),
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: Text(
-                                    '${availableRecipes.length}',
-                                    style: const TextStyle(
-                                      color: Colors.green,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 12,
+                                Row(
+                                  children: [
+                                    const Icon(Icons.circle, color: Color(0xFF4DB6AC), size: 16), // Teal circle
+                                    const SizedBox(width: 12),
+                                    Text(
+                                      'Você Pode Fazer Agora',
+                                      style: TextStyle(
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.bold,
+                                        color: Theme.of(context).brightness == Brightness.dark
+                                            ? Colors.white
+                                            : Colors.black87,
+                                      ),
                                     ),
+                                    const SizedBox(width: 8),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFF4DB6AC).withOpacity(0.1),
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: Text(
+                                        '${availableRecipes.length}',
+                                        style: const TextStyle(
+                                          color: Color(0xFF4DB6AC),
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  'Receitas com ingredientes que você já tem na lista',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: Theme.of(context).brightness == Brightness.dark
+                                        ? Colors.grey[400]
+                                        : Colors.grey[600],
                                   ),
                                 ),
                               ],
@@ -296,22 +312,33 @@ class RecipesScreen extends ConsumerWidget {
                         SliverToBoxAdapter(
                           child: Padding(
                             padding: const EdgeInsets.fromLTRB(24, 32, 24, 16),
-                            child: Row(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Icon(
-                                  Icons.restaurant, 
-                                  color: Theme.of(context).brightness == Brightness.dark ? Colors.grey[400] : Colors.grey[600], 
-                                  size: 20
+                                Row(
+                                  children: [
+                                    const Icon(Icons.local_fire_department_outlined, color: Color(0xFFFF7043), size: 24), // Orange fire
+                                    const SizedBox(width: 12),
+                                    Text(
+                                      'Outras Receitas',
+                                      style: TextStyle(
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.bold,
+                                        color: Theme.of(context).brightness == Brightness.dark
+                                            ? Colors.grey[300]
+                                            : Colors.grey[800],
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                                const SizedBox(width: 8),
+                                const SizedBox(height: 4),
                                 Text(
-                                  'Outras Receitas',
+                                  'Descubra novas receitas e adicione os ingredientes à sua lista',
                                   style: TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14,
                                     color: Theme.of(context).brightness == Brightness.dark
-                                        ? Colors.grey[300]
-                                        : Colors.grey[800],
+                                        ? Colors.grey[400]
+                                        : Colors.grey[600],
                                   ),
                                 ),
                               ],
