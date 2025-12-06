@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:smart_market_list/core/theme/app_colors.dart';
 import 'package:smart_market_list/providers/recipes_provider.dart';
 import 'package:smart_market_list/providers/shopping_notes_provider.dart';
+import 'package:smart_market_list/ui/screens/profile/favorite_recipes_screen.dart';
+import 'package:smart_market_list/providers/navigation_provider.dart';
 
 class ProfileStats extends ConsumerWidget {
   const ProfileStats({super.key});
@@ -16,15 +18,15 @@ class ProfileStats extends ConsumerWidget {
     final notesAsync = ref.watch(shoppingNotesProvider);
 
     // Calculate counts
-    final favoritesCount = recipesAsync.maybeWhen(
-      data: (recipes) => recipes.where((r) => r.isFavorite).length,
-      orElse: () => 0,
-    );
+    var favoritesCount = 0;
+    recipesAsync.whenData((recipes) {
+      favoritesCount = recipes.where((r) => r.isFavorite).length;
+    });
 
-    final notesCount = notesAsync.maybeWhen(
-      data: (notes) => notes.length,
-      orElse: () => 0,
-    );
+    var notesCount = 0;
+    notesAsync.whenData((notes) {
+      notesCount = notes.length;
+    });
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -38,6 +40,14 @@ class ProfileStats extends ConsumerWidget {
             iconBgColor: const Color(0xFFFF4081), // PinkAccent
             count: '$favoritesCount',
             label: 'Receitas\nfavoritadas',
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const FavoriteRecipesScreen(),
+                ),
+              );
+            },
           ),
           const SizedBox(width: cardSpacing),
           _buildStatCard(
@@ -47,6 +57,9 @@ class ProfileStats extends ConsumerWidget {
             iconBgColor: const Color(0xFFFF9800), // Orange
             count: '$notesCount',
             label: 'Notas\nsalvas',
+            onTap: () {
+               ref.read(bottomNavIndexProvider.notifier).state = 1;
+            },
           ),
           const SizedBox(width: cardSpacing),
           _buildStatCard(
@@ -55,7 +68,7 @@ class ProfileStats extends ConsumerWidget {
             iconColor: Colors.white,
             iconBgColor: const Color(0xFF26A69A), // Teal
             count: '1',
-            label: 'Compartilhando\nListas', // Added \nListas (or similar) to match lines? Wait, "Listas" is good.
+            label: 'Compartilhando\nListas',
           ),
         ],
       ),
@@ -69,57 +82,61 @@ class ProfileStats extends ConsumerWidget {
     required Color iconBgColor,
     required String count,
     required String label,
+    VoidCallback? onTap,
   }) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Expanded(
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
-        decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF1E1E1E) : Theme.of(context).cardColor,
-          borderRadius: BorderRadius.circular(20),
-          border: isDark 
-              ? Border.all(color: Colors.white.withOpacity(0.1), width: 1)
-              : null,
-          boxShadow: [
-            if (!isDark)
-              BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF1E1E1E) : Theme.of(context).cardColor,
+            borderRadius: BorderRadius.circular(20),
+            border: isDark 
+                ? Border.all(color: Colors.white.withOpacity(0.1), width: 1)
+                : null,
+            boxShadow: [
+              if (!isDark)
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+            ],
+          ),
+          child: Column(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: iconBgColor,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(icon, color: iconColor, size: 22),
               ),
-          ],
-        ),
-        child: Column(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: iconBgColor,
-                shape: BoxShape.circle,
+              const SizedBox(height: 12),
+              Text(
+                count,
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: isDark ? Colors.white : Colors.black87,
+                ),
               ),
-              child: Icon(icon, color: iconColor, size: 22),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              count,
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: isDark ? Colors.white : Colors.black87,
+              const SizedBox(height: 4),
+              Text(
+                label,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: isDark ? Colors.grey[400] : Colors.grey[600],
+                  height: 1.2,
+                ),
               ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 12,
-                color: isDark ? Colors.grey[400] : Colors.grey[600],
-                height: 1.2,
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

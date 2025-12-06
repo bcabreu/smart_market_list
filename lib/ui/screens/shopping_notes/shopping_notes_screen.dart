@@ -8,6 +8,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:smart_market_list/providers/shopping_notes_provider.dart';
 import 'package:smart_market_list/ui/screens/shopping_notes/widgets/shopping_note_card.dart';
 import 'package:smart_market_list/ui/screens/shopping_notes/modals/add_note_modal.dart';
+import 'package:smart_market_list/ui/common/animations/staggered_entry.dart';
 
 import 'package:smart_market_list/ui/widgets/pulse_fab.dart';
 
@@ -211,184 +212,188 @@ class ShoppingNotesScreen extends ConsumerWidget {
                     itemCount: notes.length,
                     itemBuilder: (context, index) {
                       final note = notes[index];
-                      return ShoppingNoteCard(
-                        note: note,
-                        onTap: () async {
-                            if (note.photoUrl != null && note.photoUrl!.isNotEmpty) {
-                              String? imagePath = note.photoUrl;
-                              
-                              if (!note.photoUrl!.startsWith('http')) {
-                                final file = File(note.photoUrl!);
-                                if (!await file.exists()) {
-                                  try {
-                                    final docsDir = await getApplicationDocumentsDirectory();
-                                    final name = note.photoUrl!.split('/').last;
-                                    final newPath = '${docsDir.path}/$name';
-                                    if (await File(newPath).exists()) {
-                                      imagePath = newPath;
-                                    } else {
-                                      imagePath = null;
+                      return StaggeredEntry(
+                        index: index,
+                        child: NoteItemWrapper(
+                          key: ValueKey(note.id),
+                          onDismiss: () {
+                             ref.read(shoppingNotesServiceProvider).deleteNote(note.id);
+                          },
+                          builder: (context, triggerAnimation) {
+                            return ShoppingNoteCard(
+                              note: note,
+                              onTap: () async {
+                                  if (note.photoUrl != null && note.photoUrl!.isNotEmpty) {
+                                    String? imagePath = note.photoUrl;
+                                    
+                                    if (!note.photoUrl!.startsWith('http')) {
+                                      final file = File(note.photoUrl!);
+                                      if (!await file.exists()) {
+                                        try {
+                                          final docsDir = await getApplicationDocumentsDirectory();
+                                          final name = note.photoUrl!.split('/').last;
+                                          final newPath = '${docsDir.path}/$name';
+                                          if (await File(newPath).exists()) {
+                                            imagePath = newPath;
+                                          } else {
+                                            imagePath = null;
+                                          }
+                                        } catch (e) {
+                                          debugPrint('Error resolving image path: $e');
+                                          imagePath = null;
+                                        }
+                                      }
                                     }
-                                  } catch (e) {
-                                    debugPrint('Error resolving image path: $e');
-                                    imagePath = null;
-                                  }
-                                }
-                              }
 
-                              if (context.mounted && imagePath != null) {
-                                final pathToShow = imagePath;
+                                    if (context.mounted && imagePath != null) {
+                                      final pathToShow = imagePath;
+                                      showDialog(
+                                        context: context,
+                                        builder: (context) => Dialog(
+                                          backgroundColor: Colors.transparent,
+                                          insetPadding: const EdgeInsets.all(16),
+                                          child: Stack(
+                                            alignment: Alignment.topRight,
+                                            children: [
+                                              ClipRRect(
+                                                borderRadius: BorderRadius.circular(16),
+                                                child: pathToShow.startsWith('http')
+                                                    ? CachedNetworkImage(
+                                                        imageUrl: pathToShow,
+                                                        fit: BoxFit.contain,
+                                                        placeholder: (context, url) => const Center(child: CircularProgressIndicator()),
+                                                        errorWidget: (context, url, error) => const Icon(Icons.error),
+                                                      )
+                                                    : Image.file(
+                                                        File(pathToShow),
+                                                        fit: BoxFit.contain,
+                                                      ),
+                                              ),
+                                              Padding(
+                                                padding: const EdgeInsets.all(8.0),
+                                                child: CircleAvatar(
+                                                  backgroundColor: Colors.black54,
+                                                  child: IconButton(
+                                                    icon: const Icon(Icons.close, color: Colors.white),
+                                                    onPressed: () => Navigator.pop(context),
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      );
+                                    } else if (context.mounted) {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        const SnackBar(content: Text('Imagem não encontrada')),
+                                      );
+                                    }
+                                  }
+                                },
+                              onDelete: () {
                                 showDialog(
                                   context: context,
                                   builder: (context) => Dialog(
-                                    backgroundColor: Colors.transparent,
-                                    insetPadding: const EdgeInsets.all(16),
-                                    child: Stack(
-                                      alignment: Alignment.topRight,
-                                      children: [
-                                        ClipRRect(
-                                          borderRadius: BorderRadius.circular(16),
-                                          child: pathToShow.startsWith('http')
-                                              ? CachedNetworkImage(
-                                                  imageUrl: pathToShow,
-                                                  fit: BoxFit.contain,
-                                                  placeholder: (context, url) => const Center(child: CircularProgressIndicator()),
-                                                  errorWidget: (context, url, error) => const Icon(Icons.error),
-                                                )
-                                              : Image.file(
-                                                  File(pathToShow),
-                                                  fit: BoxFit.contain,
-                                                ),
-                                        ),
-                                        Padding(
-                                          padding: const EdgeInsets.all(8.0),
-                                          child: CircleAvatar(
-                                            backgroundColor: Colors.black54,
-                                            child: IconButton(
-                                              icon: const Icon(Icons.close, color: Colors.white),
-                                              onPressed: () => Navigator.pop(context),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(24),
+                                    ),
+                                    backgroundColor: Theme.of(context).cardColor,
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(24),
+                                      child: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Container(
+                                            padding: const EdgeInsets.all(16),
+                                            decoration: BoxDecoration(
+                                              color: const Color(0xFFFFEBEE), 
+                                              shape: BoxShape.circle,
+                                            ),
+                                            child: const Icon(
+                                              Icons.delete_forever_rounded,
+                                              size: 32,
+                                              color: Color(0xFFE57373), 
                                             ),
                                           ),
-                                        ),
-                                      ],
+                                          const SizedBox(height: 16),
+                                          Text(
+                                            'Excluir Nota?',
+                                            style: TextStyle(
+                                              fontSize: 20,
+                                              fontWeight: FontWeight.bold,
+                                              color: Theme.of(context).brightness == Brightness.dark 
+                                                  ? Colors.white 
+                                                  : Colors.black87,
+                                            ),
+                                            textAlign: TextAlign.center,
+                                          ),
+                                          const SizedBox(height: 8),
+                                          Text(
+                                            'Tem certeza que deseja excluir esta nota permanentemente?',
+                                            style: TextStyle(
+                                              fontSize: 14,
+                                              color: Theme.of(context).brightness == Brightness.dark 
+                                                  ? Colors.grey[400] 
+                                                  : Colors.grey[600],
+                                            ),
+                                            textAlign: TextAlign.center,
+                                          ),
+                                          const SizedBox(height: 24),
+                                          Row(
+                                            children: [
+                                              Expanded(
+                                                child: TextButton(
+                                                  onPressed: () => Navigator.pop(context),
+                                                  style: TextButton.styleFrom(
+                                                    padding: const EdgeInsets.symmetric(vertical: 12),
+                                                    shape: RoundedRectangleBorder(
+                                                      borderRadius: BorderRadius.circular(12),
+                                                    ),
+                                                  ),
+                                                  child: Text(
+                                                    'Cancelar',
+                                                    style: TextStyle(
+                                                      color: Theme.of(context).brightness == Brightness.dark 
+                                                          ? Colors.grey[400] 
+                                                          : Colors.grey[600],
+                                                      fontWeight: FontWeight.w600,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
+                                              const SizedBox(width: 12),
+                                              Expanded(
+                                                child: ElevatedButton(
+                                                  onPressed: () {
+                                                    Navigator.pop(context); // Close dialog
+                                                    triggerAnimation(); // Trigger exit animation
+                                                  },
+                                                  style: ElevatedButton.styleFrom(
+                                                    backgroundColor: const Color(0xFFEF5350), 
+                                                    foregroundColor: Colors.white,
+                                                    padding: const EdgeInsets.symmetric(vertical: 12),
+                                                    elevation: 0,
+                                                    shape: RoundedRectangleBorder(
+                                                      borderRadius: BorderRadius.circular(12),
+                                                    ),
+                                                  ),
+                                                  child: const Text(
+                                                    'Excluir',
+                                                    style: TextStyle(fontWeight: FontWeight.bold),
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ],
+                                      ),
                                     ),
                                   ),
                                 );
-                              } else if (context.mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(content: Text('Imagem não encontrada')),
-                                );
-                              }
-                            }
+                              },
+                            );
                           },
-                        onDelete: () {
-                          showDialog(
-                            context: context,
-                            builder: (context) => Dialog(
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(24),
-                              ),
-                              backgroundColor: Theme.of(context).cardColor,
-                              child: Padding(
-                                padding: const EdgeInsets.all(24),
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    // Icon
-                                    Container(
-                                      padding: const EdgeInsets.all(16),
-                                      decoration: BoxDecoration(
-                                        color: const Color(0xFFFFEBEE), // Red 50
-                                        shape: BoxShape.circle,
-                                      ),
-                                      child: const Icon(
-                                        Icons.delete_forever_rounded,
-                                        size: 32,
-                                        color: Color(0xFFE57373), // Red 300
-                                      ),
-                                    ),
-                                    const SizedBox(height: 16),
-                                    
-                                    // Title
-                                    Text(
-                                      'Excluir Nota?',
-                                      style: TextStyle(
-                                        fontSize: 20,
-                                        fontWeight: FontWeight.bold,
-                                        color: Theme.of(context).brightness == Brightness.dark 
-                                            ? Colors.white 
-                                            : Colors.black87,
-                                      ),
-                                      textAlign: TextAlign.center,
-                                    ),
-                                    const SizedBox(height: 8),
-                                    
-                                    // Message
-                                    Text(
-                                      'Tem certeza que deseja excluir esta nota permanentemente?',
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        color: Theme.of(context).brightness == Brightness.dark 
-                                            ? Colors.grey[400] 
-                                            : Colors.grey[600],
-                                      ),
-                                      textAlign: TextAlign.center,
-                                    ),
-                                    const SizedBox(height: 24),
-                                    
-                                    // Buttons
-                                    Row(
-                                      children: [
-                                        Expanded(
-                                          child: TextButton(
-                                            onPressed: () => Navigator.pop(context),
-                                            style: TextButton.styleFrom(
-                                              padding: const EdgeInsets.symmetric(vertical: 12),
-                                              shape: RoundedRectangleBorder(
-                                                borderRadius: BorderRadius.circular(12),
-                                              ),
-                                            ),
-                                            child: Text(
-                                              'Cancelar',
-                                              style: TextStyle(
-                                                color: Theme.of(context).brightness == Brightness.dark 
-                                                    ? Colors.grey[400] 
-                                                    : Colors.grey[600],
-                                                fontWeight: FontWeight.w600,
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                        const SizedBox(width: 12),
-                                        Expanded(
-                                          child: ElevatedButton(
-                                            onPressed: () {
-                                              ref.read(shoppingNotesServiceProvider).deleteNote(note.id);
-                                              Navigator.pop(context);
-                                            },
-                                            style: ElevatedButton.styleFrom(
-                                              backgroundColor: const Color(0xFFEF5350), // Red 400
-                                              foregroundColor: Colors.white,
-                                              padding: const EdgeInsets.symmetric(vertical: 12),
-                                              elevation: 0,
-                                              shape: RoundedRectangleBorder(
-                                                borderRadius: BorderRadius.circular(12),
-                                              ),
-                                            ),
-                                            child: const Text(
-                                              'Excluir',
-                                              style: TextStyle(fontWeight: FontWeight.bold),
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          );
-                        },
+                        ),
                       );
                     },
                   );
@@ -410,6 +415,62 @@ class ShoppingNotesScreen extends ConsumerWidget {
           );
         },
         color: AppColors.secondary,
+      ),
+    );
+  }
+}
+
+class NoteItemWrapper extends StatefulWidget {
+  final Widget Function(BuildContext, VoidCallback) builder;
+  final VoidCallback onDismiss;
+
+  const NoteItemWrapper({
+    super.key,
+    required this.builder,
+    required this.onDismiss,
+  });
+
+  @override
+  State<NoteItemWrapper> createState() => _NoteItemWrapperState();
+}
+
+class _NoteItemWrapperState extends State<NoteItemWrapper> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _scaleAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 300),
+      vsync: this,
+      value: 1.0, 
+    );
+
+    _scaleAnimation = CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeInBack, 
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _triggerExit() async {
+    await _controller.reverse();
+    widget.onDismiss();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FadeTransition(
+      opacity: _scaleAnimation,
+      child: ScaleTransition(
+        scale: _scaleAnimation,
+        child: widget.builder(context, _triggerExit),
       ),
     );
   }

@@ -8,15 +8,17 @@ import 'package:smart_market_list/ui/screens/recipes/recipes_screen.dart';
 import 'package:smart_market_list/ui/screens/profile/profile_screen.dart';
 import 'package:smart_market_list/ui/navigation/custom_bottom_navigation.dart';
 
-class MainScreen extends StatefulWidget {
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:smart_market_list/providers/navigation_provider.dart';
+
+class MainScreen extends ConsumerStatefulWidget {
   const MainScreen({super.key});
 
   @override
-  State<MainScreen> createState() => _MainScreenState();
+  ConsumerState<MainScreen> createState() => _MainScreenState();
 }
 
-class _MainScreenState extends State<MainScreen> {
-  int _currentIndex = 0;
+class _MainScreenState extends ConsumerState<MainScreen> {
   int _previousIndex = 0;
 
   final List<Widget> _screens = [
@@ -27,21 +29,29 @@ class _MainScreenState extends State<MainScreen> {
   ];
 
   void _onTabTapped(int index) {
-    if (_currentIndex != index) {
+    final currentIndex = ref.read(bottomNavIndexProvider);
+    if (currentIndex != index) {
       HapticFeedback.selectionClick();
-      setState(() {
-        _previousIndex = _currentIndex;
-        _currentIndex = index;
-      });
+      // Update provider - this triggers rebuild
+      ref.read(bottomNavIndexProvider.notifier).state = index;
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final currentIndex = ref.watch(bottomNavIndexProvider);
+    
+    // Listen to changes to update previous index for animation
+    ref.listen(bottomNavIndexProvider, (previous, next) {
+      if (previous != null) {
+        _previousIndex = previous;
+      }
+    });
+
     return Scaffold(
       body: PageTransitionSwitcher(
         duration: const Duration(milliseconds: 500),
-        reverse: _currentIndex < _previousIndex,
+        reverse: currentIndex < _previousIndex,
         transitionBuilder: (
           Widget child,
           Animation<double> animation,
@@ -55,11 +65,14 @@ class _MainScreenState extends State<MainScreen> {
             child: child,
           );
         },
-        child: _screens[_currentIndex],
+        child: _screens[currentIndex],
       ),
-      bottomNavigationBar: CustomBottomNavigation(
-        currentIndex: _currentIndex,
-        onTap: _onTabTapped,
+      bottomNavigationBar: Hero(
+        tag: 'bottom_nav_bar',
+        child: CustomBottomNavigation(
+          currentIndex: currentIndex,
+          onTap: _onTabTapped,
+        ),
       ),
     );
   }
