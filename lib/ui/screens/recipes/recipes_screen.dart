@@ -274,38 +274,40 @@ class RecipesScreen extends ConsumerWidget {
                             ),
                           ),
                         ),
-                        SliverPadding(
-                          padding: const EdgeInsets.symmetric(horizontal: 24),
-                          sliver: SliverMasonryGrid.count(
-                            crossAxisCount: 2,
-                            mainAxisSpacing: 16,
-                            crossAxisSpacing: 16,
-                            childCount: availableRecipes.length,
-                            itemBuilder: (context, index) {
-                              final entry = availableRecipes[index];
-                              final recipe = entry.key;
-                              final matchData = entry.value;
-                              
-                              return StaggeredEntry(
-                                index: index,
-                                child: RecipeCard(
-                                  recipe: recipe,
-                                  matchCount: matchData['matchCount'] as int,
-                                  missingCount: matchData['missingCount'] as int,
-                                  onTap: () {
-                                    showModalBottomSheet(
-                                      context: context,
-                                      isScrollControlled: true,
-                                      backgroundColor: Colors.transparent,
-                                      builder: (context) => RecipeDetailModal(recipe: recipe),
-                                    );
-                                  },
-                                  onFavorite: () async {
-                                    await service.toggleFavorite(recipe.id);
-                                  },
-                                ),
-                              );
-                            },
+                        SliverToBoxAdapter(
+                          child: SizedBox(
+                            height: 280, // Fixed height for horizontal cards
+                            child: ListView.builder(
+                              scrollDirection: Axis.horizontal,
+                              padding: const EdgeInsets.symmetric(horizontal: 16),
+                              itemCount: availableRecipes.length,
+                              itemBuilder: (context, index) {
+                                final entry = availableRecipes[index];
+                                final recipe = entry.key;
+                                final matchData = entry.value;
+                                
+                                return Container(
+                                  width: 200, // Fixed width for horizontal items
+                                  margin: const EdgeInsets.symmetric(horizontal: 8),
+                                  child: RecipeCard(
+                                    recipe: recipe,
+                                    matchCount: matchData['matchCount'] as int,
+                                    missingCount: matchData['missingCount'] as int,
+                                    onTap: () {
+                                      showModalBottomSheet(
+                                        context: context,
+                                        isScrollControlled: true,
+                                        backgroundColor: Colors.transparent,
+                                        builder: (context) => RecipeDetailModal(recipe: recipe),
+                                      );
+                                    },
+                                    onFavorite: () async {
+                                      await service.toggleFavorite(recipe.id);
+                                    },
+                                  ),
+                                );
+                              },
+                            ),
                           ),
                         ),
                       ],
