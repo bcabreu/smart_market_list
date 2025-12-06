@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:smart_market_list/core/theme/app_colors.dart';
+import 'package:smart_market_list/core/utils/currency_input_formatter.dart';
 import 'package:smart_market_list/data/models/shopping_list.dart';
 import 'package:smart_market_list/providers/shopping_list_provider.dart';
 import 'package:intl/intl.dart';
@@ -165,6 +167,7 @@ class _BudgetInfoCardState extends ConsumerState<BudgetInfoCard> {
                             controller: _controller,
                             focusNode: _focusNode,
                             keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                            inputFormatters: [CurrencyInputFormatter()],
                             textAlign: TextAlign.end,
                             style: TextStyle(
                               fontSize: 16,

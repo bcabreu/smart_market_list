@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:smart_market_list/core/theme/app_colors.dart';
+import 'package:smart_market_list/core/utils/currency_input_formatter.dart';
 import 'package:smart_market_list/data/models/shopping_item.dart';
 
 class ShoppingItemCard extends ConsumerStatefulWidget {
@@ -255,6 +256,7 @@ class _ShoppingItemCardState extends ConsumerState<ShoppingItemCard> with Single
                                               child: TextField(
                                                 controller: _priceController,
                                                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                                                inputFormatters: [CurrencyInputFormatter()],
                                                 autofocus: true,
                                                 textAlign: TextAlign.end,
                                                 style: const TextStyle(
@@ -330,7 +332,12 @@ class _ShoppingItemCardState extends ConsumerState<ShoppingItemCard> with Single
                           children: [
                             // Edit Button
                             InkWell(
-                              onTap: widget.onEdit,
+                              onTap: () {
+                                setState(() {
+                                  _isEditingPrice = false;
+                                });
+                                widget.onEdit();
+                              },
                               borderRadius: BorderRadius.circular(8),
                               child: Container(
                                 padding: const EdgeInsets.all(8),

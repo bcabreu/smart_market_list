@@ -4,7 +4,9 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
+import 'package:flutter/services.dart';
 import 'package:smart_market_list/core/theme/app_colors.dart';
+import 'package:smart_market_list/core/utils/currency_input_formatter.dart';
 import 'package:smart_market_list/data/models/shopping_item.dart';
 import 'package:smart_market_list/providers/autocomplete_provider.dart';
 import 'package:smart_market_list/providers/categories_provider.dart';
@@ -113,9 +115,11 @@ class _AddItemModalState extends ConsumerState<AddItemModal> {
     
     final isSystemItem = _isSystemItem(widget.itemToEdit?.name);
 
-    return Container(
-      height: MediaQuery.of(context).size.height * 0.9,
-      decoration: BoxDecoration(
+    return GestureDetector(
+      onTap: () => FocusScope.of(context).unfocus(),
+      child: Container(
+        height: MediaQuery.of(context).size.height * 0.9,
+        decoration: BoxDecoration(
         color: backgroundColor,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -384,6 +388,7 @@ class _AddItemModalState extends ConsumerState<AddItemModal> {
                         child: TextField(
                           controller: _priceController,
                           keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                          inputFormatters: [CurrencyInputFormatter()],
                           style: TextStyle(color: textColor),
                           decoration: _inputDecoration('0,00', isDark),
                         ),
@@ -768,6 +773,7 @@ class _AddItemModalState extends ConsumerState<AddItemModal> {
           ),
         ],
       ),
+    ),
     );
   }
 

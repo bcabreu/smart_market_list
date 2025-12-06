@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:smart_market_list/core/theme/app_colors.dart';
+import 'package:smart_market_list/core/utils/currency_input_formatter.dart';
 import 'package:smart_market_list/data/models/shopping_item.dart';
 import 'package:smart_market_list/data/models/shopping_note.dart';
 import 'package:smart_market_list/providers/shopping_notes_provider.dart';
@@ -225,6 +226,7 @@ class _AddNoteModalState extends ConsumerState<AddNoteModal> {
                           child: TextFormField(
                             controller: _totalController,
                             keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                            inputFormatters: [CurrencyInputFormatter()],
                             decoration: InputDecoration(
                               hintText: '0,00',
                               filled: true,
