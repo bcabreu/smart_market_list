@@ -377,7 +377,12 @@ class _ShoppingItemCardState extends ConsumerState<ShoppingItemCard> with Single
         width: 50,
         height: 50,
         color: Colors.grey[200],
-        child: Icon(Icons.image, color: Colors.grey[400]),
+        child: Center(
+          child: Text(
+            _getCategoryEmoji(widget.item.category),
+            style: const TextStyle(fontSize: 24),
+          ),
+        ),
       );
     }
 
@@ -388,7 +393,17 @@ class _ShoppingItemCardState extends ConsumerState<ShoppingItemCard> with Single
         height: 50,
         fit: BoxFit.cover,
         placeholder: (context, url) => Container(color: Colors.grey[200]),
-        errorWidget: (context, url, error) => const Icon(Icons.error),
+        errorWidget: (context, url, error) => Container(
+          width: 50,
+          height: 50,
+          color: Colors.grey[200],
+          child: Center(
+            child: Text(
+              _getCategoryEmoji(widget.item.category),
+              style: const TextStyle(fontSize: 24),
+            ),
+          ),
+        ),
       );
     }
 
@@ -402,9 +417,34 @@ class _ShoppingItemCardState extends ConsumerState<ShoppingItemCard> with Single
           width: 50,
           height: 50,
           color: Colors.grey[200],
-          child: Icon(Icons.broken_image, color: Colors.grey[400]),
+          child: Center(
+            child: Text(
+              _getCategoryEmoji(widget.item.category),
+              style: const TextStyle(fontSize: 24),
+            ),
+          ),
         );
       },
     );
+  }
+
+  String _getCategoryEmoji(String category) {
+    switch (category.toLowerCase()) {
+      case 'hortifruti': return '🥬';
+      case 'padaria': return '🥖';
+      case 'laticinios': return '🥛';
+      case 'acougue': return '🥩';
+      case 'mercearia': return '🥫';
+      case 'bebidas': return '🥤';
+      case 'limpeza': return '🧹';
+      case 'higiene': return '🧴';
+      case 'congelados': return '🧊';
+      case 'doces': return '🍬';
+      case 'pet': return '🐶';
+      case 'bebe': return '👶';
+      case 'utilidades': return '🛠️';
+      case 'outros': return '📦';
+      default: return '✨';
+    }
   }
 }

@@ -10,6 +10,10 @@ import 'package:smart_market_list/providers/autocomplete_provider.dart';
 import 'package:smart_market_list/providers/categories_provider.dart';
 import 'package:smart_market_list/data/models/product_suggestion.dart';
 
+import 'package:smart_market_list/data/static/product_catalog.dart';
+import 'package:smart_market_list/providers/hidden_suggestions_provider.dart';
+import 'package:smart_market_list/providers/history_provider.dart';
+
 class AddItemModal extends ConsumerStatefulWidget {
   final Function(ShoppingItem) onAdd;
   final ShoppingItem? itemToEdit;
@@ -64,7 +68,7 @@ class _AddItemModalState extends ConsumerState<AddItemModal> {
     }
   }
 
-  void _submit() {
+  Future<void> _submit() async {
     if (_nameController.text.isNotEmpty) {
       final item = ShoppingItem(
         id: widget.itemToEdit?.id, // Preserve ID if editing
@@ -75,9 +79,25 @@ class _AddItemModalState extends ConsumerState<AddItemModal> {
         imageUrl: _imagePath ?? '',
         checked: widget.itemToEdit?.checked ?? false, // Preserve checked status
       );
+      
+      // Remove from hidden suggestions if it was previously hidden
+      // This ensures that if the user explicitly adds an item they previously deleted, it comes back
+      await ref.read(hiddenSuggestionsProvider.notifier).unhide(item.name);
+
+      // Save to history for future suggestions
+      await ref.read(historyProvider.notifier).addOrUpdate(item);
+      
       widget.onAdd(item);
-      Navigator.pop(context);
+      if (mounted) {
+        Navigator.pop(context);
+      }
     }
+  }
+
+  bool _isSystemItem(String? name) {
+    if (name == null) return false;
+    final cleanName = name.trim().toLowerCase();
+    return ProductCatalog.items.any((item) => item.name.trim().toLowerCase() == cleanName);
   }
 
   @override
@@ -90,6 +110,8 @@ class _AddItemModalState extends ConsumerState<AddItemModal> {
     final labelColor = isDark ? Colors.grey[400] : Colors.grey[700];
     final hintColor = isDark ? Colors.grey[600] : Colors.grey[500];
     final iconColor = isDark ? Colors.grey[400] : Colors.grey[600];
+    
+    final isSystemItem = _isSystemItem(widget.itemToEdit?.name);
 
     return Container(
       height: MediaQuery.of(context).size.height * 0.9,
@@ -178,11 +200,24 @@ class _AddItemModalState extends ConsumerState<AddItemModal> {
                       return TextField(
                         controller: controller,
                         focusNode: focusNode,
-                        style: TextStyle(color: textColor),
-                        decoration: _inputDecoration('Ex: Tomate, Pão, Leite...', isDark),
+                        enabled: widget.itemToEdit == null || !isSystemItem,
+                        style: TextStyle(
+                          color: (widget.itemToEdit != null && isSystemItem) ? textColor.withOpacity(0.6) : textColor,
+                        ),
+                        decoration: _inputDecoration(
+                          'Ex: Tomate, Pão, Leite...', 
+                          isDark,
+                          suffixIcon: (widget.itemToEdit != null && isSystemItem)
+                              ? Icon(Icons.lock_outline, color: (iconColor ?? Colors.grey).withOpacity(0.5), size: 20)
+                              : null,
+                        ),
                       );
                     },
                     optionsViewBuilder: (context, onSelected, options) {
+                      final hiddenSuggestions = ref.watch(hiddenSuggestionsProvider);
+                      final hiddenSet = hiddenSuggestions.map((e) => e.toLowerCase()).toSet();
+                      final visibleOptions = options.where((o) => !hiddenSet.contains(o.name.toLowerCase())).toList();
+
                       return Align(
                         alignment: Alignment.topLeft,
                         child: Material(
@@ -223,10 +258,12 @@ class _AddItemModalState extends ConsumerState<AddItemModal> {
                                   child: ListView.separated(
                                     padding: EdgeInsets.zero,
                                     shrinkWrap: true,
-                                    itemCount: options.length,
+                                    itemCount: visibleOptions.length,
                                     separatorBuilder: (context, index) => const Divider(height: 1, indent: 70),
                                     itemBuilder: (BuildContext context, int index) {
-                                      final ProductSuggestion option = options.elementAt(index);
+                                      final ProductSuggestion option = visibleOptions.elementAt(index);
+                                      final isSystem = _isSystemItem(option.name);
+                                      
                                       return InkWell(
                                         onTap: () => onSelected(option),
                                         child: Padding(
@@ -240,16 +277,25 @@ class _AddItemModalState extends ConsumerState<AddItemModal> {
                                                 decoration: BoxDecoration(
                                                   borderRadius: BorderRadius.circular(12),
                                                   color: Colors.grey[200],
-                                                  image: option.imageUrl.isNotEmpty
-                                                      ? DecorationImage(
-                                                          image: CachedNetworkImageProvider(option.imageUrl),
-                                                          fit: BoxFit.cover,
-                                                        )
-                                                      : null,
                                                 ),
-                                                child: option.imageUrl.isEmpty
-                                                    ? Icon(Icons.image, color: Colors.grey[400], size: 24)
-                                                    : null,
+                                                child: ClipRRect(
+                                                  borderRadius: BorderRadius.circular(12),
+                                                  child: option.imageUrl.isNotEmpty
+                                                      ? CachedNetworkImage(
+                                                          imageUrl: option.imageUrl,
+                                                          fit: BoxFit.cover,
+                                                          placeholder: (context, url) => Container(color: Colors.grey[200]),
+                                                          errorWidget: (context, url, error) => Center(
+                                                            child: Text(
+                                                              _getCategoryEmoji(option.category),
+                                                              style: const TextStyle(fontSize: 24),
+                                                            ),
+                                                          ),
+                                                        )
+                                                      : Center(
+                                                          child: Icon(Icons.image, color: Colors.grey[400], size: 24),
+                                                        ),
+                                                ),
                                               ),
                                               const SizedBox(width: 16),
                                               // Text Info
@@ -276,12 +322,22 @@ class _AddItemModalState extends ConsumerState<AddItemModal> {
                                                   ],
                                                 ),
                                               ),
+                                              // Delete Action (Only for User Items)
+                                              if (!isSystem)
+                                                IconButton(
+                                                  onPressed: () {
+                                                    ref.read(hiddenSuggestionsProvider.notifier).add(option.name);
+                                                    // Force rebuild or let provider update handle it (provider update will remove it from list)
+                                                  },
+                                                  icon: Icon(Icons.delete_outline, color: Colors.red[300], size: 20),
+                                                ),
                                               // Arrow
-                                              Icon(
-                                                Icons.arrow_forward,
-                                                size: 16,
-                                                color: const Color(0xFF4DB6AC),
-                                              ),
+                                              if (isSystem)
+                                                Icon(
+                                                  Icons.arrow_forward,
+                                                  size: 16,
+                                                  color: const Color(0xFF4DB6AC),
+                                                ),
                                             ],
                                           ),
                                         ),
@@ -296,7 +352,7 @@ class _AddItemModalState extends ConsumerState<AddItemModal> {
                       );
                     },
                   ),
-
+                  const SizedBox(height: 20),
                   const SizedBox(height: 20),
 
                   // Quantity Field
@@ -715,6 +771,17 @@ class _AddItemModalState extends ConsumerState<AddItemModal> {
     );
   }
 
+  Widget _buildInputLabel(String text, bool isDark, Color color) {
+    return Text(
+      text,
+      style: TextStyle(
+        fontSize: 14,
+        fontWeight: FontWeight.w500,
+        color: color,
+      ),
+    );
+  }
+
   Widget _buildLabel(String text, IconData icon, bool isDark) {
     return Row(
       children: [
@@ -732,13 +799,14 @@ class _AddItemModalState extends ConsumerState<AddItemModal> {
     );
   }
 
-  InputDecoration _inputDecoration(String hint, bool isDark, {String? prefix}) {
+  InputDecoration _inputDecoration(String hint, bool isDark, {String? prefix, Widget? suffixIcon}) {
     final fillColor = isDark ? const Color(0xFF2C2C2C) : Colors.grey[100];
     final hintColor = isDark ? Colors.grey[600] : Colors.grey[500];
     
     return InputDecoration(
       hintText: hint,
       prefixText: prefix,
+      suffixIcon: suffixIcon,
       hintStyle: TextStyle(color: hintColor),
       filled: true,
       fillColor: fillColor,
@@ -762,6 +830,16 @@ class _AddItemModalState extends ConsumerState<AddItemModal> {
       case 'hortifruti': return '🥬';
       case 'padaria': return '🥖';
       case 'laticinios': return '🥛';
+      case 'acougue': return '🥩';
+      case 'mercearia': return '🥫';
+      case 'bebidas': return '🥤';
+      case 'limpeza': return '🧹';
+      case 'higiene': return '🧴';
+      case 'congelados': return '🧊';
+      case 'doces': return '🍬';
+      case 'pet': return '🐶';
+      case 'bebe': return '👶';
+      case 'utilidades': return '🛠️';
       case 'outros': return '📦';
       default: return '✨';
     }

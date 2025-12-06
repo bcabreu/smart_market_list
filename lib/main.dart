@@ -23,6 +23,8 @@ void main() async {
   await Hive.openBox<ShoppingNote>('shopping_notes');
   await Hive.openBox<Recipe>('recipes');
   await Hive.openBox<List<String>>('categories');
+  await Hive.openBox<String>('hidden_suggestions');
+  await Hive.openBox<ShoppingItem>('item_history');
   
   // Migration: Ensure all lists use ID as key
   final keys = box.keys.toList();
@@ -39,6 +41,19 @@ void main() async {
   if (box.isEmpty) {
     final defaultList = ShoppingList(name: 'Compras do Mês', emoji: '🛒', budget: 500.0);
     await box.put(defaultList.id, defaultList);
+  }
+
+  // Migration: Populate item_history from existing lists
+  final historyBox = Hive.box<ShoppingItem>('item_history');
+  if (historyBox.isEmpty) {
+    for (final list in box.values) {
+      for (final item in list.items) {
+        final key = item.name.trim().toLowerCase();
+        if (!historyBox.containsKey(key)) {
+          await historyBox.put(key, item);
+        }
+      }
+    }
   }
 
   runApp(const ProviderScope(child: SmartMarketListApp()));

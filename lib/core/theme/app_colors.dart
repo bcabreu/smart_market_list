@@ -30,10 +30,19 @@ class AppColors {
 
   // Category Gradients
   static const Map<String, List<Color>> categoryGradients = {
-    'hortifruti': [Color(0xFF4ADE80), Color(0xFF10B981)],
-    'padaria': [Color(0xFFFBBF24), Color(0xFFF97316)],
-    'laticinios': [Color(0xFF60A5FA), Color(0xFF06B6D4)],
-    'outros': [Color(0xFFA78BFA), Color(0xFFEC4899)],
-    'custom': [Color(0xFF818CF8), Color(0xFF8B5CF6)],
+    'hortifruti': [Color(0xFF4ADE80), Color(0xFF10B981)], // Green
+    'padaria': [Color(0xFFFBBF24), Color(0xFFF97316)], // Orange/Yellow
+    'laticinios': [Color(0xFF60A5FA), Color(0xFF06B6D4)], // Blue/Cyan
+    'acougue': [Color(0xFFF87171), Color(0xFFDC2626)], // Red
+    'mercearia': [Color(0xFFFCD34D), Color(0xFFD97706)], // Gold/Amber
+    'bebidas': [Color(0xFF818CF8), Color(0xFF4F46E5)], // Indigo
+    'limpeza': [Color(0xFF2DD4BF), Color(0xFF0D9488)], // Teal
+    'higiene': [Color(0xFFF472B6), Color(0xFFDB2777)], // Pink
+    'congelados': [Color(0xFF22D3EE), Color(0xFF0891B2)], // Cyan
+    'doces': [Color(0xFFF472B6), Color(0xFFBE185D)], // Rose
+    'pet': [Color(0xFFD97706), Color(0xFF92400E)], // Brown/Amber
+    'bebe': [Color(0xFFE879F9), Color(0xFFC026D3)], // Fuchsia
+    'utilidades': [Color(0xFF94A3B8), Color(0xFF475569)], // Slate
+    'outros': [Color(0xFFA78BFA), Color(0xFFEC4899)], // Purple/Pink
   };
 }
