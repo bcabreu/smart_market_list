@@ -2,8 +2,8 @@ import 'dart:io';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:smart_market_list/core/theme/app_colors.dart';
 import 'package:smart_market_list/data/models/shopping_note.dart';
+import 'package:path_provider/path_provider.dart';
 
 class ShoppingNoteCard extends StatelessWidget {
   final ShoppingNote note;
@@ -19,7 +19,6 @@ class ShoppingNoteCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dateFormat = DateFormat('dd/MM/yyyy'); // Or 'dd 'de' MMM.'
     // Custom date format to match "01 de dez. de 2024"
     final day = note.date.day.toString().padLeft(2, '0');
     final month = DateFormat('MMM', 'pt_BR').format(note.date).toLowerCase();
@@ -31,6 +30,11 @@ class ShoppingNoteCard extends StatelessWidget {
     final borderColor = isDark ? Colors.grey[800]! : Colors.grey[200]!;
     final textColor = isDark ? Colors.white : Colors.black87;
     final mutedColor = isDark ? Colors.grey[500] : Colors.grey[600];
+    final priceColor = isDark ? const Color(0xFF64FFDA) : const Color(0xFF00897B);
+    
+    // Button Colors
+    final viewBtnColor = isDark ? const Color(0xFF64FFDA) : const Color(0xFF00897B);
+    final deleteBtnColor = isDark ? const Color(0xFFFF5252) : const Color(0xFFD32F2F);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -59,7 +63,7 @@ class ShoppingNoteCard extends StatelessWidget {
                 width: 48,
                 height: 48,
                 decoration: BoxDecoration(
-                  color: AppColors.secondary,
+                  color: Colors.orange,
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: const Icon(
@@ -116,10 +120,10 @@ class ShoppingNoteCard extends StatelessWidget {
                   ),
                   Text(
                     NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$').format(note.total),
-                    style: const TextStyle(
-                      fontSize: 20,
+                    style: TextStyle(
+                      fontSize: 24,
                       fontWeight: FontWeight.bold,
-                      color: Color(0xFF26A69A), // Teal 400
+                      color: priceColor,
                     ),
                   ),
                 ],
@@ -131,18 +135,25 @@ class ShoppingNoteCard extends StatelessWidget {
 
           // Image (if exists)
           if (note.photoUrl != null && note.photoUrl!.isNotEmpty) ...[
-            Container(
-              height: 140,
-              width: double.infinity,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(16),
-                image: DecorationImage(
-                  image: note.photoUrl!.startsWith('http')
-                      ? CachedNetworkImageProvider(note.photoUrl!) as ImageProvider
-                      : FileImage(File(note.photoUrl!)),
-                  fit: BoxFit.cover,
-                ),
-              ),
+            FutureBuilder<String?>(
+              future: _resolveImagePath(note.photoUrl!),
+              builder: (context, snapshot) {
+                if (!snapshot.hasData) return const SizedBox.shrink();
+                
+                return Container(
+                  height: 140,
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(16),
+                    image: DecorationImage(
+                      image: snapshot.data!.startsWith('http')
+                          ? CachedNetworkImageProvider(snapshot.data!) as ImageProvider
+                          : FileImage(File(snapshot.data!)),
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                );
+              },
             ),
             const SizedBox(height: 16),
           ],
@@ -155,9 +166,9 @@ class ShoppingNoteCard extends StatelessWidget {
                   child: OutlinedButton.icon(
                     onPressed: onTap, // View Note
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: const Color(0xFF26A69A),
-                      side: const BorderSide(color: Color(0xFFB2EBF2)),
-                      backgroundColor: const Color(0xFFE0F7FA).withOpacity(0.5),
+                      foregroundColor: viewBtnColor,
+                      side: BorderSide(color: viewBtnColor.withOpacity(0.5)),
+                      backgroundColor: viewBtnColor.withOpacity(0.05),
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -170,11 +181,12 @@ class ShoppingNoteCard extends StatelessWidget {
                 const SizedBox(width: 12),
               ],
               Expanded(
-                child: TextButton.icon(
+                child: OutlinedButton.icon(
                   onPressed: onDelete,
-                  style: TextButton.styleFrom(
-                    foregroundColor: Colors.red,
-                    backgroundColor: Colors.red.withOpacity(0.1),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: deleteBtnColor,
+                    side: BorderSide(color: deleteBtnColor.withOpacity(0.5)),
+                    backgroundColor: deleteBtnColor.withOpacity(0.05),
                     padding: const EdgeInsets.symmetric(vertical: 12),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -189,5 +201,25 @@ class ShoppingNoteCard extends StatelessWidget {
         ],
       ),
     );
+    }
+
+  Future<String?> _resolveImagePath(String path) async {
+    if (path.startsWith('http')) return path;
+
+    final file = File(path);
+    if (await file.exists()) return path;
+
+    try {
+      final docsDir = await getApplicationDocumentsDirectory();
+      final name = path.split('/').last;
+      final newPath = '${docsDir.path}/$name';
+      if (await File(newPath).exists()) {
+        return newPath;
+      }
+    } catch (e) {
+      debugPrint('Error resolving image path: $e');
+    }
+    
+    return null;
   }
 }

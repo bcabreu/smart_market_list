@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:smart_market_list/core/theme/app_colors.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:smart_market_list/providers/shopping_notes_provider.dart';
 import 'package:smart_market_list/ui/screens/shopping_notes/widgets/shopping_note_card.dart';
 import 'package:smart_market_list/ui/screens/shopping_notes/modals/add_note_modal.dart';
@@ -212,46 +213,74 @@ class ShoppingNotesScreen extends ConsumerWidget {
                       final note = notes[index];
                       return ShoppingNoteCard(
                         note: note,
-                        onTap: () {
-                          if (note.photoUrl != null && note.photoUrl!.isNotEmpty) {
-                            showDialog(
-                              context: context,
-                              builder: (context) => Dialog(
-                                backgroundColor: Colors.transparent,
-                                insetPadding: const EdgeInsets.all(16),
-                                child: Stack(
-                                  alignment: Alignment.topRight,
-                                  children: [
-                                    ClipRRect(
-                                      borderRadius: BorderRadius.circular(16),
-                                      child: note.photoUrl!.startsWith('http')
-                                          ? CachedNetworkImage(
-                                              imageUrl: note.photoUrl!,
-                                              fit: BoxFit.contain,
-                                              placeholder: (context, url) => const Center(child: CircularProgressIndicator()),
-                                              errorWidget: (context, url, error) => const Icon(Icons.error),
-                                            )
-                                          : Image.file(
-                                              File(note.photoUrl!),
-                                              fit: BoxFit.contain,
-                                            ),
-                                    ),
-                                    Padding(
-                                      padding: const EdgeInsets.all(8.0),
-                                      child: CircleAvatar(
-                                        backgroundColor: Colors.black54,
-                                        child: IconButton(
-                                          icon: const Icon(Icons.close, color: Colors.white),
-                                          onPressed: () => Navigator.pop(context),
+                        onTap: () async {
+                            if (note.photoUrl != null && note.photoUrl!.isNotEmpty) {
+                              String? imagePath = note.photoUrl;
+                              
+                              if (!note.photoUrl!.startsWith('http')) {
+                                final file = File(note.photoUrl!);
+                                if (!await file.exists()) {
+                                  try {
+                                    final docsDir = await getApplicationDocumentsDirectory();
+                                    final name = note.photoUrl!.split('/').last;
+                                    final newPath = '${docsDir.path}/$name';
+                                    if (await File(newPath).exists()) {
+                                      imagePath = newPath;
+                                    } else {
+                                      imagePath = null;
+                                    }
+                                  } catch (e) {
+                                    debugPrint('Error resolving image path: $e');
+                                    imagePath = null;
+                                  }
+                                }
+                              }
+
+                              if (context.mounted && imagePath != null) {
+                                final pathToShow = imagePath;
+                                showDialog(
+                                  context: context,
+                                  builder: (context) => Dialog(
+                                    backgroundColor: Colors.transparent,
+                                    insetPadding: const EdgeInsets.all(16),
+                                    child: Stack(
+                                      alignment: Alignment.topRight,
+                                      children: [
+                                        ClipRRect(
+                                          borderRadius: BorderRadius.circular(16),
+                                          child: pathToShow.startsWith('http')
+                                              ? CachedNetworkImage(
+                                                  imageUrl: pathToShow,
+                                                  fit: BoxFit.contain,
+                                                  placeholder: (context, url) => const Center(child: CircularProgressIndicator()),
+                                                  errorWidget: (context, url, error) => const Icon(Icons.error),
+                                                )
+                                              : Image.file(
+                                                  File(pathToShow),
+                                                  fit: BoxFit.contain,
+                                                ),
                                         ),
-                                      ),
+                                        Padding(
+                                          padding: const EdgeInsets.all(8.0),
+                                          child: CircleAvatar(
+                                            backgroundColor: Colors.black54,
+                                            child: IconButton(
+                                              icon: const Icon(Icons.close, color: Colors.white),
+                                              onPressed: () => Navigator.pop(context),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
                                     ),
-                                  ],
-                                ),
-                              ),
-                            );
-                          }
-                        },
+                                  ),
+                                );
+                              } else if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text('Imagem não encontrada')),
+                                );
+                              }
+                            }
+                          },
                         onDelete: () {
                           showDialog(
                             context: context,

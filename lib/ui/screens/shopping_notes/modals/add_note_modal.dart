@@ -3,14 +3,13 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:intl/intl.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:path/path.dart' as p;
 import 'package:smart_market_list/core/theme/app_colors.dart';
 import 'package:smart_market_list/core/utils/currency_input_formatter.dart';
 import 'package:smart_market_list/data/models/shopping_item.dart';
 import 'package:smart_market_list/data/models/shopping_note.dart';
 import 'package:smart_market_list/providers/shopping_notes_provider.dart';
-import 'package:smart_market_list/providers/user_provider.dart';
-import 'package:smart_market_list/ui/common/modals/paywall_modal.dart';
 
 class AddNoteModal extends ConsumerStatefulWidget {
   const AddNoteModal({super.key});
@@ -86,20 +85,8 @@ class _AddNoteModalState extends ConsumerState<AddNoteModal> {
     );
   }
 
-  void _saveNote() {
+  Future<void> _saveNote() async {
     if (_formKey.currentState!.validate()) {
-      // final isPremium = ref.read(isPremiumProvider);
-      
-      // if (!isPremium) {
-      //   showModalBottomSheet(
-      //     context: context,
-      //     isScrollControlled: true,
-      //     backgroundColor: Colors.transparent,
-      //     builder: (context) => const PaywallModal(),
-      //   );
-      //   return;
-      // }
-
       // Parse total value
       String cleanValue = _totalController.text.replaceAll('R\$', '').replaceAll('.', '').replaceAll(',', '.').trim();
       double totalValue = double.tryParse(cleanValue) ?? 0.0;
@@ -113,15 +100,40 @@ class _AddNoteModalState extends ConsumerState<AddNoteModal> {
         )
       ];
 
+      String? permanentImagePath;
+      if (_imagePath != null) {
+        try {
+          final directory = await getApplicationDocumentsDirectory();
+          // Ensure directory exists
+          if (!await directory.exists()) {
+             await directory.create(recursive: true);
+          }
+          
+          final extension = p.extension(_imagePath!);
+          // Use timestamp for unique filename
+          final fileName = 'note_${DateTime.now().millisecondsSinceEpoch}$extension';
+          final savedImage = File('${directory.path}/$fileName');
+          
+          await File(_imagePath!).copy(savedImage.path);
+          permanentImagePath = fileName; // Store only filename
+        } catch (e) {
+          debugPrint('Error saving image: $e');
+          // If copy fails, fallback to original path but log error
+          permanentImagePath = _imagePath;
+        }
+      }
+
       final note = ShoppingNote(
         storeName: _storeController.text,
         date: DateTime.now(),
         items: items,
-        photoUrl: _imagePath,
+        photoUrl: permanentImagePath,
       );
 
       ref.read(shoppingNotesServiceProvider).createNote(note);
-      Navigator.pop(context);
+      if (mounted) {
+        Navigator.pop(context);
+      }
     }
   }
 
@@ -131,7 +143,9 @@ class _AddNoteModalState extends ConsumerState<AddNoteModal> {
     final inputFillColor = isDark ? const Color(0xFF2C2C2C) : const Color(0xFFF5F5F5);
     final borderColor = isDark ? Colors.grey[800]! : Colors.grey[300]!;
 
-    return Container(
+    return GestureDetector(
+      onTap: () => FocusScope.of(context).unfocus(),
+      child: Container(
       decoration: BoxDecoration(
         color: Theme.of(context).scaffoldBackgroundColor,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
@@ -334,7 +348,7 @@ class _AddNoteModalState extends ConsumerState<AddNoteModal> {
           ],
         ),
       ),
-    );
+    ));
   }
 
   Widget _buildLabel(String text, IconData icon, bool isDark) {
