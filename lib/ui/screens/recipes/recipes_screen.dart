@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'dart:math';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
-import 'package:smart_market_list/core/theme/app_colors.dart';
+
 import 'package:smart_market_list/providers/recipes_provider.dart';
 import 'package:smart_market_list/ui/screens/recipes/widgets/recipe_card.dart';
 import 'package:smart_market_list/ui/screens/recipes/modals/recipe_detail_modal.dart';
@@ -10,11 +11,88 @@ import 'package:smart_market_list/data/models/recipe.dart';
 import 'package:smart_market_list/ui/common/animations/staggered_entry.dart';
 import 'package:smart_market_list/providers/shopping_list_provider.dart';
 
-class RecipesScreen extends ConsumerWidget {
+class RecipesScreen extends ConsumerStatefulWidget {
   const RecipesScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<RecipesScreen> createState() => _RecipesScreenState();
+}
+
+class _RecipesScreenState extends ConsumerState<RecipesScreen> {
+  final ScrollController _scrollController = ScrollController();
+  bool _isLoadingMore = false;
+  int _currentPage = 0;
+  int _sessionSeed = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _sessionSeed = Random().nextInt(100000); // Generate random seed for this session
+    
+    _scrollController.addListener(_onScroll);
+    
+    // Initial fetch if empty (post-frame to avoid build errors)
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final recipes = ref.read(recipesProvider).value ?? [];
+      if (recipes.isEmpty) {
+        _loadMoreRecipes();
+      } else {
+        // Assume we have at least 1 page if we have data
+         _currentPage = 1;
+      }
+    });
+  }
+
+
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 500) {
+      _loadMoreRecipes();
+    }
+  }
+
+  Future<void> _loadMoreRecipes() async {
+    if (_isLoadingMore) return;
+    // Removed legacy ID limit. API has its own limits but we can keep fetching until empty.
+
+    setState(() {
+      _isLoadingMore = true;
+    });
+
+    try {
+      final service = ref.read(recipesServiceProvider);
+      final nextPage = _currentPage + 1;
+      
+      final newRecipes = await service.fetchRecipesPage(page: nextPage, limit: 10);
+      
+      if (newRecipes.isNotEmpty) {
+        setState(() {
+          _currentPage = nextPage;
+        });
+        
+
+      } else {
+         // No more recipes found
+      }
+    } catch (e) {
+      print('Erro no lazy load: $e');
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoadingMore = false;
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final recipesAsync = ref.watch(recipesProvider);
     final service = ref.watch(recipesServiceProvider);
     final shoppingListsAsync = ref.watch(shoppingListsProvider);
@@ -77,24 +155,25 @@ class RecipesScreen extends ConsumerWidget {
                                   : Colors.grey[600],
                             ),
                           ),
+                          const SizedBox(height: 8),
+
                         ],
                       ),
                     ],
                   ),
                   const SizedBox(height: 24),
                   
-                  // Search Bar with Autocomplete
+                  // Search Bar with Autocomplete (Server Side)
                   LayoutBuilder(
                     builder: (context, constraints) {
                       return RawAutocomplete<Recipe>(
-                        optionsBuilder: (TextEditingValue textEditingValue) {
+                        optionsBuilder: (TextEditingValue textEditingValue) async {
                           if (textEditingValue.text.length < 2) {
                             return const Iterable<Recipe>.empty();
                           }
-                          return recipesAsync.value?.where((recipe) {
-                                return recipe.name.toLowerCase().contains(textEditingValue.text.toLowerCase());
-                              }) ??
-                              const Iterable<Recipe>.empty();
+                          // Use API search
+                          final results = await service.searchRecipes(textEditingValue.text);
+                          return results;
                         },
                         displayStringForOption: (Recipe option) => option.name,
                         fieldViewBuilder: (context, textEditingController, focusNode, onFieldSubmitted) {
@@ -116,7 +195,7 @@ class RecipesScreen extends ConsumerWidget {
                                       ? Colors.grey[400]
                                       : Colors.grey[500],
                                 ),
-                                hintText: 'Buscar receitas...',
+                                hintText: 'Buscar na API...',
                                 hintStyle: TextStyle(
                                   color: Theme.of(context).brightness == Brightness.dark
                                       ? Colors.grey[400]
@@ -134,56 +213,133 @@ class RecipesScreen extends ConsumerWidget {
                           );
                         },
                         optionsViewBuilder: (context, onSelected, options) {
+                          final isDark = Theme.of(context).brightness == Brightness.dark;
                           return Align(
                             alignment: Alignment.topLeft,
                             child: Material(
-                              elevation: 4,
-                              borderRadius: BorderRadius.circular(16),
-                              color: Theme.of(context).cardColor,
+                              elevation: 8,
+                              borderRadius: BorderRadius.circular(20),
+                              color: Colors.transparent,
                               child: Container(
                                 width: constraints.maxWidth,
                                 margin: const EdgeInsets.only(top: 8),
+                                constraints: const BoxConstraints(maxHeight: 400),
                                 decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(16),
-                                  color: Theme.of(context).cardColor,
+                                  color: isDark ? const Color(0xFF2C2C2C) : Colors.white,
+                                  borderRadius: BorderRadius.circular(20),
+                                  border: Border.all(color: isDark ? Colors.grey[800]! : Colors.grey[200]!),
                                 ),
                                 child: Column(
                                   mainAxisSize: MainAxisSize.min,
-                                  children: options.map((Recipe option) {
-                                    return ListTile(
-                                      title: Text(option.name),
-                                      leading: ClipRRect(
-                                        borderRadius: BorderRadius.circular(8),
-                                        child: CachedNetworkImage(
-                                          imageUrl: option.imageUrl,
-                                          width: 40,
-                                          height: 40,
-                                          fit: BoxFit.cover,
-                                        ),
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Padding(
+                                      padding: const EdgeInsets.all(16),
+                                      child: Row(
+                                        children: [
+                                          const Icon(Icons.auto_awesome, size: 16, color: Color(0xFFFFD700)), // Gold star
+                                          const SizedBox(width: 8),
+                                          Text(
+                                            'Receitas Encontradas',
+                                            style: TextStyle(
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w500,
+                                              color: isDark ? Colors.grey[400] : Colors.grey[600],
+                                            ),
+                                          ),
+                                        ],
                                       ),
-                                      onTap: () {
-                                        onSelected(option);
-                                        showModalBottomSheet(
-                                          context: context,
-                                          isScrollControlled: true,
-                                          backgroundColor: Colors.transparent,
-                                          builder: (context) => RecipeDetailModal(recipe: option),
-                                        );
-                                      },
-                                    );
-                                  }).toList(),
+                                    ),
+                                    Divider(height: 1, color: isDark ? Colors.white10 : const Color(0xFFEEEEEE)),
+                                    Flexible(
+                                      child: ListView.separated(
+                                        padding: EdgeInsets.zero,
+                                        shrinkWrap: true,
+                                        itemCount: options.length,
+                                        separatorBuilder: (context, index) => Divider(height: 1, color: isDark ? Colors.white10 : const Color(0xFFEEEEEE)),
+                                        itemBuilder: (BuildContext context, int index) {
+                                          final Recipe option = options.elementAt(index);
+                                          
+                                          return InkWell(
+                                            onTap: () {
+                                              onSelected(option);
+                                              _showRecipeDetail(context, option);
+                                            },
+                                            child: Container(
+                                              color: index == 0 
+                                                  ? (isDark ? const Color(0xFF4DB6AC).withOpacity(0.1) : const Color(0xFFE0F2F1))
+                                                  : null,
+                                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                              child: Row(
+                                                children: [
+                                                  // Image
+                                                  Container(
+                                                    width: 48,
+                                                    height: 48,
+                                                    decoration: BoxDecoration(
+                                                      borderRadius: BorderRadius.circular(12),
+                                                      color: Colors.grey[200],
+                                                    ),
+                                                    child: ClipRRect(
+                                                      borderRadius: BorderRadius.circular(12),
+                                                      child: CachedNetworkImage(
+                                                        imageUrl: option.imageUrl,
+                                                        fit: BoxFit.cover,
+                                                        placeholder: (context, url) => Container(color: Colors.grey[200]),
+                                                        errorWidget: (context, url, error) => const Center(
+                                                          child: Icon(Icons.restaurant, color: Colors.grey),
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  const SizedBox(width: 16),
+                                                  // Text Info
+                                                  Expanded(
+                                                    child: Column(
+                                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                                      children: [
+                                                        Text(
+                                                          option.name,
+                                                          maxLines: 1,
+                                                          overflow: TextOverflow.ellipsis,
+                                                          style: TextStyle(
+                                                            fontSize: 16,
+                                                            fontWeight: FontWeight.bold,
+                                                            color: isDark ? Colors.white : Colors.black87,
+                                                          ),
+                                                        ),
+                                                        const SizedBox(height: 4),
+                                                        Text(
+                                                          '${option.difficulty} • ${option.prepTime} min',
+                                                          style: TextStyle(
+                                                            fontSize: 13,
+                                                            color: isDark ? Colors.grey[400] : Colors.grey[600],
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                  // Arrow
+                                                  const Icon(
+                                                    Icons.arrow_forward,
+                                                    size: 18,
+                                                    color: Color(0xFF4DB6AC),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
                             ),
                           );
                         },
                         onSelected: (Recipe selection) {
-                          showModalBottomSheet(
-                            context: context,
-                            isScrollControlled: true,
-                            backgroundColor: Colors.transparent,
-                            builder: (context) => RecipeDetailModal(recipe: selection),
-                          );
+                           _showRecipeDetail(context, selection);
                         },
                       );
                     },
@@ -203,10 +359,17 @@ class RecipesScreen extends ConsumerWidget {
                   }).toList();
 
                   // Sort by number of matches (descending)
+                  // Sort by number of matches (descending), then random tie-breaker
                   recipesWithMatches.sort((a, b) {
                     final matchesA = a.value['matchCount'] as int;
                     final matchesB = b.value['matchCount'] as int;
-                    return matchesB.compareTo(matchesA);
+                    if (matchesA != matchesB) {
+                      return matchesB.compareTo(matchesA);
+                    }
+                    // Tie-breaker: Random session order
+                    final hashA = (a.key.id.hashCode + _sessionSeed).hashCode;
+                    final hashB = (b.key.id.hashCode + _sessionSeed).hashCode;
+                    return hashA.compareTo(hashB);
                   });
 
                   // Split into "Available" (at least 1 match) and "Others"
@@ -218,7 +381,18 @@ class RecipesScreen extends ConsumerWidget {
                       .where((entry) => (entry.value['matchCount'] as int) == 0)
                       .toList();
 
+                  // Shuffle "Others" consistently for this session but MORE vigorously
+                  otherRecipes.sort((a, b) {
+                     final recipeA = a.key;
+                     final recipeB = b.key;
+                     // Stronger mix for random feel
+                     final hashA = (recipeA.id.toString().hashCode + _sessionSeed).toString().hashCode;
+                     final hashB = (recipeB.id.toString().hashCode + _sessionSeed).toString().hashCode;
+                     return hashA.compareTo(hashB);
+                  });
+
                   return CustomScrollView(
+                    controller: _scrollController,
                     slivers: [
                       // Available Recipes Section
                       if (availableRecipes.isNotEmpty) ...[
@@ -276,10 +450,10 @@ class RecipesScreen extends ConsumerWidget {
                         ),
                         SliverToBoxAdapter(
                           child: SizedBox(
-                            height: 280, // Fixed height for horizontal cards
+                            height: 320, // Increased height to prevent shadow clipping
                             child: ListView.builder(
                               scrollDirection: Axis.horizontal,
-                              padding: const EdgeInsets.symmetric(horizontal: 16),
+                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                               itemCount: availableRecipes.length,
                               itemBuilder: (context, index) {
                                 final entry = availableRecipes[index];
@@ -293,14 +467,7 @@ class RecipesScreen extends ConsumerWidget {
                                     recipe: recipe,
                                     matchCount: matchData['matchCount'] as int,
                                     missingCount: matchData['missingCount'] as int,
-                                    onTap: () {
-                                      showModalBottomSheet(
-                                        context: context,
-                                        isScrollControlled: true,
-                                        backgroundColor: Colors.transparent,
-                                        builder: (context) => RecipeDetailModal(recipe: recipe),
-                                      );
-                                    },
+                                    onTap: () => _showRecipeDetail(context, recipe),
                                     onFavorite: () async {
                                       await service.toggleFavorite(recipe.id);
                                     },
@@ -368,14 +535,7 @@ class RecipesScreen extends ConsumerWidget {
                                   recipe: recipe,
                                   matchCount: matchData['matchCount'] as int,
                                   missingCount: matchData['missingCount'] as int,
-                                  onTap: () {
-                                    showModalBottomSheet(
-                                      context: context,
-                                      isScrollControlled: true,
-                                      backgroundColor: Colors.transparent,
-                                      builder: (context) => RecipeDetailModal(recipe: recipe),
-                                    );
-                                  },
+                                  onTap: () => _showRecipeDetail(context, recipe),
                                   onFavorite: () async {
                                     await service.toggleFavorite(recipe.id);
                                   },
@@ -385,6 +545,15 @@ class RecipesScreen extends ConsumerWidget {
                           ),
                         ),
                       ],
+                      
+                      // Loading Indicator at bottom
+                      if (_isLoadingMore)
+                        const SliverToBoxAdapter(
+                          child: Padding(
+                            padding: EdgeInsets.all(24.0),
+                            child: Center(child: CircularProgressIndicator()),
+                          ),
+                        ),
                       
                       // Bottom Padding
                       const SliverToBoxAdapter(child: SizedBox(height: 80)),
@@ -423,43 +592,6 @@ class RecipesScreen extends ConsumerWidget {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) => RecipeDetailModal(recipe: recipe),
-    );
-  }
-
-  Widget _buildSectionHeader(BuildContext context, String title, String subtitle, Color dotColor) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              if (title == 'Outras Receitas')
-                 Icon(Icons.local_fire_department_rounded, color: dotColor, size: 24)
-              else
-                 Icon(Icons.circle, color: dotColor, size: 16),
-              const SizedBox(width: 12),
-              Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 4),
-          Text(
-            subtitle,
-            style: TextStyle(
-              fontSize: 14,
-              color: Theme.of(context).brightness == Brightness.dark
-                  ? Colors.grey[400]
-                  : Colors.grey[600],
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

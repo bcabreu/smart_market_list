@@ -49,6 +49,7 @@ dependencies:
   font_awesome_flutter: ^10.12.0
   animations: ^2.1.1
   path: ^1.9.1
+  http: ^1.6.0
 
 dev_dependencies:
   flutter_test:

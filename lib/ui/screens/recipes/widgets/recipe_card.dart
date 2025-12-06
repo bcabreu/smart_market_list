@@ -168,33 +168,45 @@ class RecipeCard extends StatelessWidget {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Row(
-                      children: [
-                        const Icon(Icons.circle, size: 10, color: Color(0xFF4DB6AC)), // Teal
-                        const SizedBox(width: 6),
-                        Text(
-                          '$matchCount na lista',
-                          style: const TextStyle(
-                            color: Color(0xFF4DB6AC),
-                            fontWeight: FontWeight.w600,
-                            fontSize: 12,
+                    Flexible(
+                      child: Row(
+                        children: [
+                          const Icon(Icons.circle, size: 10, color: Color(0xFF4DB6AC)),
+                          const SizedBox(width: 6),
+                          Flexible(
+                            child: Text(
+                              '$matchCount na lista',
+                              style: const TextStyle(
+                                color: Color(0xFF4DB6AC),
+                                fontWeight: FontWeight.w600,
+                                fontSize: 12,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                    Row(
-                      children: [
-                        const Icon(Icons.local_fire_department_rounded, size: 14, color: Color(0xFFFF7043)), // Orange
-                        const SizedBox(width: 4),
-                        Text(
-                          '$missingCount faltando',
-                          style: const TextStyle(
-                            color: Color(0xFFFF7043),
-                            fontWeight: FontWeight.w600,
-                            fontSize: 12,
+                    const SizedBox(width: 8),
+                    Flexible(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          const Icon(Icons.local_fire_department_rounded, size: 14, color: Color(0xFFFF7043)),
+                          const SizedBox(width: 4),
+                          Flexible(
+                            child: Text(
+                              '$missingCount faltando',
+                              style: const TextStyle(
+                                color: Color(0xFFFF7043),
+                                fontWeight: FontWeight.w600,
+                                fontSize: 12,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ],
                 ),

@@ -1,5 +1,9 @@
+import 'dart:convert';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import '../models/recipe.dart';
+import 'package:smart_market_list/data/models/recipe.dart';
+import 'package:http/http.dart' as http;
+import 'dart:math';
 
 class RecipesService {
   final Box<Recipe> _box;
@@ -22,51 +26,120 @@ class RecipesService {
     }
   }
 
-  // Populate initial recipes if empty
-  Future<void> populateInitialRecipes() async {
-    if (_box.isEmpty) {
-      final initialRecipes = [
-        Recipe(
-          name: 'Lasanha à Bolonhesa',
-          imageUrl: 'https://images.unsplash.com/photo-1574894709920-11b28e7367e3?w=600',
-          ingredients: ['Massa de lasanha', 'Carne moída', 'Molho de tomate', 'Queijo', 'Presunto'],
-          instructions: ['Cozinhe a massa', 'Prepare o molho', 'Monte as camadas', 'Asse por 40 min'],
-          prepTime: 60,
-          difficulty: 'Médio',
-          likes: 156,
-        ),
-        Recipe(
-          name: 'Bolo de Chocolate',
-          imageUrl: 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=600',
-          ingredients: ['Farinha', 'Açúcar', 'Chocolate em pó', 'Ovos', 'Leite'],
-          instructions: ['Misture tudo', 'Asse por 40 min', 'Faça a cobertura'],
-          prepTime: 50,
-          difficulty: 'Fácil',
-          likes: 234,
-        ),
-        Recipe(
-          name: 'Salada Caesar',
-          imageUrl: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=600',
-          ingredients: ['Alface', 'Croutons', 'Queijo Parmesão', 'Molho Caesar', 'Frango'],
-          instructions: ['Lave a alface', 'Grelhe o frango', 'Misture tudo'],
-          prepTime: 20,
-          difficulty: 'Fácil',
-          likes: 89,
-        ),
-        Recipe(
-          name: 'Sopa de Legumes',
-          imageUrl: 'https://images.unsplash.com/photo-1547592166-23ac45744acd?w=600',
-          ingredients: ['Batata', 'Cenoura', 'Cebola', 'Caldo de legumes'],
-          instructions: ['Corte os legumes', 'Cozinhe no caldo', 'Tempere a gosto'],
-          prepTime: 40,
-          difficulty: 'Fácil',
-          likes: 112,
-        ),
-      ];
+  Future<void> clearRecipes() async {
+    await _box.clear();
+    print('🧹 Banco de dados limpo manualmente.');
+  }
+
+  static const String _baseUrl = 'https://api-receitas.kepoweb.com';
+
+  /// Fetches a specific page of recipes.
+  Future<List<Recipe>> fetchRecipesPage({int page = 1, int limit = 10}) async {
+    print('🚀 Buscando página $page (limit: $limit) na nova API...');
+    try {
+      final url = Uri.parse('$_baseUrl/recipes?page=$page&limit=$limit&lang=pt');
       
-      for (var recipe in initialRecipes) {
-        await _box.put(recipe.id, recipe);
+      final response = await http.get(
+        url,
+        headers: {'Accept': 'application/json'},
+      );
+
+      if (response.statusCode == 200) {
+        final body = utf8.decode(response.bodyBytes);
+        final jsonResponse = json.decode(body);
+        final List<dynamic> data = jsonResponse['data'] ?? [];
+        
+        print('📦 Recebidos ${data.length} itens da API.');
+        
+        final List<Recipe> recipes = [];
+
+        for (var item in data) {
+          try {
+            // Handle Image URL (Relative vs Absolute)
+            String imageUrl = item['imageUrl'] ?? '';
+            if (imageUrl.startsWith('/')) {
+              imageUrl = '$_baseUrl$imageUrl';
+            }
+
+            final recipe = Recipe(
+              id: item['id'],
+              name: item['name'] ?? 'Sem nome',
+              imageUrl: imageUrl,
+              ingredients: List<String>.from(item['ingredients'] ?? []),
+              instructions: List<String>.from(item['instructions'] ?? []),
+              prepTime: item['prepTime'] ?? 30,
+              difficulty: item['difficulty'] ?? 'Médio',
+              servings: item['servings'] ?? 2,
+              likes: item['likes'] ?? 0,
+            );
+            
+            recipes.add(recipe);
+            // Cache immediately to Hive
+            await _box.put(recipe.id, recipe);
+            
+          } catch (e) {
+            print('⚠️ Erro ao processar item: $e');
+          }
+        }
+        return recipes;
+      } else {
+        print('❌ Erro API: ${response.statusCode}');
+        return [];
       }
+    } catch (e) {
+      print('🔥 Erro de conexão: $e');
+      return [];
     }
   }
+
+  /// Searches recipes by query.
+  Future<List<Recipe>> searchRecipes(String query) async {
+    if (query.length < 2) return [];
+    print('🔎 Buscando por "$query"...');
+    try {
+      final url = Uri.parse('$_baseUrl/recipes/search?q=$query&lang=pt');
+      final response = await http.get(url);
+
+      if (response.statusCode == 200) {
+        final body = utf8.decode(response.bodyBytes);
+        final dynamic decoded = json.decode(body);
+        
+        List<dynamic> items = [];
+        if (decoded is Map && decoded.containsKey('data')) {
+           items = decoded['data'] ?? [];
+        } else if (decoded is List) {
+           items = decoded;
+        }
+
+        final List<Recipe> recipes = [];
+         for (var item in items) {
+            String imageUrl = item['imageUrl'] ?? '';
+            if (imageUrl.startsWith('/')) {
+              imageUrl = '$_baseUrl$imageUrl';
+            }
+            recipes.add(Recipe(
+              id: item['id'],
+              name: item['name'] ?? 'Sem nome',
+              imageUrl: imageUrl,
+              ingredients: List<String>.from(item['ingredients'] ?? []),
+              instructions: List<String>.from(item['instructions'] ?? []),
+              prepTime: item['prepTime'] ?? 30,
+              difficulty: item['difficulty'] ?? 'Médio',
+              servings: item['servings'] ?? 2,
+              likes: item['likes'] ?? 0,
+            ));
+         }
+         return recipes;
+      }
+    } catch (e) {
+      print('Erro na busca: $e');
+    }
+    return [];
+  } 
+
+  // Legacy method removed/replaced by above.
+  /*
+  Future<List<Recipe>> fetchRecipeBatch...
+  */
 }
+

@@ -17,12 +17,8 @@ final recipesProvider = StreamProvider<List<Recipe>>((ref) {
   final box = ref.watch(recipesBoxProvider);
   final service = ref.watch(recipesServiceProvider);
   
-  // Ensure initial data is populated
-  // Note: This is a side effect in a provider, which is generally discouraged,
-  // but acceptable for simple initialization here. Ideally done in main.dart.
-  if (box.isEmpty) {
-    service.populateInitialRecipes();
-  }
+  // Ensure data is refreshed from API
+
 
   return box.watch().map((event) => box.values.toList()).startWith(box.values.toList());
 });
