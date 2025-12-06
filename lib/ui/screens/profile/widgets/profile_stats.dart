@@ -1,0 +1,127 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:smart_market_list/core/theme/app_colors.dart';
+import 'package:smart_market_list/providers/recipes_provider.dart';
+import 'package:smart_market_list/providers/shopping_notes_provider.dart';
+
+class ProfileStats extends ConsumerWidget {
+  const ProfileStats({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    const double cardSpacing = 12.0;
+    
+    // Watch providers
+    final recipesAsync = ref.watch(recipesProvider);
+    final notesAsync = ref.watch(shoppingNotesProvider);
+
+    // Calculate counts
+    final favoritesCount = recipesAsync.maybeWhen(
+      data: (recipes) => recipes.where((r) => r.isFavorite).length,
+      orElse: () => 0,
+    );
+
+    final notesCount = notesAsync.maybeWhen(
+      data: (notes) => notes.length,
+      orElse: () => 0,
+    );
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          _buildStatCard(
+            context,
+            icon: Icons.favorite_border_rounded,
+            iconColor: Colors.white,
+            iconBgColor: const Color(0xFFFF4081), // PinkAccent
+            count: '$favoritesCount',
+            label: 'Receitas\nfavoritadas',
+          ),
+          const SizedBox(width: cardSpacing),
+          _buildStatCard(
+            context,
+            icon: Icons.description_outlined,
+            iconColor: Colors.white,
+            iconBgColor: const Color(0xFFFF9800), // Orange
+            count: '$notesCount',
+            label: 'Notas\nsalvas',
+          ),
+          const SizedBox(width: cardSpacing),
+          _buildStatCard(
+            context,
+            icon: Icons.group_outlined,
+            iconColor: Colors.white,
+            iconBgColor: const Color(0xFF26A69A), // Teal
+            count: '1',
+            label: 'Compartilhando\nListas', // Added \nListas (or similar) to match lines? Wait, "Listas" is good.
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatCard(
+    BuildContext context, {
+    required IconData icon,
+    required Color iconColor,
+    required Color iconBgColor,
+    required String count,
+    required String label,
+  }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF1E1E1E) : Theme.of(context).cardColor,
+          borderRadius: BorderRadius.circular(20),
+          border: isDark 
+              ? Border.all(color: Colors.white.withOpacity(0.1), width: 1)
+              : null,
+          boxShadow: [
+            if (!isDark)
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+          ],
+        ),
+        child: Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: iconBgColor,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, color: iconColor, size: 22),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              count,
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: isDark ? Colors.white : Colors.black87,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 12,
+                color: isDark ? Colors.grey[400] : Colors.grey[600],
+                height: 1.2,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
