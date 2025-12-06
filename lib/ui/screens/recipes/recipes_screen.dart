@@ -214,6 +214,15 @@ class _RecipesScreenState extends ConsumerState<RecipesScreen> {
                         },
                         optionsViewBuilder: (context, onSelected, options) {
                           final isDark = Theme.of(context).brightness == Brightness.dark;
+                          // Calculate available height above keyboard
+                          final mediaQuery = MediaQuery.of(context);
+                          final keyboardHeight = mediaQuery.viewInsets.bottom;
+                          final screenHeight = mediaQuery.size.height;
+                          // Approx top offset of search bar is 200px. 
+                          // Safe max height = Screen - Keyboard - TopOffset - Buffer
+                          // Increased buffer to 340 to account for larger headers or safe areas
+                          final maxListHeight = (screenHeight - keyboardHeight - 340).clamp(100.0, 400.0);
+
                           return Align(
                             alignment: Alignment.topLeft,
                             child: Material(
@@ -223,7 +232,7 @@ class _RecipesScreenState extends ConsumerState<RecipesScreen> {
                               child: Container(
                                 width: constraints.maxWidth,
                                 margin: const EdgeInsets.only(top: 8),
-                                constraints: const BoxConstraints(maxHeight: 400),
+                                constraints: BoxConstraints(maxHeight: maxListHeight),
                                 decoration: BoxDecoration(
                                   color: isDark ? const Color(0xFF2C2C2C) : Colors.white,
                                   borderRadius: BorderRadius.circular(20),
