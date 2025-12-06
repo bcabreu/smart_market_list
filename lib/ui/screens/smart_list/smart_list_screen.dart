@@ -10,6 +10,7 @@ import 'package:smart_market_list/ui/screens/smart_list/widgets/smart_list_heade
 import 'package:smart_market_list/ui/screens/smart_list/widgets/budget_info_card.dart';
 import 'package:smart_market_list/ui/screens/smart_list/modals/add_item_modal.dart';
 import 'package:smart_market_list/ui/widgets/pulse_fab.dart';
+import 'package:smart_market_list/ui/common/animations/staggered_entry.dart';
 
 class SmartListScreen extends ConsumerWidget {
   const SmartListScreen({super.key});
@@ -461,9 +462,15 @@ class SmartListScreen extends ConsumerWidget {
     final sortedCategories = grouped.keys.toList()..sort();
 
     final widgets = <Widget>[];
+    int index = 0;
+    
     for (var category in sortedCategories) {
       widgets.add(_buildCategoryHeader(context, category));
-      widgets.addAll(grouped[category]!.map((item) => ShoppingItemCard(
+      
+      for (var item in grouped[category]!) {
+        widgets.add(StaggeredEntry(
+          index: index++,
+          child: ShoppingItemCard(
             key: ValueKey(item.id),
             item: item,
             onCheckChanged: (val) {
@@ -491,7 +498,9 @@ class SmartListScreen extends ConsumerWidget {
                 ),
               );
             },
-          )));
+          ),
+        ));
+      }
     }
     return widgets;
   }

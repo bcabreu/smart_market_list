@@ -203,9 +203,7 @@ class _ShoppingItemCardState extends ConsumerState<ShoppingItemCard> with Single
                                       ? AppColors.mutedForeground 
                                       : (isDark ? Colors.white : Theme.of(context).textTheme.bodyLarge?.color),
                                 ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
+                                ),
                               const SizedBox(height: 4),
                               Text(
                                 widget.item.quantity,
