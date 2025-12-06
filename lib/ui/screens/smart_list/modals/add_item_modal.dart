@@ -257,20 +257,23 @@ class _AddItemModalState extends ConsumerState<AddItemModal> {
                                     ],
                                   ),
                                 ),
-                                const Divider(height: 1),
+                                Divider(height: 1, color: isDark ? Colors.white10 : const Color(0xFFEEEEEE)),
                                 Flexible(
                                   child: ListView.separated(
                                     padding: EdgeInsets.zero,
                                     shrinkWrap: true,
                                     itemCount: visibleOptions.length,
-                                    separatorBuilder: (context, index) => const Divider(height: 1, indent: 70),
+                                    separatorBuilder: (context, index) => Divider(height: 1, color: isDark ? Colors.white10 : const Color(0xFFEEEEEE)),
                                     itemBuilder: (BuildContext context, int index) {
                                       final ProductSuggestion option = visibleOptions.elementAt(index);
                                       final isSystem = _isSystemItem(option.name);
                                       
                                       return InkWell(
                                         onTap: () => onSelected(option),
-                                        child: Padding(
+                                        child: Container(
+                                          color: index == 0 
+                                              ? (isDark ? const Color(0xFF4DB6AC).withOpacity(0.1) : const Color(0xFFE0F2F1))
+                                              : null,
                                           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                                           child: Row(
                                             children: [
@@ -331,16 +334,15 @@ class _AddItemModalState extends ConsumerState<AddItemModal> {
                                                 IconButton(
                                                   onPressed: () {
                                                     ref.read(hiddenSuggestionsProvider.notifier).add(option.name);
-                                                    // Force rebuild or let provider update handle it (provider update will remove it from list)
                                                   },
                                                   icon: Icon(Icons.delete_outline, color: Colors.red[300], size: 20),
                                                 ),
-                                              // Arrow
+                                              // Arrow (Always show for system items, or if not deleting)
                                               if (isSystem)
-                                                Icon(
+                                                const Icon(
                                                   Icons.arrow_forward,
-                                                  size: 16,
-                                                  color: const Color(0xFF4DB6AC),
+                                                  size: 18,
+                                                  color: Color(0xFF4DB6AC),
                                                 ),
                                             ],
                                           ),
