@@ -54,3 +54,5 @@ class ProfileImageNotifier extends StateNotifier<String?> {
 final profileImageProvider = StateNotifierProvider<ProfileImageNotifier, String?>((ref) {
   return ProfileImageNotifier();
 });
+
+final isEditingProfileNameProvider = StateProvider<bool>((ref) => false);

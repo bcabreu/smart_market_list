@@ -456,4 +456,64 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get startPlanning => 'Começar a planejar';
+
+  @override
+  String get login => 'Entrar';
+
+  @override
+  String get signUp => 'Criar Conta';
+
+  @override
+  String get guestMessage => 'Salve seus dados e acesse de qualquer lugar';
+
+  @override
+  String get orContinueWith => 'Ou continue com';
+
+  @override
+  String get email => 'E-mail';
+
+  @override
+  String get emailHint => 'seu@email.com';
+
+  @override
+  String get password => 'Senha';
+
+  @override
+  String get passwordHint => 'Sua senha segura';
+
+  @override
+  String get name => 'Nome';
+
+  @override
+  String get nameHint => 'Seu nome completo';
+
+  @override
+  String get forgotPassword => 'Esqueci minha senha';
+
+  @override
+  String get dontHaveAccount => 'Não tem uma conta?';
+
+  @override
+  String get alreadyHaveAccount => 'Já tem uma conta?';
+
+  @override
+  String get loginButton => 'Entrar';
+
+  @override
+  String get signUpButton => 'Criar Conta';
+
+  @override
+  String get welcomeBack => 'Bem-vindo de volta! 👋';
+
+  @override
+  String get welcomeBackSubtitle => 'Sentimos sua falta';
+
+  @override
+  String get createAccountTitle => 'Criar Conta 🚀';
+
+  @override
+  String get createAccountSubtitle => 'Comece sua jornada';
+
+  @override
+  String get confirmPassword => 'Confirmar Senha';
 }

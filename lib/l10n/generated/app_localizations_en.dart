@@ -456,4 +456,64 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get startPlanning => 'Start planning';
+
+  @override
+  String get login => 'Log In';
+
+  @override
+  String get signUp => 'Sign Up';
+
+  @override
+  String get guestMessage => 'Save your data and access from anywhere';
+
+  @override
+  String get orContinueWith => 'Or continue with';
+
+  @override
+  String get email => 'Email';
+
+  @override
+  String get emailHint => 'your@email.com';
+
+  @override
+  String get password => 'Password';
+
+  @override
+  String get passwordHint => 'Your secure password';
+
+  @override
+  String get name => 'Name';
+
+  @override
+  String get nameHint => 'Your full name';
+
+  @override
+  String get forgotPassword => 'Forgot password?';
+
+  @override
+  String get dontHaveAccount => 'Don\'t have an account?';
+
+  @override
+  String get alreadyHaveAccount => 'Already have an account?';
+
+  @override
+  String get loginButton => 'Log In';
+
+  @override
+  String get signUpButton => 'Sign Up';
+
+  @override
+  String get welcomeBack => 'Welcome Back! 👋';
+
+  @override
+  String get welcomeBackSubtitle => 'We missed you';
+
+  @override
+  String get createAccountTitle => 'Create Account 🚀';
+
+  @override
+  String get createAccountSubtitle => 'Start your journey';
+
+  @override
+  String get confirmPassword => 'Confirm Password';
 }

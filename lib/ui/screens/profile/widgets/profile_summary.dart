@@ -8,11 +8,34 @@ import 'package:smart_market_list/providers/profile_provider.dart';
 import 'package:smart_market_list/providers/user_provider.dart';
 
 import 'package:smart_market_list/l10n/generated/app_localizations.dart';
+import 'package:smart_market_list/ui/screens/auth/login_screen.dart';
+import 'package:smart_market_list/ui/screens/auth/signup_screen.dart';
 
-class ProfileSummary extends ConsumerWidget {
+class ProfileSummary extends ConsumerStatefulWidget {
   const ProfileSummary({super.key});
 
-  Future<void> _pickImage(BuildContext context, WidgetRef ref, ImageSource source) async {
+  @override
+  ConsumerState<ProfileSummary> createState() => _ProfileSummaryState();
+}
+
+class _ProfileSummaryState extends ConsumerState<ProfileSummary> {
+  late TextEditingController _nameController;
+  final FocusNode _nameFocusNode = FocusNode();
+
+  @override
+  void initState() {
+    super.initState();
+    _nameController = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _nameFocusNode.dispose();
+    super.dispose();
+  }
+
+  Future<void> _pickImage(ImageSource source) async {
     final l10n = AppLocalizations.of(context)!;
     try {
       final picker = ImagePicker();
@@ -27,13 +50,15 @@ class ProfileSummary extends ConsumerWidget {
         ref.read(profileImageProvider.notifier).setImage(pickedFile.path);
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.imageError(e.toString()))),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.imageError(e.toString()))),
+        );
+      }
     }
   }
 
-  void _showImageSourceActionSheet(BuildContext context, WidgetRef ref) {
+  void _showImageSourceActionSheet() {
     final l10n = AppLocalizations.of(context)!;
     showModalBottomSheet(
       context: context,
@@ -61,7 +86,7 @@ class ProfileSummary extends ConsumerWidget {
                   label: l10n.camera,
                   onTap: () {
                     Navigator.pop(context);
-                    _pickImage(context, ref, ImageSource.camera);
+                    _pickImage(ImageSource.camera);
                   },
                 ),
                 _buildActionButton(
@@ -70,7 +95,7 @@ class ProfileSummary extends ConsumerWidget {
                   label: l10n.gallery,
                   onTap: () {
                     Navigator.pop(context);
-                    _pickImage(context, ref, ImageSource.gallery);
+                    _pickImage(ImageSource.gallery);
                   },
                 ),
               ],
@@ -102,12 +127,34 @@ class ProfileSummary extends ConsumerWidget {
     );
   }
 
+  void _saveName() {
+    final newName = _nameController.text.trim();
+    if (newName.isNotEmpty) {
+      ref.read(userNameProvider.notifier).setName(newName);
+    }
+    ref.read(isEditingProfileNameProvider.notifier).state = false;
+  }
+
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final isPremium = ref.watch(isPremiumProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final userName = ref.watch(userNameProvider);
+    final isLoggedIn = ref.watch(isLoggedInProvider);
     final profileImagePath = ref.watch(profileImageProvider);
+    final isEditingName = ref.watch(isEditingProfileNameProvider);
+    final l10n = AppLocalizations.of(context)!;
+
+    // Listen for entry into edit mode to set initial text and focus
+    ref.listen<bool>(isEditingProfileNameProvider, (previous, next) {
+      if (next && (previous == false || previous == null)) {
+        _nameController.text = userName ?? l10n.guest;
+        // Small delay to ensure widget is built/visible
+        Future.delayed(Duration.zero, () {
+            _nameFocusNode.requestFocus();
+        });
+      }
+    });
 
     return Container(
       width: double.infinity,
@@ -201,7 +248,7 @@ class ProfileSummary extends ConsumerWidget {
                 bottom: 0,
                 right: 0,
                 child: GestureDetector(
-                  onTap: () => _showImageSourceActionSheet(context, ref),
+                  onTap: _showImageSourceActionSheet,
                   child: Container(
                     width: 36,
                     height: 36,
@@ -232,15 +279,73 @@ class ProfileSummary extends ConsumerWidget {
           ),
           const SizedBox(height: 24),
 
-          // Name
-          Text(
-            userName ?? AppLocalizations.of(context)!.guest,
-            style: const TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.bold,
-              letterSpacing: -0.5,
+          // Name or Edit Input
+          if (isEditingName)
+             Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                SizedBox(
+                  width: 200,
+                  child: TextField(
+                    controller: _nameController,
+                    focusNode: _nameFocusNode,
+                    textAlign: TextAlign.center,
+                    onSubmitted: (_) => _saveName(),
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: -0.5,
+                      color: isDark ? Colors.white : Colors.black87,
+                    ),
+                    decoration: InputDecoration(
+                      isDense: true,
+                      contentPadding: const EdgeInsets.symmetric(vertical: 8),
+                      border: UnderlineInputBorder(
+                        borderSide: BorderSide(color: AppColors.primary),
+                      ),
+                      hintText: l10n.nameHint,
+                      hintStyle: TextStyle(
+                        color: isDark ? Colors.white30 : Colors.black26,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                GestureDetector(
+                  onTap: _saveName,
+                  child: Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: AppColors.primary,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.primary.withOpacity(0.3),
+                          blurRadius: 8,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: const Icon(
+                      Icons.check_rounded,
+                      color: Colors.white,
+                      size: 24,
+                    ),
+                  ),
+                ),
+              ],
+            )
+          else
+            Text(
+              userName ?? AppLocalizations.of(context)!.guest,
+              style: const TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                letterSpacing: -0.5,
+              ),
             ),
-          ),
+            
           const SizedBox(height: 12),
 
           // Status Row (Only for Premium)
@@ -249,7 +354,7 @@ class ProfileSummary extends ConsumerWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  '${AppLocalizations.of(context)!.clientSince} Nov 2024',
+                  '${l10n.clientSince} Nov 2024',
                   style: TextStyle(
                     color: isDark ? Colors.grey[400] : Colors.grey[600],
                     fontSize: 14,
@@ -264,11 +369,11 @@ class ProfileSummary extends ConsumerWidget {
                   ),
                   child: Row(
                     children: [
-                      FaIcon(FontAwesomeIcons.crown, color: Colors.white, size: 12),
-                      SizedBox(width: 6),
+                      const FaIcon(FontAwesomeIcons.crown, color: Colors.white, size: 12),
+                      const SizedBox(width: 6),
                       Text(
-                        AppLocalizations.of(context)!.premiumLabel,
-                        style: TextStyle(
+                        l10n.premiumLabel,
+                        style: const TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
                           fontSize: 12,
@@ -278,10 +383,121 @@ class ProfileSummary extends ConsumerWidget {
                   ),
                 ),
               ],
+            )
+          else if (!isLoggedIn) ...[
+            Text(
+              l10n.guestMessage,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: isDark ? Colors.grey[400] : Colors.grey[600],
+                fontSize: 14,
+              ),
             ),
+            const SizedBox(height: 24),
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const LoginScreen()),
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: isDark ? Colors.white : Colors.black,
+                      foregroundColor: isDark ? Colors.black : Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      elevation: 0,
+                    ),
+                    child: Text(
+                      l10n.login,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const SignUpScreen()),
+                      );
+                    },
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      side: BorderSide(
+                        color: isDark 
+                            ? Colors.white.withOpacity(0.2) 
+                            : Colors.black.withOpacity(0.1),
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                    ),
+                    child: Text(
+                      l10n.signUp,
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: isDark ? Colors.white : Colors.black,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+            Text(
+              l10n.orContinueWith,
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.grey[500],
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                _buildSocialButton(context, FontAwesomeIcons.google, isDark),
+                const SizedBox(width: 16),
+                _buildSocialButton(context, FontAwesomeIcons.apple, isDark),
+              ],
+            ),
+          ],
         ],
       ),
     );
   }
-}
 
+  Widget _buildSocialButton(BuildContext context, IconData icon, bool isDark) {
+    return Container(
+      width: 50,
+      height: 50,
+      decoration: BoxDecoration(
+        color: isDark ? Colors.white.withOpacity(0.05) : Colors.grey[100],
+        shape: BoxShape.circle,
+        border: Border.all(
+          color: isDark 
+              ? Colors.white.withOpacity(0.1) 
+              : Colors.black.withOpacity(0.05),
+        ),
+      ),
+      child: Center(
+        child: FaIcon(
+          icon,
+          size: 20,
+          color: isDark ? Colors.white : Colors.black87,
+        ),
+      ),
+    );
+  }
+}
