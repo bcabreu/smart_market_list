@@ -11,6 +11,7 @@ import 'package:smart_market_list/ui/screens/smart_list/widgets/budget_info_card
 import 'package:smart_market_list/ui/screens/smart_list/modals/add_item_modal.dart';
 import 'package:smart_market_list/ui/widgets/pulse_fab.dart';
 import 'package:smart_market_list/ui/common/animations/staggered_entry.dart';
+import 'package:smart_market_list/l10n/generated/app_localizations.dart';
 
 class SmartListScreen extends ConsumerWidget {
   const SmartListScreen({super.key});
@@ -19,6 +20,7 @@ class SmartListScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final currentList = ref.watch(currentListProvider);
     final service = ref.watch(shoppingListServiceProvider);
+    final l10n = AppLocalizations.of(context)!;
 
     if (currentList == null) {
       return const Scaffold(
@@ -55,7 +57,7 @@ class SmartListScreen extends ConsumerWidget {
                           ),
                           const SizedBox(height: 24),
                           Text(
-                            'Sua lista está vazia',
+                            l10n.emptyListTitle,
                             style: TextStyle(
                               fontSize: 20,
                               fontWeight: FontWeight.bold,
@@ -66,7 +68,7 @@ class SmartListScreen extends ConsumerWidget {
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            'Adicione itens para começar suas compras.',
+                            l10n.emptyListSubtitle,
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               fontSize: 16,
@@ -106,7 +108,7 @@ class SmartListScreen extends ConsumerWidget {
                                 
                                 // Title
                                 Text(
-                                  'Finalizados (${checkedItems.length})',
+                                  '${l10n.completedItems} (${checkedItems.length})',
                                   style: TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.w600,
@@ -151,7 +153,7 @@ class SmartListScreen extends ConsumerWidget {
                                               
                                               // Title
                                               Text(
-                                                'Restaurar Itens?',
+                                                l10n.restoreItemsTitle,
                                                 style: TextStyle(
                                                   fontSize: 20,
                                                   fontWeight: FontWeight.bold,
@@ -165,7 +167,7 @@ class SmartListScreen extends ConsumerWidget {
                                               
                                               // Message
                                               Text(
-                                                'Todos os itens finalizados voltarão para a lista de compras.',
+                                                l10n.restoreItemsMessage,
                                                 style: TextStyle(
                                                   fontSize: 14,
                                                   color: Theme.of(context).brightness == Brightness.dark 
@@ -189,7 +191,7 @@ class SmartListScreen extends ConsumerWidget {
                                                         ),
                                                       ),
                                                       child: Text(
-                                                        'Cancelar',
+                                                        l10n.cancel,
                                                         style: TextStyle(
                                                           color: Theme.of(context).brightness == Brightness.dark 
                                                               ? Colors.grey[400] 
@@ -215,9 +217,9 @@ class SmartListScreen extends ConsumerWidget {
                                                           borderRadius: BorderRadius.circular(12),
                                                         ),
                                                       ),
-                                                      child: const Text(
-                                                        'Restaurar',
-                                                        style: TextStyle(fontWeight: FontWeight.bold),
+                                                      child: Text(
+                                                        l10n.restore,
+                                                        style: const TextStyle(fontWeight: FontWeight.bold),
                                                       ),
                                                     ),
                                                   ),
@@ -280,7 +282,7 @@ class SmartListScreen extends ConsumerWidget {
                                               
                                               // Title
                                               Text(
-                                                'Limpar Concluídos?',
+                                                l10n.clearCompletedTitle,
                                                 style: TextStyle(
                                                   fontSize: 20,
                                                   fontWeight: FontWeight.bold,
@@ -294,7 +296,7 @@ class SmartListScreen extends ConsumerWidget {
                                               
                                               // Message
                                               Text(
-                                                'Todos os itens marcados como concluídos serão removidos permanentemente.',
+                                                l10n.clearCompletedMessage,
                                                 style: TextStyle(
                                                   fontSize: 14,
                                                   color: Theme.of(context).brightness == Brightness.dark 
@@ -318,7 +320,7 @@ class SmartListScreen extends ConsumerWidget {
                                                         ),
                                                       ),
                                                       child: Text(
-                                                        'Cancelar',
+                                                        l10n.cancel,
                                                         style: TextStyle(
                                                           color: Theme.of(context).brightness == Brightness.dark 
                                                               ? Colors.grey[400] 
@@ -344,9 +346,9 @@ class SmartListScreen extends ConsumerWidget {
                                                           borderRadius: BorderRadius.circular(12),
                                                         ),
                                                       ),
-                                                      child: const Text(
-                                                        'Limpar',
-                                                        style: TextStyle(fontWeight: FontWeight.bold),
+                                                      child: Text(
+                                                        l10n.clear,
+                                                        style: const TextStyle(fontWeight: FontWeight.bold),
                                                       ),
                                                     ),
                                                   ),

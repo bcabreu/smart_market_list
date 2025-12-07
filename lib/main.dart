@@ -7,6 +7,9 @@ import 'data/models/shopping_item.dart';
 import 'data/models/shopping_list.dart';
 import 'data/models/shopping_note.dart';
 import 'data/models/recipe.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:smart_market_list/l10n/generated/app_localizations.dart';
+import 'providers/locale_provider.dart';
 import 'providers/theme_provider.dart';
 import 'ui/screens/main_screen.dart';
 
@@ -65,6 +68,7 @@ class SmartMarketListApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final themeMode = ref.watch(themeModeProvider);
+    final locale = ref.watch(localeProvider);
 
     return MaterialApp(
       title: 'Smart Market List',
@@ -72,6 +76,17 @@ class SmartMarketListApp extends ConsumerWidget {
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
       themeMode: themeMode,
+      locale: locale,
+      localizationsDelegates: const [
+        AppLocalizations.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: const [
+        Locale('en'), // English
+        Locale('pt'), // Portuguese
+      ],
       home: const MainScreen(),
     );
   }

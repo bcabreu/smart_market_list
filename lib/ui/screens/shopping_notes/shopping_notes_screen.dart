@@ -11,6 +11,7 @@ import 'package:smart_market_list/ui/screens/shopping_notes/modals/add_note_moda
 import 'package:smart_market_list/ui/common/animations/staggered_entry.dart';
 
 import 'package:smart_market_list/ui/widgets/pulse_fab.dart';
+import 'package:smart_market_list/l10n/generated/app_localizations.dart';
 
 class ShoppingNotesScreen extends ConsumerWidget {
   const ShoppingNotesScreen({super.key});
@@ -19,6 +20,8 @@ class ShoppingNotesScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final notesAsync = ref.watch(shoppingNotesProvider);
     final currencyFormat = NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$');
+    final l10n = AppLocalizations.of(context)!;
+
 
     return Scaffold(
       body: SafeArea(
@@ -53,16 +56,16 @@ class ShoppingNotesScreen extends ConsumerWidget {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        'Notas de Compras 🧾',
-                        style: TextStyle(
+                      Text(
+                        l10n.shoppingNotesTitle,
+                        style: const TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        'Histórico de gastos',
+                        l10n.shoppingNotesSubtitle,
                         style: TextStyle(
                           fontSize: 14,
                           color: Theme.of(context).brightness == Brightness.dark
@@ -112,7 +115,7 @@ class ShoppingNotesScreen extends ConsumerWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Total em compras',
+                              l10n.totalSpent,
                               style: TextStyle(
                                 fontSize: 14,
                                 color: isDark ? Colors.grey[400] : Colors.grey[700],
@@ -136,7 +139,7 @@ class ShoppingNotesScreen extends ConsumerWidget {
                           crossAxisAlignment: CrossAxisAlignment.end,
                           children: [
                             Text(
-                              'Notas salvas',
+                              l10n.savedNotes,
                               style: TextStyle(
                                 fontSize: 14,
                                 color: isDark ? Colors.grey[500] : Colors.grey[600],
@@ -189,18 +192,18 @@ class ShoppingNotesScreen extends ConsumerWidget {
                             ),
                           ),
                           const SizedBox(height: 24),
-                          const Text(
-                            'Nenhuma nota salva',
-                            style: TextStyle(
+                          Text(
+                            l10n.noSavedNotes,
+                            style: const TextStyle(
                               fontSize: 20,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
                           const SizedBox(height: 8),
-                          const Text(
-                            'Compare preços e economize\nsalvando suas notas fiscais.',
+                          Text(
+                            l10n.noSavedNotesSubtitle,
                             textAlign: TextAlign.center,
-                            style: TextStyle(color: AppColors.mutedForeground),
+                            style: const TextStyle(color: AppColors.mutedForeground),
                           ),
                         ],
                       ),
@@ -285,7 +288,7 @@ class ShoppingNotesScreen extends ConsumerWidget {
                                       );
                                     } else if (context.mounted) {
                                       ScaffoldMessenger.of(context).showSnackBar(
-                                        const SnackBar(content: Text('Imagem não encontrada')),
+                                        SnackBar(content: Text(l10n.imageNotFound)),
                                       );
                                     }
                                   }
@@ -317,7 +320,7 @@ class ShoppingNotesScreen extends ConsumerWidget {
                                           ),
                                           const SizedBox(height: 16),
                                           Text(
-                                            'Excluir Nota?',
+                                            l10n.deleteNoteTitle,
                                             style: TextStyle(
                                               fontSize: 20,
                                               fontWeight: FontWeight.bold,
@@ -329,7 +332,7 @@ class ShoppingNotesScreen extends ConsumerWidget {
                                           ),
                                           const SizedBox(height: 8),
                                           Text(
-                                            'Tem certeza que deseja excluir esta nota permanentemente?',
+                                            l10n.deleteNoteMessage,
                                             style: TextStyle(
                                               fontSize: 14,
                                               color: Theme.of(context).brightness == Brightness.dark 
@@ -351,7 +354,7 @@ class ShoppingNotesScreen extends ConsumerWidget {
                                                     ),
                                                   ),
                                                   child: Text(
-                                                    'Cancelar',
+                                                    l10n.cancel,
                                                     style: TextStyle(
                                                       color: Theme.of(context).brightness == Brightness.dark 
                                                           ? Colors.grey[400] 
@@ -377,9 +380,9 @@ class ShoppingNotesScreen extends ConsumerWidget {
                                                       borderRadius: BorderRadius.circular(12),
                                                     ),
                                                   ),
-                                                  child: const Text(
-                                                    'Excluir',
-                                                    style: TextStyle(fontWeight: FontWeight.bold),
+                                                  child: Text(
+                                                    l10n.delete,
+                                                    style: const TextStyle(fontWeight: FontWeight.bold),
                                                   ),
                                                 ),
                                               ),

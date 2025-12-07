@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:smart_market_list/data/models/recipe.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:math';
 
 class RecipesService {
@@ -33,11 +34,41 @@ class RecipesService {
 
   static const String _baseUrl = 'https://api-receitas.kepoweb.com';
 
+  Future<String?> getLastFetchedLanguage() async {
+    // We can't easily inject SharedPreferences here without major refactor,
+    // but we can use Hive since we already depend on it.
+    // Let's assume there's a 'settings' box or we use the recipes box metadata if Hive supports it.
+    // Actually, Hive boxes can store random key-values if they are not strictly typed or if we use a separate box.
+    // Simpler: Just rely on the caller to handle logic? No, caller relies on Service.
+    
+    // Let's use a separate Hive box for settings if not existent, or just a static variable for session?
+    // Session static variable is not enough for app restarts.
+    
+    // I'll use SharedPreferences.
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('recipes_last_lang');
+  }
+
+  Future<void> _saveFetchedLanguage(String lang) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('recipes_last_lang', lang);
+  }
+
   /// Fetches a specific page of recipes.
-  Future<List<Recipe>> fetchRecipesPage({int page = 1, int limit = 10}) async {
-    print('🚀 Buscando página $page (limit: $limit) na nova API...');
+  Future<List<Recipe>> fetchRecipesPage({int page = 1, int limit = 10, String languageCode = 'pt'}) async {
+    print('🚀 Buscando página $page (limit: $limit) na nova API (lang: $languageCode)...');
     try {
-      final url = Uri.parse('$_baseUrl/recipes?page=$page&limit=$limit&lang=pt');
+      // User requested: 
+      // English -> https://api-receitas.kepoweb.com/recipes
+      // Portuguese -> https://api-receitas.kepoweb.com/recipes?lang=pt
+      
+      String urlString = '$_baseUrl/recipes?page=$page&limit=$limit';
+      if (languageCode == 'pt') {
+        urlString += '&lang=pt';
+      }
+      
+      final url = Uri.parse(urlString);
+      print('🌐 Requesting: $url');
       
       final response = await http.get(
         url,
@@ -45,6 +76,9 @@ class RecipesService {
       );
 
       if (response.statusCode == 200) {
+        // Save the language we successfully fetched
+        await _saveFetchedLanguage(languageCode);
+
         final body = utf8.decode(response.bodyBytes);
         final jsonResponse = json.decode(body);
         final List<dynamic> data = jsonResponse['data'] ?? [];
@@ -93,11 +127,16 @@ class RecipesService {
   }
 
   /// Searches recipes by query.
-  Future<List<Recipe>> searchRecipes(String query) async {
+  Future<List<Recipe>> searchRecipes(String query, {String languageCode = 'pt'}) async {
     if (query.length < 2) return [];
-    print('🔎 Buscando por "$query"...');
+    print('🔎 Buscando por "$query" (lang: $languageCode)...');
     try {
-      final url = Uri.parse('$_baseUrl/recipes/search?q=$query&lang=pt');
+      String urlString = '$_baseUrl/recipes/search?q=$query';
+      if (languageCode == 'pt') {
+        urlString += '&lang=pt';
+      }
+      final url = Uri.parse(urlString);
+      print('🌐 Searching: $url');
       final response = await http.get(url);
 
       if (response.statusCode == 200) {

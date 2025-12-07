@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:smart_market_list/core/theme/app_colors.dart';
+import 'package:smart_market_list/l10n/generated/app_localizations.dart';
 
 class CustomBottomNavigation extends StatelessWidget {
   final int currentIndex;
@@ -17,30 +18,31 @@ class CustomBottomNavigation extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final backgroundColor = isDark ? const Color(0xFF1E1E1E) : Colors.white;
+    final l10n = AppLocalizations.of(context)!;
 
     final items = [
       _NavItemData(
         icon: Icons.shopping_cart_outlined,
         activeIcon: Icons.shopping_cart,
-        label: 'Lista',
+        label: l10n.navShop,
         color: AppColors.primary,
       ),
       _NavItemData(
         icon: Icons.storefront_outlined,
         activeIcon: Icons.storefront,
-        label: 'Notas',
+        label: l10n.navNotes,
         color: AppColors.secondary,
       ),
       _NavItemData(
         icon: FontAwesomeIcons.kitchenSet,
         activeIcon: FontAwesomeIcons.kitchenSet,
-        label: 'Receitas',
+        label: l10n.navRecipes,
         color: Colors.purple,
       ),
       _NavItemData(
         icon: Icons.person_outline,
         activeIcon: Icons.person,
-        label: 'Perfil',
+        label: l10n.navProfile,
         color: Colors.blue,
       ),
     ];

@@ -9,9 +9,75 @@ import 'package:smart_market_list/ui/screens/profile/widgets/profile_header.dart
 import 'package:smart_market_list/ui/screens/profile/widgets/profile_stats.dart';
 import 'package:smart_market_list/ui/screens/profile/widgets/settings_card.dart';
 import 'package:smart_market_list/providers/notifications_provider.dart';
+import 'package:smart_market_list/providers/locale_provider.dart';
+import 'package:smart_market_list/l10n/generated/app_localizations.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
+
+  void _showLanguagePicker(BuildContext context, WidgetRef ref) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        final currentLocale = ref.watch(localeProvider);
+        return Container(
+          decoration: BoxDecoration(
+            color: Theme.of(context).scaffoldBackgroundColor,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          padding: const EdgeInsets.symmetric(vertical: 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: 24),
+                decoration: BoxDecoration(
+                  color: Colors.grey.withOpacity(0.3),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              Text(
+                AppLocalizations.of(context)!.language,
+                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 16),
+              ListTile(
+                leading: const Text('📱', style: TextStyle(fontSize: 24)),
+                title: Text(AppLocalizations.of(context)!.darkModeSystem),
+                trailing: currentLocale == null ? const Icon(Icons.check, color: AppColors.primary) : null,
+                onTap: () {
+                  ref.read(localeProvider.notifier).setLocale(null);
+                  Navigator.pop(context);
+                },
+              ),
+              ListTile(
+                leading: const Text('🇺🇸', style: TextStyle(fontSize: 24)),
+                title: const Text('English'),
+                trailing: currentLocale?.languageCode == 'en' ? const Icon(Icons.check, color: AppColors.primary) : null,
+                onTap: () {
+                  ref.read(localeProvider.notifier).setLocale(const Locale('en'));
+                  Navigator.pop(context);
+                },
+              ),
+              ListTile(
+                leading: const Text('🇧🇷', style: TextStyle(fontSize: 24)),
+                title: const Text('Português (BR)'),
+                trailing: currentLocale?.languageCode == 'pt' ? const Icon(Icons.check, color: AppColors.primary) : null,
+                onTap: () {
+                  ref.read(localeProvider.notifier).setLocale(const Locale('pt'));
+                  Navigator.pop(context);
+                },
+              ),
+              const SizedBox(height: 16),
+            ],
+          ),
+        );
+      },
+    );
+  }
 
   void _showPaywall(BuildContext context) {
     showModalBottomSheet(
@@ -135,6 +201,8 @@ class ProfileScreen extends ConsumerWidget {
     final isPremium = ref.watch(isPremiumProvider);
     final themeMode = ref.watch(themeModeProvider);
     final notificationsEnabled = ref.watch(notificationsEnabledProvider);
+    final locale = ref.watch(localeProvider);
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       body: SafeArea(
@@ -161,12 +229,12 @@ class ProfileScreen extends ConsumerWidget {
                     
                     // Preferences
                     SettingsCard(
-                      title: 'Configurações',
+                      title: l10n.settingsTitle,
                       children: [
                         SettingsTile(
                           icon: Icons.dark_mode,
-                          title: 'Dark Mode',
-                          subtitle: _getThemeModeName(themeMode),
+                          title: l10n.darkMode,
+                          subtitle: _getThemeModeName(themeMode, l10n),
                           trailing: Switch(
                             value: themeMode == ThemeMode.dark,
                             activeColor: AppColors.primary,
@@ -179,8 +247,8 @@ class ProfileScreen extends ConsumerWidget {
                         ),
                         SettingsTile(
                           icon: Icons.notifications,
-                          title: 'Notificações',
-                          subtitle: 'Alertas de promoção',
+                          title: l10n.notifications,
+                          subtitle: l10n.notificationsSubtitle,
                           trailing: Switch(
                             value: notificationsEnabled,
                             activeColor: AppColors.primary,
@@ -189,36 +257,39 @@ class ProfileScreen extends ConsumerWidget {
                             },
                           ),
                         ),
-                        const SettingsTile(
+                        SettingsTile(
                           icon: Icons.language,
-                          title: 'Idioma',
-                          subtitle: 'Português (BR)',
+                          title: l10n.language,
+                          subtitle: locale == null 
+                              ? l10n.darkModeSystem 
+                              : (locale.languageCode == 'en' ? 'English' : 'Português (BR)'),
+                          onTap: () => _showLanguagePicker(context, ref),
                         ),
                       ],
                     ),
 
                     // Premium Features
                     SettingsCard(
-                      title: 'Recursos Premium',
+                      title: l10n.premiumFeatures,
                       children: [
                         SettingsTile(
                           icon: Icons.share,
-                          title: 'Compartilhar Lista',
-                          subtitle: 'Sincronize com família',
+                          title: l10n.shareList,
+                          subtitle: l10n.shareListSubtitle,
                           isLocked: !isPremium,
                           onTap: !isPremium ? () => _showPaywall(context) : null,
                         ),
                         SettingsTile(
                           icon: Icons.bar_chart,
-                          title: 'Gráficos de Gastos',
-                          subtitle: 'Análise mensal completa',
+                          title: l10n.expenseCharts,
+                          subtitle: l10n.expenseChartsSubtitle,
                           isLocked: !isPremium,
                           onTap: !isPremium ? () => _showPaywall(context) : null,
                         ),
                         SettingsTile(
                           icon: Icons.picture_as_pdf,
-                          title: 'Exportar Relatórios',
-                          subtitle: 'PDF com histórico',
+                          title: l10n.exportReports,
+                          subtitle: l10n.exportReportsSubtitle,
                           isLocked: !isPremium,
                           onTap: !isPremium ? () => _showPaywall(context) : null,
                         ),
@@ -227,31 +298,31 @@ class ProfileScreen extends ConsumerWidget {
 
                     // Account
                     SettingsCard(
-                      title: 'Conta',
+                      title: l10n.account,
                       children: [
                         SettingsTile(
                           icon: Icons.credit_card,
-                          title: 'Gerenciar Assinatura',
+                          title: l10n.manageSubscription,
                           onTap: () {},
                         ),
                         SettingsTile(
                           icon: Icons.restore,
-                          title: 'Restaurar Compra',
+                          title: l10n.restorePurchase,
                           onTap: () {},
                         ),
                         SettingsTile(
                           icon: Icons.help_outline,
-                          title: 'Ajuda e Suporte',
+                          title: l10n.helpSupport,
                           onTap: () {},
                         ),
                         SettingsTile(
                           icon: Icons.privacy_tip_outlined,
-                          title: 'Privacidade',
+                          title: l10n.privacy,
                           onTap: () => _showPrivacyPolicy(context),
                         ),
                         SettingsTile(
                           icon: Icons.logout,
-                          title: 'Sair da Conta',
+                          title: l10n.logout,
                           onTap: () {},
                           trailing: const SizedBox(), // Hide chevron
                         ),
@@ -267,11 +338,11 @@ class ProfileScreen extends ConsumerWidget {
     );
   }
 
-  String _getThemeModeName(ThemeMode mode) {
+  String _getThemeModeName(ThemeMode mode, AppLocalizations l10n) {
     switch (mode) {
-      case ThemeMode.system: return 'Seguir sistema';
-      case ThemeMode.light: return 'Claro';
-      case ThemeMode.dark: return 'Escuro';
+      case ThemeMode.system: return l10n.darkModeSystem;
+      case ThemeMode.light: return l10n.darkModeLight;
+      case ThemeMode.dark: return l10n.darkModeDark;
     }
   }
 }

@@ -10,6 +10,8 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:smart_market_list/data/models/recipe.dart';
 import 'package:smart_market_list/ui/common/animations/staggered_entry.dart';
 import 'package:smart_market_list/providers/shopping_list_provider.dart';
+import 'package:smart_market_list/providers/locale_provider.dart';
+import 'package:smart_market_list/l10n/generated/app_localizations.dart';
 
 class RecipesScreen extends ConsumerStatefulWidget {
   const RecipesScreen({super.key});
@@ -32,15 +34,38 @@ class _RecipesScreenState extends ConsumerState<RecipesScreen> {
     _scrollController.addListener(_onScroll);
     
     // Initial fetch if empty (post-frame to avoid build errors)
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    // Initial fetch validation
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       final recipes = ref.read(recipesProvider).value ?? [];
-      if (recipes.isEmpty) {
+      final service = ref.read(recipesServiceProvider);
+      final currentLocale = ref.read(localeProvider);
+      final targetLang = currentLocale?.languageCode ?? 'en';
+      
+      final lastFetchedLang = await service.getLastFetchedLanguage();
+      
+      if (recipes.isEmpty || lastFetchedLang != targetLang) {
+        print('🔄 Language mismatch or empty list (Last: $lastFetchedLang, Target: $targetLang). Reloading...');
+        // Clear if mismatch
+        if (lastFetchedLang != targetLang) {
+           await service.clearRecipes();
+           setState(() {
+             _currentPage = 0;
+           });
+        }
         _loadMoreRecipes();
       } else {
-        // Assume we have at least 1 page if we have data
+        // Assume we have at least 1 page if we have data and language matches
          _currentPage = 1;
       }
     });
+  }
+
+  // Monitor locale changes
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // We can't easily listen to riverpod provider changes in didChangeDependencies without context,
+    // but we can do it in build via ref.listen
   }
 
 
@@ -68,8 +93,13 @@ class _RecipesScreenState extends ConsumerState<RecipesScreen> {
     try {
       final service = ref.read(recipesServiceProvider);
       final nextPage = _currentPage + 1;
+      final currentLocale = ref.read(localeProvider);
       
-      final newRecipes = await service.fetchRecipesPage(page: nextPage, limit: 10);
+      final newRecipes = await service.fetchRecipesPage(
+        page: nextPage, 
+        limit: 10,
+        languageCode: currentLocale?.languageCode ?? 'en',
+      );
       
       if (newRecipes.isNotEmpty) {
         setState(() {
@@ -93,9 +123,32 @@ class _RecipesScreenState extends ConsumerState<RecipesScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Listen for locale changes to refresh recipes
+    ref.listen(localeProvider, (previous, next) async {
+      if (previous != next) {
+        // Language changed, clear cache and reload
+        try {
+          setState(() {
+             _currentPage = 0;
+             // Do NOT set _isLoadingMore = true here, let the method handle it
+          });
+
+          // Clear local cache (Hive)
+          await ref.read(recipesServiceProvider).clearRecipes();
+          
+          // Re-fetch page 1 with new locale
+          await _loadMoreRecipes();
+        } catch (e) {
+          print('Erro ao recarregar receitas no novo idioma: $e');
+        } 
+      }
+    });
+
     final recipesAsync = ref.watch(recipesProvider);
     final service = ref.watch(recipesServiceProvider);
     final shoppingListsAsync = ref.watch(shoppingListsProvider);
+    final l10n = AppLocalizations.of(context)!;
+    final locale = ref.watch(localeProvider);
 
     // Get target list (current or first)
     final targetList = ref.watch(currentListProvider) ?? shoppingListsAsync.value?.firstOrNull;
@@ -138,16 +191,16 @@ class _RecipesScreenState extends ConsumerState<RecipesScreen> {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
-                            'Receitas pra Você 👨‍🍳',
-                            style: TextStyle(
+                          Text(
+                            l10n.recipesTitle,
+                            style: const TextStyle(
                               fontSize: 20,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            'Baseadas nos seus ingredientes',
+                            l10n.recipesSubtitle,
                             style: TextStyle(
                               fontSize: 14,
                               color: Theme.of(context).brightness == Brightness.dark
@@ -171,8 +224,11 @@ class _RecipesScreenState extends ConsumerState<RecipesScreen> {
                           if (textEditingValue.text.length < 2) {
                             return const Iterable<Recipe>.empty();
                           }
-                          // Use API search
-                          final results = await service.searchRecipes(textEditingValue.text);
+                          // Use API search with current language
+                          final results = await service.searchRecipes(
+                            textEditingValue.text,
+                            languageCode: locale?.languageCode ?? 'en',
+                          );
                           return results;
                         },
                         displayStringForOption: (Recipe option) => option.name,
@@ -195,7 +251,7 @@ class _RecipesScreenState extends ConsumerState<RecipesScreen> {
                                       ? Colors.grey[400]
                                       : Colors.grey[500],
                                 ),
-                                hintText: 'Buscar na API...',
+                                hintText: l10n.searchHint,
                                 hintStyle: TextStyle(
                                   color: Theme.of(context).brightness == Brightness.dark
                                       ? Colors.grey[400]
@@ -249,7 +305,7 @@ class _RecipesScreenState extends ConsumerState<RecipesScreen> {
                                           const Icon(Icons.auto_awesome, size: 16, color: Color(0xFFFFD700)), // Gold star
                                           const SizedBox(width: 8),
                                           Text(
-                                            'Receitas Encontradas',
+                                            l10n.recipesFound,
                                             style: TextStyle(
                                               fontSize: 14,
                                               fontWeight: FontWeight.w500,
@@ -317,9 +373,9 @@ class _RecipesScreenState extends ConsumerState<RecipesScreen> {
                                                             color: isDark ? Colors.white : Colors.black87,
                                                           ),
                                                         ),
-                                                        const SizedBox(height: 4),
-                                                        Text(
-                                                          '${option.difficulty} • ${option.prepTime} min',
+                                                          const SizedBox(height: 4),
+                                                          Text(
+                                                            '${option.difficulty} • ${option.prepTime} ${l10n.cookTime}',
                                                           style: TextStyle(
                                                             fontSize: 13,
                                                             color: isDark ? Colors.grey[400] : Colors.grey[600],
@@ -416,7 +472,7 @@ class _RecipesScreenState extends ConsumerState<RecipesScreen> {
                                     const Icon(Icons.circle, color: Color(0xFF4DB6AC), size: 16), // Teal circle
                                     const SizedBox(width: 12),
                                     Text(
-                                      'Você Pode Fazer Agora',
+                                      l10n.youCanCookNow,
                                       style: TextStyle(
                                         fontSize: 20,
                                         fontWeight: FontWeight.bold,
@@ -445,7 +501,7 @@ class _RecipesScreenState extends ConsumerState<RecipesScreen> {
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
-                                  'Receitas com ingredientes que você já tem na lista',
+                                  l10n.youCanCookNowSubtitle,
                                   style: TextStyle(
                                     fontSize: 14,
                                     color: Theme.of(context).brightness == Brightness.dark
@@ -501,7 +557,7 @@ class _RecipesScreenState extends ConsumerState<RecipesScreen> {
                                     const Icon(Icons.local_fire_department_outlined, color: Color(0xFFFF7043), size: 24), // Orange fire
                                     const SizedBox(width: 12),
                                     Text(
-                                      'Outras Receitas',
+                                      l10n.otherRecipes,
                                       style: TextStyle(
                                         fontSize: 20,
                                         fontWeight: FontWeight.bold,
@@ -514,7 +570,7 @@ class _RecipesScreenState extends ConsumerState<RecipesScreen> {
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
-                                  'Descubra novas receitas e adicione os ingredientes à sua lista',
+                                  l10n.otherRecipesSubtitle,
                                   style: TextStyle(
                                     fontSize: 14,
                                     color: Theme.of(context).brightness == Brightness.dark
