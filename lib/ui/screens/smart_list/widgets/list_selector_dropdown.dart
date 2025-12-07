@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:smart_market_list/core/theme/app_colors.dart';
 import 'package:smart_market_list/data/models/shopping_list.dart';
+import 'package:intl/intl.dart';
 import 'package:smart_market_list/providers/shopping_list_provider.dart';
+import 'package:smart_market_list/l10n/generated/app_localizations.dart';
 
 class ListSelectorDropdown extends ConsumerStatefulWidget {
   final String selectedListId;
@@ -280,7 +282,7 @@ class _ListSelectorDropdownState extends ConsumerState<ListSelectorDropdown> {
                             ),
                             const SizedBox(height: 2),
                             Text(
-                              '$itemCount itens • R\$ ${total.toStringAsFixed(2)}',
+                              '$itemCount ${AppLocalizations.of(context)!.items.toLowerCase()} • ${NumberFormat.simpleCurrency(locale: Localizations.localeOf(context).toString()).format(total)}',
                               style: TextStyle(
                                 fontSize: 12,
                                 color: subtitleColor,
@@ -319,33 +321,42 @@ class _ListSelectorDropdownState extends ConsumerState<ListSelectorDropdown> {
                             }
                           },
                           itemBuilder: (context) => [
-                            const PopupMenuItem(
+                            PopupMenuItem(
                               value: 'rename',
                               child: Row(
                                 children: [
-                                  Icon(Icons.edit_outlined, color: AppColors.primary, size: 20),
-                                  SizedBox(width: 12),
-                                  Text('Renomear', style: TextStyle(color: AppColors.primary)),
+                                  const Icon(Icons.edit_outlined, color: AppColors.primary, size: 20),
+                                  const SizedBox(width: 12),
+                                  Text(
+                                    AppLocalizations.of(context)!.renameList,
+                                    style: const TextStyle(color: AppColors.primary),
+                                  ),
                                 ],
                               ),
                             ),
-                            const PopupMenuItem(
+                            PopupMenuItem(
                               value: 'duplicate',
                               child: Row(
                                 children: [
-                                  Icon(Icons.copy_outlined, color: AppColors.primary, size: 20),
-                                  SizedBox(width: 12),
-                                  Text('Duplicar', style: TextStyle(color: AppColors.primary)),
+                                  const Icon(Icons.copy_outlined, color: AppColors.primary, size: 20),
+                                  const SizedBox(width: 12),
+                                  Text(
+                                    AppLocalizations.of(context)!.duplicateList,
+                                    style: const TextStyle(color: AppColors.primary),
+                                  ),
                                 ],
                               ),
                             ),
-                            const PopupMenuItem(
+                            PopupMenuItem(
                               value: 'delete',
                               child: Row(
                                 children: [
-                                  Icon(Icons.delete_outline, color: Colors.red, size: 20),
-                                  SizedBox(width: 12),
-                                  Text('Deletar', style: TextStyle(color: Colors.red)),
+                                  const Icon(Icons.delete_outline, color: Colors.red, size: 20),
+                                  const SizedBox(width: 12),
+                                  Text(
+                                    AppLocalizations.of(context)!.deleteList,
+                                    style: const TextStyle(color: Colors.red),
+                                  ),
                                 ],
                               ),
                             ),

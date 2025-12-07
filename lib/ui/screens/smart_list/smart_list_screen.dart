@@ -530,7 +530,7 @@ class SmartListScreen extends ConsumerWidget {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Text(
-              category[0].toUpperCase() + category.substring(1),
+              _getLocalizedCategoryName(context, category),
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
@@ -552,5 +552,25 @@ class SmartListScreen extends ConsumerWidget {
         ],
       ),
     );
+  }
+
+  String _getLocalizedCategoryName(BuildContext context, String category) {
+    final l10n = AppLocalizations.of(context)!;
+    switch (category.toLowerCase()) {
+      case 'hortifruti': return l10n.cat_hortifruti;
+      case 'padaria': return l10n.cat_padaria;
+      case 'laticinios': return l10n.cat_laticinios;
+      case 'acougue': return l10n.cat_acougue;
+      case 'mercearia': return l10n.cat_mercearia;
+      case 'bebidas': return l10n.cat_bebidas;
+      case 'limpeza': return l10n.cat_limpeza;
+      case 'higiene': return l10n.cat_higiene;
+      case 'congelados': return l10n.cat_congelados;
+      case 'doces': return l10n.cat_doces;
+      case 'pet': return l10n.cat_pet;
+      case 'bebe': return l10n.cat_bebe;
+      case 'utilidades': return l10n.cat_utilidades;
+      default: return l10n.cat_outros;
+    }
   }
 }

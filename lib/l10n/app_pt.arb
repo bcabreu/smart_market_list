@@ -129,5 +129,19 @@
   "cat_pet": "Pet Shop",
   "cat_bebe": "Bebê",
   "cat_utilidades": "Utilidades",
-  "cat_outros": "Outros"
+  "cat_outros": "Outros",
+  "renameList": "Renomear",
+  "duplicateList": "Duplicar",
+  "deleteList": "Deletar",
+  "copySuffix": " (Cópia)",
+  "newList": "Nova Lista",
+  "editList": "Editar Lista",
+  "createPersonalizedList": "Crie uma lista personalizada",
+  "chooseEmoji": "Escolha um emoji",
+  "listName": "Nome da Lista",
+  "listNameHint": "Ex: Churrasco do Final de Semana",
+  "saveChanges": "Salvar Alterações",
+  "createListButton": "Criar Lista",
+  "updateDetails": "Atualizar detalhes",
+  "startPlanning": "Começar a planejar"
 }

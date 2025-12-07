@@ -129,5 +129,19 @@
   "cat_pet": "Pet Shop",
   "cat_bebe": "Baby",
   "cat_utilidades": "Utilities",
-  "cat_outros": "Others"
+  "cat_outros": "Others",
+  "renameList": "Rename",
+  "duplicateList": "Duplicate",
+  "deleteList": "Delete",
+  "copySuffix": " (Copy)",
+  "newList": "New List",
+  "editList": "Edit List",
+  "createPersonalizedList": "Create a custom list",
+  "chooseEmoji": "Choose an emoji",
+  "listName": "List Name",
+  "listNameHint": "Ex: Weekend BBQ",
+  "saveChanges": "Save Changes",
+  "createListButton": "Create List",
+  "updateDetails": "Update details",
+  "startPlanning": "Start planning"
 }

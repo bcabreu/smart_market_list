@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:smart_market_list/core/theme/app_colors.dart';
 import 'package:smart_market_list/data/models/shopping_list.dart';
 import 'package:smart_market_list/providers/shopping_list_provider.dart';
+import 'package:smart_market_list/l10n/generated/app_localizations.dart';
 import 'package:uuid/uuid.dart';
 
 class EditListModal extends ConsumerStatefulWidget {
@@ -103,7 +104,9 @@ class _EditListModalState extends ConsumerState<EditListModal> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    widget.list != null ? 'Editar Lista' : 'Nova Lista',
+                    widget.list != null 
+                      ? AppLocalizations.of(context)!.editList
+                      : AppLocalizations.of(context)!.newList,
                     style: TextStyle(
                       fontSize: 24, 
                       fontWeight: FontWeight.bold,
@@ -112,7 +115,7 @@ class _EditListModalState extends ConsumerState<EditListModal> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'Crie uma lista personalizada',
+                    AppLocalizations.of(context)!.createPersonalizedList,
                     style: TextStyle(
                       fontSize: 14, 
                       color: subtitleColor,
@@ -138,7 +141,7 @@ class _EditListModalState extends ConsumerState<EditListModal> {
           
           // Emoji Selector
           Text(
-            'Escolha um emoji',
+            AppLocalizations.of(context)!.chooseEmoji,
             style: TextStyle(
               fontSize: 14,
               color: subtitleColor,
@@ -176,7 +179,7 @@ class _EditListModalState extends ConsumerState<EditListModal> {
               Icon(Icons.list, size: 20, color: subtitleColor),
               const SizedBox(width: 8),
               Text(
-                'Nome da Lista',
+                AppLocalizations.of(context)!.listName,
                 style: TextStyle(
                   fontSize: 14,
                   color: subtitleColor,
@@ -195,7 +198,7 @@ class _EditListModalState extends ConsumerState<EditListModal> {
               controller: _nameController,
               style: TextStyle(color: textColor),
               decoration: InputDecoration(
-                hintText: 'Ex: Churrasco do Final de Semana',
+                hintText: AppLocalizations.of(context)!.listNameHint,
                 hintStyle: TextStyle(color: Colors.grey[500]),
                 border: InputBorder.none,
                 contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
@@ -244,7 +247,9 @@ class _EditListModalState extends ConsumerState<EditListModal> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          widget.list != null ? 'Salvar Alterações' : 'Criar Lista',
+                          widget.list != null 
+                              ? AppLocalizations.of(context)!.saveChanges 
+                              : AppLocalizations.of(context)!.createListButton,
                           style: const TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
@@ -252,7 +257,9 @@ class _EditListModalState extends ConsumerState<EditListModal> {
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          widget.list != null ? 'Atualizar detalhes' : 'Começar a planejar',
+                          widget.list != null 
+                              ? AppLocalizations.of(context)!.updateDetails 
+                              : AppLocalizations.of(context)!.startPlanning,
                           style: TextStyle(
                             fontSize: 12,
                             color: Colors.white.withOpacity(0.8),

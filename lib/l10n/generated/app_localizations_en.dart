@@ -414,4 +414,46 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cat_outros => 'Others';
+
+  @override
+  String get renameList => 'Rename';
+
+  @override
+  String get duplicateList => 'Duplicate';
+
+  @override
+  String get deleteList => 'Delete';
+
+  @override
+  String get copySuffix => ' (Copy)';
+
+  @override
+  String get newList => 'New List';
+
+  @override
+  String get editList => 'Edit List';
+
+  @override
+  String get createPersonalizedList => 'Create a custom list';
+
+  @override
+  String get chooseEmoji => 'Choose an emoji';
+
+  @override
+  String get listName => 'List Name';
+
+  @override
+  String get listNameHint => 'Ex: Weekend BBQ';
+
+  @override
+  String get saveChanges => 'Save Changes';
+
+  @override
+  String get createListButton => 'Create List';
+
+  @override
+  String get updateDetails => 'Update details';
+
+  @override
+  String get startPlanning => 'Start planning';
 }

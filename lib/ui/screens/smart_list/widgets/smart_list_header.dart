@@ -42,7 +42,7 @@ class _SmartListHeaderState extends ConsumerState<SmartListHeader> {
     final service = ref.read(shoppingListServiceProvider);
     final newList = ShoppingList(
       id: const Uuid().v4(),
-      name: '${list.name} (Cópia)',
+      name: '${list.name}${AppLocalizations.of(context)!.copySuffix}',
       emoji: list.emoji,
       budget: list.budget,
       items: list.items.map((i) => i.copyWith(id: const Uuid().v4())).toList(),

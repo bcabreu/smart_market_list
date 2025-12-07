@@ -883,6 +883,90 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Others'**
   String get cat_outros;
+
+  /// No description provided for @renameList.
+  ///
+  /// In en, this message translates to:
+  /// **'Rename'**
+  String get renameList;
+
+  /// No description provided for @duplicateList.
+  ///
+  /// In en, this message translates to:
+  /// **'Duplicate'**
+  String get duplicateList;
+
+  /// No description provided for @deleteList.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get deleteList;
+
+  /// No description provided for @copySuffix.
+  ///
+  /// In en, this message translates to:
+  /// **' (Copy)'**
+  String get copySuffix;
+
+  /// No description provided for @newList.
+  ///
+  /// In en, this message translates to:
+  /// **'New List'**
+  String get newList;
+
+  /// No description provided for @editList.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit List'**
+  String get editList;
+
+  /// No description provided for @createPersonalizedList.
+  ///
+  /// In en, this message translates to:
+  /// **'Create a custom list'**
+  String get createPersonalizedList;
+
+  /// No description provided for @chooseEmoji.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose an emoji'**
+  String get chooseEmoji;
+
+  /// No description provided for @listName.
+  ///
+  /// In en, this message translates to:
+  /// **'List Name'**
+  String get listName;
+
+  /// No description provided for @listNameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Ex: Weekend BBQ'**
+  String get listNameHint;
+
+  /// No description provided for @saveChanges.
+  ///
+  /// In en, this message translates to:
+  /// **'Save Changes'**
+  String get saveChanges;
+
+  /// No description provided for @createListButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Create List'**
+  String get createListButton;
+
+  /// No description provided for @updateDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Update details'**
+  String get updateDetails;
+
+  /// No description provided for @startPlanning.
+  ///
+  /// In en, this message translates to:
+  /// **'Start planning'**
+  String get startPlanning;
 }
 
 class _AppLocalizationsDelegate
