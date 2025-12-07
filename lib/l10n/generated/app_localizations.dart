@@ -601,6 +601,90 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Mark recipes with ❤️ to see them here'**
   String get noFavoritesSubtitle;
+
+  /// No description provided for @viewNote.
+  ///
+  /// In en, this message translates to:
+  /// **'View note'**
+  String get viewNote;
+
+  /// No description provided for @totalLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Total'**
+  String get totalLabel;
+
+  /// No description provided for @newNoteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'New Note'**
+  String get newNoteTitle;
+
+  /// No description provided for @newNoteSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Register your purchase'**
+  String get newNoteSubtitle;
+
+  /// No description provided for @storeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Store Name'**
+  String get storeLabel;
+
+  /// No description provided for @storeHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Ex: Central Supermarket'**
+  String get storeHint;
+
+  /// No description provided for @totalValueLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Value'**
+  String get totalValueLabel;
+
+  /// No description provided for @requiredField.
+  ///
+  /// In en, this message translates to:
+  /// **'Required'**
+  String get requiredField;
+
+  /// No description provided for @notePhotoLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Note Photo (optional)'**
+  String get notePhotoLabel;
+
+  /// No description provided for @addPhotoHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Take photo or choose from gallery'**
+  String get addPhotoHint;
+
+  /// No description provided for @saveNoteButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Save Note'**
+  String get saveNoteButton;
+
+  /// No description provided for @generalPurchase.
+  ///
+  /// In en, this message translates to:
+  /// **'General Purchase'**
+  String get generalPurchase;
+
+  /// No description provided for @takePhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Take Photo'**
+  String get takePhoto;
+
+  /// No description provided for @chooseFromGallery.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose from Gallery'**
+  String get chooseFromGallery;
 }
 
 class _AppLocalizationsDelegate

@@ -82,5 +82,19 @@
   "difficultyHard": "Difícil",
   "favoriteRecipesTitle": "Receitas Favoritas",
   "noFavorites": "Nenhuma receita favorita",
-  "noFavoritesSubtitle": "Marque receitas com ❤️ para vê-las aqui"
+  "noFavoritesSubtitle": "Marque receitas com ❤️ para vê-las aqui",
+  "viewNote": "Ver nota",
+  "totalLabel": "Total",
+  "newNoteTitle": "Nova Nota",
+  "newNoteSubtitle": "Registre sua compra",
+  "storeLabel": "Nome do Mercado",
+  "storeHint": "Ex: Supermercado Central",
+  "totalValueLabel": "Valor Total",
+  "requiredField": "Obrigatório",
+  "notePhotoLabel": "Foto da Nota (opcional)",
+  "addPhotoHint": "Tirar foto ou escolher da galeria",
+  "saveNoteButton": "Salvar Nota",
+  "generalPurchase": "Compra Geral",
+  "takePhoto": "Tirar Foto",
+  "chooseFromGallery": "Escolher da Galeria"
 }

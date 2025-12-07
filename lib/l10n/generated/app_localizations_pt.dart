@@ -271,4 +271,46 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get noFavoritesSubtitle => 'Marque receitas com ❤️ para vê-las aqui';
+
+  @override
+  String get viewNote => 'Ver nota';
+
+  @override
+  String get totalLabel => 'Total';
+
+  @override
+  String get newNoteTitle => 'Nova Nota';
+
+  @override
+  String get newNoteSubtitle => 'Registre sua compra';
+
+  @override
+  String get storeLabel => 'Nome do Mercado';
+
+  @override
+  String get storeHint => 'Ex: Supermercado Central';
+
+  @override
+  String get totalValueLabel => 'Valor Total';
+
+  @override
+  String get requiredField => 'Obrigatório';
+
+  @override
+  String get notePhotoLabel => 'Foto da Nota (opcional)';
+
+  @override
+  String get addPhotoHint => 'Tirar foto ou escolher da galeria';
+
+  @override
+  String get saveNoteButton => 'Salvar Nota';
+
+  @override
+  String get generalPurchase => 'Compra Geral';
+
+  @override
+  String get takePhoto => 'Tirar Foto';
+
+  @override
+  String get chooseFromGallery => 'Escolher da Galeria';
 }

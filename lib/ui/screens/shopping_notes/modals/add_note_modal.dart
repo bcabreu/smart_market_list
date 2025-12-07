@@ -10,6 +10,7 @@ import 'package:smart_market_list/core/utils/currency_input_formatter.dart';
 import 'package:smart_market_list/data/models/shopping_item.dart';
 import 'package:smart_market_list/data/models/shopping_note.dart';
 import 'package:smart_market_list/providers/shopping_notes_provider.dart';
+import 'package:smart_market_list/l10n/generated/app_localizations.dart';
 
 class AddNoteModal extends ConsumerStatefulWidget {
   const AddNoteModal({super.key});
@@ -51,50 +52,93 @@ class _AddNoteModalState extends ConsumerState<AddNoteModal> {
   }
 
   void _showImageSourceOptions() {
+    final l10n = AppLocalizations.of(context)!;
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
       builder: (context) => Container(
+        padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
           color: Theme.of(context).scaffoldBackgroundColor,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            ListTile(
-              leading: const Icon(Icons.camera_alt),
-              title: const Text('Tirar Foto'),
-              onTap: () {
-                Navigator.pop(context);
-                _pickImage();
-              },
+             Text(
+              l10n.notePhotoLabel.replaceAll(' (opcional)', ''),
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
-            ListTile(
-              leading: const Icon(Icons.photo_library),
-              title: const Text('Escolher da Galeria'),
-              onTap: () {
-                Navigator.pop(context);
-                _pickImageGallery();
-              },
+            const SizedBox(height: 24),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                _buildActionButton(
+                  icon: Icons.camera_alt,
+                  label: l10n.camera,
+                  onTap: () {
+                    Navigator.pop(context);
+                    _pickImage();
+                  },
+                ),
+                _buildActionButton(
+                  icon: Icons.photo_library,
+                  label: l10n.gallery,
+                  onTap: () {
+                    Navigator.pop(context);
+                    _pickImageGallery();
+                  },
+                ),
+              ],
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 16),
           ],
         ),
       ),
     );
   }
 
+  Widget _buildActionButton({required IconData icon, required String label, required VoidCallback onTap}) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppColors.primary.withOpacity(0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, color: AppColors.primary, size: 32),
+          ),
+          const SizedBox(height: 8),
+          Text(label, style: const TextStyle(fontWeight: FontWeight.w500)),
+        ],
+      ),
+    );
+  }
+
   Future<void> _saveNote() async {
     if (_formKey.currentState!.validate()) {
-      // Parse total value
-      String cleanValue = _totalController.text.replaceAll('R\$', '').replaceAll('.', '').replaceAll(',', '.').trim();
+      // Parse total value - Handle both dot and comma
+      String cleanValue = _totalController.text.trim();
+      
+      // Remove currency symbol if present
+      final locale = Localizations.localeOf(context);
+      final currencySymbol = locale.languageCode == 'pt' ? 'R\$' : '\$';
+      cleanValue = cleanValue.replaceAll(currencySymbol, '').trim();
+
+      // Normalize decimal separator
+      if (cleanValue.contains(',')) {
+        cleanValue = cleanValue.replaceAll('.', '').replaceAll(',', '.');
+      }
+
       double totalValue = double.tryParse(cleanValue) ?? 0.0;
 
       // Create a single item representing the total purchase
       final items = [
         ShoppingItem(
-          name: 'Compra Geral',
+          name: AppLocalizations.of(context)!.generalPurchase,
           price: totalValue,
           quantity: '1',
         )
@@ -142,6 +186,9 @@ class _AddNoteModalState extends ConsumerState<AddNoteModal> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final inputFillColor = isDark ? const Color(0xFF2C2C2C) : const Color(0xFFF5F5F5);
     final borderColor = isDark ? Colors.grey[800]! : Colors.grey[300]!;
+    final l10n = AppLocalizations.of(context)!;
+    final locale = Localizations.localeOf(context);
+    final currencySymbol = locale.languageCode == 'pt' ? 'R\$' : '\$';
 
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
@@ -164,16 +211,16 @@ class _AddNoteModalState extends ConsumerState<AddNoteModal> {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        'Nova Nota',
-                        style: TextStyle(
+                      Text(
+                        l10n.newNoteTitle,
+                        style: const TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        'Registre sua compra',
+                        l10n.newNoteSubtitle,
                         style: TextStyle(
                           fontSize: 14,
                           color: isDark ? Colors.grey[400] : Colors.grey[600],
@@ -204,12 +251,12 @@ class _AddNoteModalState extends ConsumerState<AddNoteModal> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Store Name
-                    _buildLabel('Nome do Mercado', Icons.store_outlined, isDark),
+                    _buildLabel(l10n.storeLabel, Icons.store_outlined, isDark),
                     const SizedBox(height: 8),
                     TextFormField(
                       controller: _storeController,
                       decoration: InputDecoration(
-                        hintText: 'Ex: Supermercado Central',
+                        hintText: l10n.storeHint,
                         filled: true,
                         fillColor: inputFillColor,
                         border: OutlineInputBorder(
@@ -218,17 +265,17 @@ class _AddNoteModalState extends ConsumerState<AddNoteModal> {
                         ),
                         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                       ),
-                      validator: (value) => value?.isEmpty ?? true ? 'Obrigatório' : null,
+                      validator: (value) => value?.isEmpty ?? true ? l10n.requiredField : null,
                     ),
                     const SizedBox(height: 24),
 
                     // Total Value
-                    _buildLabel('Valor Total', Icons.attach_money, isDark),
+                    _buildLabel(l10n.totalValueLabel, Icons.attach_money, isDark),
                     const SizedBox(height: 8),
                     Row(
                       children: [
                         Text(
-                          'R\$',
+                          currencySymbol,
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
@@ -240,9 +287,9 @@ class _AddNoteModalState extends ConsumerState<AddNoteModal> {
                           child: TextFormField(
                             controller: _totalController,
                             keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                            inputFormatters: [CurrencyInputFormatter()],
+                            inputFormatters: [CurrencyInputFormatter(locale: Localizations.localeOf(context).toString())],
                             decoration: InputDecoration(
-                              hintText: '0,00',
+                              hintText: locale.languageCode == 'pt' ? '0,00' : '0.00',
                               filled: true,
                               fillColor: inputFillColor,
                               border: OutlineInputBorder(
@@ -251,15 +298,14 @@ class _AddNoteModalState extends ConsumerState<AddNoteModal> {
                               ),
                               contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                             ),
-                            validator: (value) => value?.isEmpty ?? true ? 'Obrigatório' : null,
+                            validator: (value) => value?.isEmpty ?? true ? l10n.requiredField : null,
                           ),
                         ),
                       ],
                     ),
                     const SizedBox(height: 24),
-
                     // Photo Upload
-                    _buildLabel('Foto da Nota (opcional)', Icons.camera_alt_outlined, isDark),
+                    _buildLabel(l10n.notePhotoLabel, Icons.camera_alt_outlined, isDark),
                     const SizedBox(height: 8),
                     GestureDetector(
                       onTap: _showImageSourceOptions,
@@ -289,7 +335,7 @@ class _AddNoteModalState extends ConsumerState<AddNoteModal> {
                                     ),
                                     const SizedBox(height: 12),
                                     Text(
-                                      'Tirar foto ou escolher da galeria',
+                                      l10n.addPhotoHint,
                                       style: TextStyle(
                                         color: isDark ? Colors.grey[500] : Colors.grey[500],
                                         fontSize: 14,
@@ -322,14 +368,14 @@ class _AddNoteModalState extends ConsumerState<AddNoteModal> {
                     ),
                     elevation: 0,
                   ),
-                  child: const Row(
+                  child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.add, size: 24),
-                      SizedBox(width: 8),
+                      const Icon(Icons.add, size: 24),
+                      const SizedBox(width: 8),
                       Text(
-                        'Salvar Nota',
-                        style: TextStyle(
+                        l10n.saveNoteButton,
+                        style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
                         ),

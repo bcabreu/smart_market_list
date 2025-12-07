@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:smart_market_list/data/models/shopping_note.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:smart_market_list/l10n/generated/app_localizations.dart';
 
 class ShoppingNoteCard extends StatelessWidget {
   final ShoppingNote note;
@@ -19,11 +20,14 @@ class ShoppingNoteCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Custom date format to match "01 de dez. de 2024"
+    final l10n = AppLocalizations.of(context)!;
+    final locale = Localizations.localeOf(context);
+    
+    // Custom date format
     final day = note.date.day.toString().padLeft(2, '0');
-    final month = DateFormat('MMM', 'pt_BR').format(note.date).toLowerCase();
+    final month = DateFormat('MMM', locale.toString()).format(note.date).toLowerCase();
     final year = note.date.year;
-    final dateString = '$day de $month. de $year';
+    final dateString = '$day ${locale.languageCode == 'pt' ? 'de ' : ''}$month${locale.languageCode == 'pt' ? '.' : ''} ${locale.languageCode == 'pt' ? 'de ' : ''}$year';
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final cardColor = isDark ? const Color(0xFF1E1E1E) : Colors.white;
@@ -112,14 +116,17 @@ class ShoppingNoteCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Text(
-                    'Total',
+                    l10n.totalLabel,
                     style: TextStyle(
                       fontSize: 12,
                       color: mutedColor,
                     ),
                   ),
                   Text(
-                    NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$').format(note.total),
+                    NumberFormat.currency(
+                      locale: locale.toString(), 
+                      symbol: locale.languageCode == 'pt' ? 'R\$' : '\$'
+                    ).format(note.total),
                     style: TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
@@ -175,7 +182,7 @@ class ShoppingNoteCard extends StatelessWidget {
                       ),
                     ),
                     icon: const Icon(Icons.image_outlined, size: 18),
-                    label: const Text('Ver nota'),
+                    label: Text(l10n.viewNote),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -193,7 +200,7 @@ class ShoppingNoteCard extends StatelessWidget {
                     ),
                   ),
                   icon: const Icon(Icons.delete_outline, size: 18),
-                  label: const Text('Excluir'),
+                  label: Text(l10n.delete),
                 ),
               ),
             ],

@@ -271,4 +271,46 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get noFavoritesSubtitle => 'Mark recipes with ❤️ to see them here';
+
+  @override
+  String get viewNote => 'View note';
+
+  @override
+  String get totalLabel => 'Total';
+
+  @override
+  String get newNoteTitle => 'New Note';
+
+  @override
+  String get newNoteSubtitle => 'Register your purchase';
+
+  @override
+  String get storeLabel => 'Store Name';
+
+  @override
+  String get storeHint => 'Ex: Central Supermarket';
+
+  @override
+  String get totalValueLabel => 'Total Value';
+
+  @override
+  String get requiredField => 'Required';
+
+  @override
+  String get notePhotoLabel => 'Note Photo (optional)';
+
+  @override
+  String get addPhotoHint => 'Take photo or choose from gallery';
+
+  @override
+  String get saveNoteButton => 'Save Note';
+
+  @override
+  String get generalPurchase => 'General Purchase';
+
+  @override
+  String get takePhoto => 'Take Photo';
+
+  @override
+  String get chooseFromGallery => 'Choose from Gallery';
 }

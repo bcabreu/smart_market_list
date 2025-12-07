@@ -19,8 +19,13 @@ class ShoppingNotesScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final notesAsync = ref.watch(shoppingNotesProvider);
-    final currencyFormat = NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$');
     final l10n = AppLocalizations.of(context)!;
+    final locale = Localizations.localeOf(context);
+    final currencySymbol = locale.languageCode == 'pt' ? 'R\$' : '\$';
+    final currencyFormat = NumberFormat.currency(
+      locale: locale.toString(),
+      symbol: currencySymbol,
+    );
 
 
     return Scaffold(

@@ -82,5 +82,19 @@
   "difficultyHard": "Hard",
   "favoriteRecipesTitle": "Favorite Recipes",
   "noFavorites": "No favorite recipes",
-  "noFavoritesSubtitle": "Mark recipes with ❤️ to see them here"
+  "noFavoritesSubtitle": "Mark recipes with ❤️ to see them here",
+  "viewNote": "View note",
+  "totalLabel": "Total",
+  "newNoteTitle": "New Note",
+  "newNoteSubtitle": "Register your purchase",
+  "storeLabel": "Store Name",
+  "storeHint": "Ex: Central Supermarket",
+  "totalValueLabel": "Total Value",
+  "requiredField": "Required",
+  "notePhotoLabel": "Note Photo (optional)",
+  "addPhotoHint": "Take photo or choose from gallery",
+  "saveNoteButton": "Save Note",
+  "generalPurchase": "General Purchase",
+  "takePhoto": "Take Photo",
+  "chooseFromGallery": "Choose from Gallery"
 }
