@@ -601,6 +601,9 @@ class ProfileScreen extends ConsumerWidget {
          final recipesService = ref.read(recipesServiceProvider);
          await recipesService.clearRecipes();
          
+         // 5. Clear Premium Status
+         await ref.read(premiumSinceProvider.notifier).setPremium(false);
+         
          // Wait a bit for UX
          await Future.delayed(const Duration(seconds: 1));
 
