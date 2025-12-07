@@ -14,6 +14,7 @@ import 'providers/theme_provider.dart';
 import 'ui/screens/main_screen.dart';
 
 void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
   await Hive.initFlutter();
   await initializeDateFormatting('pt_BR', null);
   
@@ -29,6 +30,7 @@ void main() async {
   await Hive.openBox<String>('hidden_suggestions');
   await Hive.openBox<ShoppingItem>('item_history');
   await Hive.openBox<double>('expense_goals');
+  await Hive.openBox<List<String>>('list_shared_users');
   
   // Migration: Ensure all lists use ID as key
   final keys = box.keys.toList();

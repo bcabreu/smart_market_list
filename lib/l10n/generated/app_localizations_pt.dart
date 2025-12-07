@@ -563,4 +563,72 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get chartsDisclaimer => 'Valores baseados nas notas fiscais enviadas';
+
+  @override
+  String get pdfReportTitle => 'Relatório Financeiro Completo';
+
+  @override
+  String pdfGeneratedAt(Object date) {
+    return 'Gerado em $date';
+  }
+
+  @override
+  String get pdfExecutiveSummary => 'Resumo Executivo';
+
+  @override
+  String get pdfTotalSpent => 'Total Gasto (12m)';
+
+  @override
+  String get pdfMonthlyAverage => 'Média Mensal';
+
+  @override
+  String get pdfHighestSpending => 'Maior Gasto';
+
+  @override
+  String get pdfAverageTicket => 'Ticket Médio';
+
+  @override
+  String get pdfFinancialEvolution => 'Evolução Financeira';
+
+  @override
+  String get pdfMonthlySummary => 'Resumo Mensal (Metas vs. Gastos)';
+
+  @override
+  String get pdfDetailedLogs => 'Detalhamento de Compras';
+
+  @override
+  String get pdfMonth => 'Mês';
+
+  @override
+  String get pdfGoal => 'Meta';
+
+  @override
+  String get pdfSpent => 'Gasto';
+
+  @override
+  String get pdfStatus => 'Status';
+
+  @override
+  String get pdfItem => 'Item';
+
+  @override
+  String get pdfQty => 'Qtd';
+
+  @override
+  String get pdfPrice => 'Valor';
+
+  @override
+  String get pdfDiff => 'Diferença';
+
+  @override
+  String get pdfStatusOver => 'Estourou';
+
+  @override
+  String get pdfStatusOk => 'Dentro';
+
+  @override
+  String get pdfPage => 'Página';
+
+  @override
+  String get pdfOf => 'de';
 }

@@ -12,7 +12,13 @@ import 'package:smart_market_list/providers/notifications_provider.dart';
 import 'package:smart_market_list/ui/screens/profile/modals/share_list_modal.dart';
 import 'package:smart_market_list/ui/screens/profile/modals/expense_charts_modal.dart';
 import 'package:smart_market_list/providers/locale_provider.dart';
+import 'package:smart_market_list/ui/common/modals/loading_dialog.dart';
+import 'package:smart_market_list/core/services/pdf_service.dart';
+import 'package:smart_market_list/providers/goals_provider.dart';
+import 'package:smart_market_list/providers/shopping_notes_provider.dart';
 import 'package:smart_market_list/l10n/generated/app_localizations.dart';
+import 'package:smart_market_list/providers/shopping_list_provider.dart';
+import 'package:smart_market_list/providers/shared_users_provider.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -206,6 +212,13 @@ class ProfileScreen extends ConsumerWidget {
     final notificationsEnabled = ref.watch(notificationsEnabledProvider);
     final locale = ref.watch(localeProvider);
     final l10n = AppLocalizations.of(context)!;
+    
+    // Get shared count for active list
+    final currentList = ref.watch(currentListProvider);
+    final sharedUsers = currentList != null 
+        ? (ref.watch(sharedUsersProvider)[currentList.id] ?? []) 
+        : <String>[];
+    final sharedCount = sharedUsers.length;
 
     return Scaffold(
       body: SafeArea(
@@ -278,7 +291,11 @@ class ProfileScreen extends ConsumerWidget {
                         SettingsTile(
                           icon: Icons.share,
                           title: l10n.shareList,
-                          subtitle: l10n.shareListSubtitle,
+                          subtitle: sharedCount > 0 
+                              ? (locale?.languageCode == 'pt' 
+                                  ? 'Compartilhado com $sharedCount pessoa${sharedCount > 1 ? 's' : ''}' 
+                                  : 'Shared with $sharedCount person${sharedCount > 1 ? 's' : ''}')
+                              : l10n.shareListSubtitle,
                           isLocked: !isPremium,
                           onTap: !isPremium 
                               ? () => _showPaywall(context) 
@@ -313,7 +330,7 @@ class ProfileScreen extends ConsumerWidget {
                           title: l10n.exportReports,
                           subtitle: l10n.exportReportsSubtitle,
                           isLocked: !isPremium,
-                          onTap: !isPremium ? () => _showPaywall(context) : null,
+                          onTap: !isPremium ? () => _showPaywall(context) : () => _generatePdfReport(context, ref),
                         ),
                       ],
                     ),
@@ -358,6 +375,57 @@ class ProfileScreen extends ConsumerWidget {
         ),
       ),
     );
+  }
+
+
+  Future<void> _generatePdfReport(BuildContext context, WidgetRef ref) async {
+    try {
+      // Show loading dialog
+      LoadingDialog.show(context, 'Gerando relatório em PDF...');
+
+      // Small delay to ensure UI renders
+      await Future.delayed(const Duration(milliseconds: 500));
+
+      final notesAsync = ref.read(shoppingNotesProvider);
+      final notes = notesAsync.value ?? []; 
+      
+      // Calculate goals for last 12 months
+      final now = DateTime.now();
+      final Map<String, double> goalsMap = {};
+      
+      for (int i = 0; i < 12; i++) {
+        final date = DateTime(now.year, now.month - i, 1);
+        final key = '${date.year}-${date.month.toString().padLeft(2, '0')}';
+        final goal = ref.read(goalsProvider.notifier).getGoal(key);
+        goalsMap[key] = goal;
+      }
+
+      final l10n = AppLocalizations.of(context)!;
+      final locale = Localizations.localeOf(context);
+
+      await PdfService().generateAndShareReport(
+        notes: notes, 
+        goals: goalsMap,
+        l10n: l10n,
+        locale: locale,
+      );
+      
+      // Hide loading
+      if (context.mounted) {
+        LoadingDialog.hide(context);
+      }
+
+    } catch (e) {
+      if (context.mounted) {
+        LoadingDialog.hide(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Erro ao gerar relatório: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   String _getThemeModeName(ThemeMode mode, AppLocalizations l10n) {

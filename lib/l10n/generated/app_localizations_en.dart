@@ -563,4 +563,72 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get chartsDisclaimer => 'Values based on uploaded receipts';
+
+  @override
+  String get pdfReportTitle => 'Full Financial Report';
+
+  @override
+  String pdfGeneratedAt(Object date) {
+    return 'Generated at $date';
+  }
+
+  @override
+  String get pdfExecutiveSummary => 'Executive Summary';
+
+  @override
+  String get pdfTotalSpent => 'Total Spent (12m)';
+
+  @override
+  String get pdfMonthlyAverage => 'Monthly Average';
+
+  @override
+  String get pdfHighestSpending => 'Highest Spending';
+
+  @override
+  String get pdfAverageTicket => 'Average Ticket';
+
+  @override
+  String get pdfFinancialEvolution => 'Financial Evolution';
+
+  @override
+  String get pdfMonthlySummary => 'Monthly Summary (Goals vs. Spent)';
+
+  @override
+  String get pdfDetailedLogs => 'Detailed Shopping Logs';
+
+  @override
+  String get pdfMonth => 'Month';
+
+  @override
+  String get pdfGoal => 'Goal';
+
+  @override
+  String get pdfSpent => 'Spent';
+
+  @override
+  String get pdfStatus => 'Status';
+
+  @override
+  String get pdfItem => 'Item';
+
+  @override
+  String get pdfQty => 'Qty';
+
+  @override
+  String get pdfPrice => 'Price';
+
+  @override
+  String get pdfDiff => 'Diff';
+
+  @override
+  String get pdfStatusOver => 'Over Budget';
+
+  @override
+  String get pdfStatusOk => 'Within Goal';
+
+  @override
+  String get pdfPage => 'Page';
+
+  @override
+  String get pdfOf => 'of';
 }

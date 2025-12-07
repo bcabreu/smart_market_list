@@ -1177,6 +1177,138 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Values based on uploaded receipts'**
   String get chartsDisclaimer;
+
+  /// No description provided for @pdfReportTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Full Financial Report'**
+  String get pdfReportTitle;
+
+  /// No description provided for @pdfGeneratedAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Generated at {date}'**
+  String pdfGeneratedAt(Object date);
+
+  /// No description provided for @pdfExecutiveSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Executive Summary'**
+  String get pdfExecutiveSummary;
+
+  /// No description provided for @pdfTotalSpent.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Spent (12m)'**
+  String get pdfTotalSpent;
+
+  /// No description provided for @pdfMonthlyAverage.
+  ///
+  /// In en, this message translates to:
+  /// **'Monthly Average'**
+  String get pdfMonthlyAverage;
+
+  /// No description provided for @pdfHighestSpending.
+  ///
+  /// In en, this message translates to:
+  /// **'Highest Spending'**
+  String get pdfHighestSpending;
+
+  /// No description provided for @pdfAverageTicket.
+  ///
+  /// In en, this message translates to:
+  /// **'Average Ticket'**
+  String get pdfAverageTicket;
+
+  /// No description provided for @pdfFinancialEvolution.
+  ///
+  /// In en, this message translates to:
+  /// **'Financial Evolution'**
+  String get pdfFinancialEvolution;
+
+  /// No description provided for @pdfMonthlySummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Monthly Summary (Goals vs. Spent)'**
+  String get pdfMonthlySummary;
+
+  /// No description provided for @pdfDetailedLogs.
+  ///
+  /// In en, this message translates to:
+  /// **'Detailed Shopping Logs'**
+  String get pdfDetailedLogs;
+
+  /// No description provided for @pdfMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'Month'**
+  String get pdfMonth;
+
+  /// No description provided for @pdfGoal.
+  ///
+  /// In en, this message translates to:
+  /// **'Goal'**
+  String get pdfGoal;
+
+  /// No description provided for @pdfSpent.
+  ///
+  /// In en, this message translates to:
+  /// **'Spent'**
+  String get pdfSpent;
+
+  /// No description provided for @pdfStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Status'**
+  String get pdfStatus;
+
+  /// No description provided for @pdfItem.
+  ///
+  /// In en, this message translates to:
+  /// **'Item'**
+  String get pdfItem;
+
+  /// No description provided for @pdfQty.
+  ///
+  /// In en, this message translates to:
+  /// **'Qty'**
+  String get pdfQty;
+
+  /// No description provided for @pdfPrice.
+  ///
+  /// In en, this message translates to:
+  /// **'Price'**
+  String get pdfPrice;
+
+  /// No description provided for @pdfDiff.
+  ///
+  /// In en, this message translates to:
+  /// **'Diff'**
+  String get pdfDiff;
+
+  /// No description provided for @pdfStatusOver.
+  ///
+  /// In en, this message translates to:
+  /// **'Over Budget'**
+  String get pdfStatusOver;
+
+  /// No description provided for @pdfStatusOk.
+  ///
+  /// In en, this message translates to:
+  /// **'Within Goal'**
+  String get pdfStatusOk;
+
+  /// No description provided for @pdfPage.
+  ///
+  /// In en, this message translates to:
+  /// **'Page'**
+  String get pdfPage;
+
+  /// No description provided for @pdfOf.
+  ///
+  /// In en, this message translates to:
+  /// **'of'**
+  String get pdfOf;
 }
 
 class _AppLocalizationsDelegate

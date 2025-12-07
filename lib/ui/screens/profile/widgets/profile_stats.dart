@@ -5,6 +5,8 @@ import 'package:smart_market_list/providers/recipes_provider.dart';
 import 'package:smart_market_list/providers/shopping_notes_provider.dart';
 import 'package:smart_market_list/ui/screens/profile/favorite_recipes_screen.dart';
 import 'package:smart_market_list/providers/navigation_provider.dart';
+import 'package:smart_market_list/providers/shopping_list_provider.dart';
+import 'package:smart_market_list/providers/shared_users_provider.dart';
 
 import 'package:smart_market_list/l10n/generated/app_localizations.dart';
 
@@ -30,6 +32,13 @@ class ProfileStats extends ConsumerWidget {
     notesAsync.whenData((notes) {
       notesCount = notes.length;
     });
+
+    // Get shared count for active list
+    final currentList = ref.watch(currentListProvider);
+    final sharedUsers = currentList != null 
+        ? (ref.watch(sharedUsersProvider)[currentList.id] ?? []) 
+        : <String>[];
+    final sharedCount = sharedUsers.length;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -70,7 +79,7 @@ class ProfileStats extends ConsumerWidget {
             icon: Icons.group_outlined,
             iconColor: Colors.white,
             iconBgColor: const Color(0xFF26A69A), // Teal
-            count: '1',
+            count: '$sharedCount',
             label: l10n.sharingListsStats,
           ),
         ],
@@ -129,13 +138,20 @@ class ProfileStats extends ConsumerWidget {
                 ),
               ),
               const SizedBox(height: 4),
-              Text(
-                label,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: isDark ? Colors.grey[400] : Colors.grey[600],
-                  height: 1.2,
+              SizedBox(
+                height: 32, // Fixed height for 2 lines of text
+                child: Center(
+                  child: Text(
+                    label,
+                    textAlign: TextAlign.center,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 11, // Slightly smaller
+                      color: isDark ? Colors.grey[400] : Colors.grey[600],
+                      height: 1.1,
+                    ),
+                  ),
                 ),
               ),
             ],

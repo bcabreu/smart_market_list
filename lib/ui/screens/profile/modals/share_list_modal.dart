@@ -4,6 +4,8 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:smart_market_list/core/theme/app_colors.dart';
 import 'package:smart_market_list/l10n/generated/app_localizations.dart';
+import 'package:smart_market_list/providers/shopping_list_provider.dart';
+import 'package:smart_market_list/providers/shared_users_provider.dart';
 
 class ShareListModal extends ConsumerStatefulWidget {
   const ShareListModal({super.key});
@@ -14,7 +16,6 @@ class ShareListModal extends ConsumerStatefulWidget {
 
 class _ShareListModalState extends ConsumerState<ShareListModal> {
   late TextEditingController _emailController;
-  final List<String> _sharedUsers = ['joao.silva@email.com']; // Simulated initial state
 
   @override
   void initState() {
@@ -32,23 +33,25 @@ class _ShareListModalState extends ConsumerState<ShareListModal> {
     final l10n = AppLocalizations.of(context)!;
     final email = _emailController.text.trim();
     
+    // Get current list ID
+    final currentList = ref.read(currentListProvider);
+    if (currentList == null) return;
+    
+    // Get shared users from provider
+    final sharedUsers = ref.read(sharedUsersProvider)[currentList.id] ?? [];
+    
     if (email.isNotEmpty && email.contains('@')) {
-      if (_sharedUsers.isNotEmpty) { // Limit to 1 (array has 0 or 1 items for this logic to work with "1 person only")
-         // Actually the prompt said "1 person only" which means max 1 share.
-         // If `_sharedUsers` has 1 item, we block.
-         // My previous logic was `>= 1`.
-         if (_sharedUsers.length >= 1) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(l10n.shareLimitError)),
-            );
-            return;
-         }
+      if (sharedUsers.isNotEmpty) { 
+         // Limit to 1 person
+         ScaffoldMessenger.of(context).showSnackBar(
+           SnackBar(content: Text(l10n.shareLimitError)),
+         );
+         return;
       }
       
-      setState(() {
-        _sharedUsers.add(email);
-        _emailController.clear();
-      });
+      // Update persistent state
+      await ref.read(sharedUsersProvider.notifier).addUser(currentList.id, email);
+      _emailController.clear();
       
       // Open system share dialog
       await Share.share(l10n.shareInviteMessage);
@@ -56,16 +59,23 @@ class _ShareListModalState extends ConsumerState<ShareListModal> {
   }
 
   void _removeUser(String email) {
-    setState(() {
-      _sharedUsers.remove(email);
-    });
+    final currentList = ref.read(currentListProvider);
+    if (currentList == null) return;
+    
+    ref.read(sharedUsersProvider.notifier).removeUser(currentList.id, email);
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final canAdd = _sharedUsers.isEmpty;
+    
+    final currentList = ref.watch(currentListProvider);
+    final sharedUsers = currentList != null 
+        ? (ref.watch(sharedUsersProvider)[currentList.id] ?? []) 
+        : <String>[];
+        
+    final canAdd = sharedUsers.isEmpty;
 
     return Container(
       padding: const EdgeInsets.all(24),
@@ -173,7 +183,7 @@ class _ShareListModalState extends ConsumerState<ShareListModal> {
           const SizedBox(height: 32),
 
           // Sharing With Section
-          if (_sharedUsers.isNotEmpty) ...[
+          if (sharedUsers.isNotEmpty) ...[
             Text(
               l10n.sharingWithLabel,
               style: TextStyle(
@@ -203,12 +213,12 @@ class _ShareListModalState extends ConsumerState<ShareListModal> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      _sharedUsers.first,
+                      sharedUsers.first,
                       style: const TextStyle(fontWeight: FontWeight.w500),
                     ),
                   ),
                   IconButton(
-                    onPressed: () => _removeUser(_sharedUsers.first),
+                    onPressed: () => _removeUser(sharedUsers.first),
                     icon: const Icon(Icons.close, size: 18),
                     style: IconButton.styleFrom(
                       backgroundColor: const Color(0xFFFFEBEE), // Light red
