@@ -178,6 +178,7 @@ class ProfileScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isPremium = ref.watch(isPremiumProvider);
+    final isLoggedIn = ref.watch(isLoggedInProvider);
     final themeMode = ref.watch(themeModeProvider);
     final notificationsEnabled = ref.watch(notificationsEnabledProvider);
     final locale = ref.watch(localeProvider);
@@ -334,18 +335,20 @@ class ProfileScreen extends ConsumerWidget {
                           title: l10n.privacy,
                           onTap: () => _showPrivacyPolicy(context),
                         ),
-                        SettingsTile(
-                          icon: Icons.delete_forever,
-                          title: l10n.deleteAccount,
-                          onTap: () => _deleteAccount(context, ref),
-                          textColor: Colors.red,
-                        ),
-                        SettingsTile(
-                          icon: Icons.logout,
-                          title: l10n.logout,
-                          onTap: () => _logout(context, ref),
-                          trailing: const SizedBox(), // Hide chevron
-                        ),
+                        if (isLoggedIn) ...[
+                          SettingsTile(
+                            icon: Icons.delete_forever,
+                            title: l10n.deleteAccount,
+                            onTap: () => _deleteAccount(context, ref),
+                            textColor: Colors.red,
+                          ),
+                          SettingsTile(
+                            icon: Icons.logout,
+                            title: l10n.logout,
+                            onTap: () => _logout(context, ref),
+                            trailing: const SizedBox(), // Hide chevron
+                          ),
+                        ],
                       ],
                     ),
                   ],
