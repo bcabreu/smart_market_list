@@ -1123,6 +1123,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Only 1 person allowed in the current plan.'**
   String get shareLimitError;
+
+  /// No description provided for @expenseChartsPeriod.
+  ///
+  /// In en, this message translates to:
+  /// **'Last 6 months'**
+  String get expenseChartsPeriod;
+
+  /// No description provided for @monthlyAverage.
+  ///
+  /// In en, this message translates to:
+  /// **'Monthly average:'**
+  String get monthlyAverage;
+
+  /// No description provided for @totalSixMonths.
+  ///
+  /// In en, this message translates to:
+  /// **'Total (6 months):'**
+  String get totalSixMonths;
+
+  /// No description provided for @goalLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Goal'**
+  String get goalLabel;
+
+  /// No description provided for @editGoalTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Budget Goal'**
+  String get editGoalTitle;
+
+  /// No description provided for @editGoalHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter amount'**
+  String get editGoalHint;
+
+  /// No description provided for @statusWithinGoal.
+  ///
+  /// In en, this message translates to:
+  /// **'Within goal'**
+  String get statusWithinGoal;
+
+  /// No description provided for @statusOverBudget.
+  ///
+  /// In en, this message translates to:
+  /// **'Over budget'**
+  String get statusOverBudget;
+
+  /// No description provided for @chartsDisclaimer.
+  ///
+  /// In en, this message translates to:
+  /// **'Values based on uploaded receipts'**
+  String get chartsDisclaimer;
 }
 
 class _AppLocalizationsDelegate

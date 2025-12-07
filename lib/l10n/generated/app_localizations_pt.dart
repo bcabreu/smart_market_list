@@ -536,4 +536,31 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get shareLimitError => 'Apenas 1 pessoa é permitida no plano atual.';
+
+  @override
+  String get expenseChartsPeriod => 'Últimos 6 meses';
+
+  @override
+  String get monthlyAverage => 'Média mensal:';
+
+  @override
+  String get totalSixMonths => 'Total (6 meses):';
+
+  @override
+  String get goalLabel => 'Meta';
+
+  @override
+  String get editGoalTitle => 'Meta de Gastos';
+
+  @override
+  String get editGoalHint => 'Digite o valor';
+
+  @override
+  String get statusWithinGoal => 'Dentro da meta';
+
+  @override
+  String get statusOverBudget => 'Estourou a meta';
+
+  @override
+  String get chartsDisclaimer => 'Valores baseados nas notas fiscais enviadas';
 }

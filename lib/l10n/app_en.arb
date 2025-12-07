@@ -169,5 +169,14 @@
   "shareRealTimeInfo": "✨ List changes are synchronized in real time",
   "shareInviteMessage": "Hello! I'm inviting you to edit my shopping list on Smart Market List. Let's save together!",
   "shareLimitReached": "Limit reached (1/1)",
-  "shareLimitError": "Only 1 person allowed in the current plan."
+  "shareLimitError": "Only 1 person allowed in the current plan.",
+  "expenseChartsPeriod": "Last 6 months",
+  "monthlyAverage": "Monthly average:",
+  "totalSixMonths": "Total (6 months):",
+  "goalLabel": "Goal",
+  "editGoalTitle": "Budget Goal",
+  "editGoalHint": "Enter amount",
+  "statusWithinGoal": "Within goal",
+  "statusOverBudget": "Over budget",
+  "chartsDisclaimer": "Values based on uploaded receipts"
 }

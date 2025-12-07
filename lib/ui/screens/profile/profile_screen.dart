@@ -10,6 +10,7 @@ import 'package:smart_market_list/ui/screens/profile/widgets/profile_stats.dart'
 import 'package:smart_market_list/ui/screens/profile/widgets/settings_card.dart';
 import 'package:smart_market_list/providers/notifications_provider.dart';
 import 'package:smart_market_list/ui/screens/profile/modals/share_list_modal.dart';
+import 'package:smart_market_list/ui/screens/profile/modals/expense_charts_modal.dart';
 import 'package:smart_market_list/providers/locale_provider.dart';
 import 'package:smart_market_list/l10n/generated/app_localizations.dart';
 
@@ -298,7 +299,14 @@ class ProfileScreen extends ConsumerWidget {
                           title: l10n.expenseCharts,
                           subtitle: l10n.expenseChartsSubtitle,
                           isLocked: !isPremium,
-                          onTap: !isPremium ? () => _showPaywall(context) : null,
+                          onTap: !isPremium 
+                              ? () => _showPaywall(context) 
+                              : () => showModalBottomSheet(
+                                  context: context,
+                                  isScrollControlled: true,
+                                  backgroundColor: Colors.transparent,
+                                  builder: (context) => const ExpenseChartsModal(),
+                                ),
                         ),
                         SettingsTile(
                           icon: Icons.picture_as_pdf,

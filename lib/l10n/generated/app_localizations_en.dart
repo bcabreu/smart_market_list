@@ -536,4 +536,31 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get shareLimitError => 'Only 1 person allowed in the current plan.';
+
+  @override
+  String get expenseChartsPeriod => 'Last 6 months';
+
+  @override
+  String get monthlyAverage => 'Monthly average:';
+
+  @override
+  String get totalSixMonths => 'Total (6 months):';
+
+  @override
+  String get goalLabel => 'Goal';
+
+  @override
+  String get editGoalTitle => 'Budget Goal';
+
+  @override
+  String get editGoalHint => 'Enter amount';
+
+  @override
+  String get statusWithinGoal => 'Within goal';
+
+  @override
+  String get statusOverBudget => 'Over budget';
+
+  @override
+  String get chartsDisclaimer => 'Values based on uploaded receipts';
 }
