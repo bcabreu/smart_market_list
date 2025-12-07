@@ -1087,6 +1087,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Confirm Password'**
   String get confirmPassword;
+
+  /// No description provided for @shareEmailLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Share email'**
+  String get shareEmailLabel;
+
+  /// No description provided for @sharingWithLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Sharing with:'**
+  String get sharingWithLabel;
+
+  /// No description provided for @shareRealTimeInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'✨ List changes are synchronized in real time'**
+  String get shareRealTimeInfo;
+
+  /// No description provided for @shareInviteMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Hello! I\'m inviting you to edit my shopping list on Smart Market List. Let\'s save together!'**
+  String get shareInviteMessage;
+
+  /// No description provided for @shareLimitReached.
+  ///
+  /// In en, this message translates to:
+  /// **'Limit reached (1/1)'**
+  String get shareLimitReached;
+
+  /// No description provided for @shareLimitError.
+  ///
+  /// In en, this message translates to:
+  /// **'Only 1 person allowed in the current plan.'**
+  String get shareLimitError;
 }
 
 class _AppLocalizationsDelegate

@@ -9,6 +9,7 @@ import 'package:smart_market_list/ui/screens/profile/widgets/profile_header.dart
 import 'package:smart_market_list/ui/screens/profile/widgets/profile_stats.dart';
 import 'package:smart_market_list/ui/screens/profile/widgets/settings_card.dart';
 import 'package:smart_market_list/providers/notifications_provider.dart';
+import 'package:smart_market_list/ui/screens/profile/modals/share_list_modal.dart';
 import 'package:smart_market_list/providers/locale_provider.dart';
 import 'package:smart_market_list/l10n/generated/app_localizations.dart';
 
@@ -278,7 +279,19 @@ class ProfileScreen extends ConsumerWidget {
                           title: l10n.shareList,
                           subtitle: l10n.shareListSubtitle,
                           isLocked: !isPremium,
-                          onTap: !isPremium ? () => _showPaywall(context) : null,
+                          onTap: !isPremium 
+                              ? () => _showPaywall(context) 
+                              : () => showModalBottomSheet(
+                                  context: context,
+                                  isScrollControlled: true,
+                                  backgroundColor: Colors.transparent,
+                                  builder: (context) => Padding(
+                                    padding: EdgeInsets.only(
+                                      bottom: MediaQuery.of(context).viewInsets.bottom,
+                                    ),
+                                    child: const ShareListModal(),
+                                  ),
+                                ),
                         ),
                         SettingsTile(
                           icon: Icons.bar_chart,

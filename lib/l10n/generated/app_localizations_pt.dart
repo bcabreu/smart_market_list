@@ -516,4 +516,24 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get confirmPassword => 'Confirmar Senha';
+
+  @override
+  String get shareEmailLabel => 'Email para compartilhar';
+
+  @override
+  String get sharingWithLabel => 'Compartilhando com:';
+
+  @override
+  String get shareRealTimeInfo =>
+      '✨ Alterações na lista são sincronizadas em tempo real';
+
+  @override
+  String get shareInviteMessage =>
+      'Olá! Estou te convidando para editar minha lista de compras no Smart Market List. Vamos economizar juntos!';
+
+  @override
+  String get shareLimitReached => 'Limite atingido (1/1)';
+
+  @override
+  String get shareLimitError => 'Apenas 1 pessoa é permitida no plano atual.';
 }

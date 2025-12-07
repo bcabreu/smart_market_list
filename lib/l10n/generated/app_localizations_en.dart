@@ -516,4 +516,24 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get confirmPassword => 'Confirm Password';
+
+  @override
+  String get shareEmailLabel => 'Share email';
+
+  @override
+  String get sharingWithLabel => 'Sharing with:';
+
+  @override
+  String get shareRealTimeInfo =>
+      '✨ List changes are synchronized in real time';
+
+  @override
+  String get shareInviteMessage =>
+      'Hello! I\'m inviting you to edit my shopping list on Smart Market List. Let\'s save together!';
+
+  @override
+  String get shareLimitReached => 'Limit reached (1/1)';
+
+  @override
+  String get shareLimitError => 'Only 1 person allowed in the current plan.';
 }

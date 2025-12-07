@@ -163,5 +163,11 @@
   "welcomeBackSubtitle": "We missed you",
   "createAccountTitle": "Create Account 🚀",
   "createAccountSubtitle": "Start your journey",
-  "confirmPassword": "Confirm Password"
+  "confirmPassword": "Confirm Password",
+  "shareEmailLabel": "Share email",
+  "sharingWithLabel": "Sharing with:",
+  "shareRealTimeInfo": "✨ List changes are synchronized in real time",
+  "shareInviteMessage": "Hello! I'm inviting you to edit my shopping list on Smart Market List. Let's save together!",
+  "shareLimitReached": "Limit reached (1/1)",
+  "shareLimitError": "Only 1 person allowed in the current plan."
 }
