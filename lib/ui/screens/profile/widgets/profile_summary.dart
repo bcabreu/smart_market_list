@@ -6,6 +6,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:smart_market_list/core/theme/app_colors.dart';
 import 'package:smart_market_list/providers/profile_provider.dart';
 import 'package:smart_market_list/providers/user_provider.dart';
+import 'package:intl/intl.dart';
 
 import 'package:smart_market_list/l10n/generated/app_localizations.dart';
 import 'package:smart_market_list/ui/screens/auth/login_screen.dart';
@@ -354,7 +355,16 @@ class _ProfileSummaryState extends ConsumerState<ProfileSummary> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  '${l10n.clientSince} Nov 2024',
+                  (() {
+                     final date = ref.watch(premiumSinceProvider);
+                     final locale = Localizations.localeOf(context).languageCode;
+                     if (date == null) return '';
+                     
+                     final formatter = DateFormat('MMM yyyy', locale);
+                     // Capitalize first letter for consistency
+                     final formatted = formatter.format(date);
+                     return '${l10n.clientSince} ${formatted[0].toUpperCase()}${formatted.substring(1)}';
+                  })(),
                   style: TextStyle(
                     color: isDark ? Colors.grey[400] : Colors.grey[600],
                     fontSize: 14,

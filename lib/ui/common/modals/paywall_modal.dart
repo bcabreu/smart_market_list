@@ -161,7 +161,7 @@ class PaywallModal extends ConsumerWidget {
 
   void _subscribe(BuildContext context, WidgetRef ref) {
     // Simulate subscription
-    ref.read(isPremiumProvider.notifier).state = true;
+    ref.read(premiumSinceProvider.notifier).setPremium(true);
     Navigator.pop(context);
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
