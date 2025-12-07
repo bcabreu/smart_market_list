@@ -59,6 +59,12 @@ class ProfileImageNotifier extends StateNotifier<String?> {
       print('Error saving profile image: $e');
     }
   }
+
+  Future<void> clearImage() async {
+    state = null;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_key);
+  }
 }
 
 final profileImageProvider = StateNotifierProvider<ProfileImageNotifier, String?>((ref) {

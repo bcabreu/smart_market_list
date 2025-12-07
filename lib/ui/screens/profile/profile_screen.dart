@@ -27,6 +27,8 @@ import 'package:smart_market_list/data/models/shopping_list.dart';
 import 'package:smart_market_list/providers/recipes_provider.dart';
 import 'package:smart_market_list/providers/auth_provider.dart';
 
+import 'package:smart_market_list/providers/profile_provider.dart';
+
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
 
@@ -592,7 +594,9 @@ class ProfileScreen extends ConsumerWidget {
          // 3. Clear Shared Preferences & User State
          await ref.read(isLoggedInProvider.notifier).setLoggedIn(false);
          await ref.read(userEmailProvider.notifier).clearEmail();
+         await ref.read(userEmailProvider.notifier).clearEmail();
          await ref.read(userNameProvider.notifier).clearName();
+         await ref.read(profileImageProvider.notifier).clearImage();
          
          // 3. Clear Shopping Notes
          final notesService = ref.read(shoppingNotesServiceProvider);
@@ -736,7 +740,9 @@ class ProfileScreen extends ConsumerWidget {
       // Clear user state
       await ref.read(isLoggedInProvider.notifier).setLoggedIn(false);
       await ref.read(userEmailProvider.notifier).clearEmail();
+      await ref.read(userEmailProvider.notifier).clearEmail();
       await ref.read(userNameProvider.notifier).clearName();
+      await ref.read(profileImageProvider.notifier).clearImage();
 
       if (context.mounted) {
          Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => false);
