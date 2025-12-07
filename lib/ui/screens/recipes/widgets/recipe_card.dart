@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:smart_market_list/core/theme/app_colors.dart';
 import 'package:smart_market_list/data/models/recipe.dart';
+import 'package:smart_market_list/l10n/generated/app_localizations.dart';
 
 class RecipeCard extends StatelessWidget {
   final Recipe recipe;
@@ -23,6 +24,11 @@ class RecipeCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final backgroundColor = isDark ? const Color(0xFF1E1E1E) : Colors.white;
+    final l10n = AppLocalizations.of(context)!;
+    
+    // Normalize difficulty for display
+    final difficultyText = _getLocalizedDifficulty(recipe.difficulty, l10n);
+    final difficultyColor = _getDifficultyColor(recipe.difficulty);
 
     return GestureDetector(
       onTap: onTap,
@@ -89,11 +95,11 @@ class RecipeCard extends StatelessWidget {
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
-                        color: _getDifficultyColor(recipe.difficulty),
+                        color: difficultyColor,
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text(
-                        recipe.difficulty,
+                        difficultyText,
                         style: const TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
@@ -151,7 +157,7 @@ class RecipeCard extends StatelessWidget {
                         const SizedBox(height: 8),
                         Row(
                           children: [
-                            _buildMetadataChip(Icons.access_time, '${recipe.prepTime} min'),
+                            _buildMetadataChip(Icons.access_time, '${recipe.prepTime} ${l10n.cookTime ?? "min"}'),
                             const SizedBox(width: 8),
                             _buildMetadataChip(Icons.people_outline, '${recipe.servings}'),
                           ],
@@ -175,7 +181,7 @@ class RecipeCard extends StatelessWidget {
                           const SizedBox(width: 6),
                           Flexible(
                             child: Text(
-                              '$matchCount na lista',
+                              l10n.matchesInList(matchCount),
                               style: const TextStyle(
                                 color: Color(0xFF4DB6AC),
                                 fontWeight: FontWeight.w600,
@@ -196,7 +202,7 @@ class RecipeCard extends StatelessWidget {
                           const SizedBox(width: 4),
                           Flexible(
                             child: Text(
-                              '$missingCount faltando',
+                              l10n.missingIngredients(missingCount),
                               style: const TextStyle(
                                 color: Color(0xFFFF7043),
                                 fontWeight: FontWeight.w600,
@@ -242,16 +248,28 @@ class RecipeCard extends StatelessWidget {
     );
   }
 
-  Color _getDifficultyColor(String difficulty) {
-    switch (difficulty.toLowerCase()) {
-      case 'fácil':
-        return const Color(0xFF00C853); // Green
-      case 'médio':
-        return const Color(0xFFFF9800); // Orange
-      case 'difícil':
-        return const Color(0xFFD50000); // Red
-      default:
-        return const Color(0xFF2196F3); // Blue
+  String _getLocalizedDifficulty(String difficulty, AppLocalizations l10n) {
+    final lower = difficulty.toLowerCase().trim();
+    if (lower.contains('fácil') || lower.contains('facil') || lower.contains('easy')) {
+      return l10n.difficultyEasy;
+    } else if (lower.contains('médio') || lower.contains('medio') || lower.contains('medium')) {
+      return l10n.difficultyMedium;
+    } else if (lower.contains('difícil') || lower.contains('dificil') || lower.contains('hard') || lower.contains('difficile')) {
+      return l10n.difficultyHard;
     }
+    // Default fallback
+    return l10n.difficultyMedium;
+  }
+
+  Color _getDifficultyColor(String difficulty) {
+    final lower = difficulty.toLowerCase().trim();
+    if (lower.contains('fácil') || lower.contains('facil') || lower.contains('easy')) {
+      return const Color(0xFF00C853); // Green
+    } else if (lower.contains('médio') || lower.contains('medio') || lower.contains('medium')) {
+      return const Color(0xFFFF9800); // Orange
+    } else if (lower.contains('difícil') || lower.contains('dificil') || lower.contains('hard') || lower.contains('difficile')) {
+      return const Color(0xFFD50000); // Red
+    } 
+    return const Color(0xFF2196F3); // Blue default
   }
 }

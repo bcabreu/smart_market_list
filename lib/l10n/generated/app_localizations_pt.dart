@@ -204,6 +204,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get delete => 'Excluir';
 
   @override
+  String get premiumLabel => 'Premium';
+
+  @override
   String get profileTitle => 'Perfil 👤';
 
   @override
@@ -242,5 +245,30 @@ class AppLocalizationsPt extends AppLocalizations {
   String get clientSince => 'Cliente desde';
 
   @override
-  String get premiumLabel => 'Premium';
+  String matchesInList(Object count) {
+    return '$count na lista';
+  }
+
+  @override
+  String missingIngredients(Object count) {
+    return '$count faltando';
+  }
+
+  @override
+  String get difficultyEasy => 'Fácil';
+
+  @override
+  String get difficultyMedium => 'Médio';
+
+  @override
+  String get difficultyHard => 'Difícil';
+
+  @override
+  String get favoriteRecipesTitle => 'Receitas Favoritas';
+
+  @override
+  String get noFavorites => 'Nenhuma receita favorita';
+
+  @override
+  String get noFavoritesSubtitle => 'Marque receitas com ❤️ para vê-las aqui';
 }

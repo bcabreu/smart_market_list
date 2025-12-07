@@ -62,6 +62,7 @@
   "deleteNoteTitle": "Excluir Nota?",
   "deleteNoteMessage": "Tem certeza que deseja excluir esta nota permanentemente?",
   "delete": "Excluir",
+  "premiumLabel": "Premium",
   "profileTitle": "Perfil 👤",
   "personalInfo": "Suas informações pessoais",
   "guest": "Visitante",
@@ -74,5 +75,12 @@
   "gallery": "Galeria",
   "imageError": "Erro ao selecionar imagem: {error}",
   "clientSince": "Cliente desde",
-  "premiumLabel": "Premium"
+  "matchesInList": "{count} na lista",
+  "missingIngredients": "{count} faltando",
+  "difficultyEasy": "Fácil",
+  "difficultyMedium": "Médio",
+  "difficultyHard": "Difícil",
+  "favoriteRecipesTitle": "Receitas Favoritas",
+  "noFavorites": "Nenhuma receita favorita",
+  "noFavoritesSubtitle": "Marque receitas com ❤️ para vê-las aqui"
 }

@@ -476,6 +476,12 @@ abstract class AppLocalizations {
   /// **'Delete'**
   String get delete;
 
+  /// No description provided for @premiumLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Premium'**
+  String get premiumLabel;
+
   /// No description provided for @profileTitle.
   ///
   /// In en, this message translates to:
@@ -548,11 +554,53 @@ abstract class AppLocalizations {
   /// **'Customer since'**
   String get clientSince;
 
-  /// No description provided for @premiumLabel.
+  /// No description provided for @matchesInList.
   ///
   /// In en, this message translates to:
-  /// **'Premium'**
-  String get premiumLabel;
+  /// **'{count} in list'**
+  String matchesInList(Object count);
+
+  /// No description provided for @missingIngredients.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} missing'**
+  String missingIngredients(Object count);
+
+  /// No description provided for @difficultyEasy.
+  ///
+  /// In en, this message translates to:
+  /// **'Easy'**
+  String get difficultyEasy;
+
+  /// No description provided for @difficultyMedium.
+  ///
+  /// In en, this message translates to:
+  /// **'Medium'**
+  String get difficultyMedium;
+
+  /// No description provided for @difficultyHard.
+  ///
+  /// In en, this message translates to:
+  /// **'Hard'**
+  String get difficultyHard;
+
+  /// No description provided for @favoriteRecipesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Favorite Recipes'**
+  String get favoriteRecipesTitle;
+
+  /// No description provided for @noFavorites.
+  ///
+  /// In en, this message translates to:
+  /// **'No favorite recipes'**
+  String get noFavorites;
+
+  /// No description provided for @noFavoritesSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark recipes with ❤️ to see them here'**
+  String get noFavoritesSubtitle;
 }
 
 class _AppLocalizationsDelegate

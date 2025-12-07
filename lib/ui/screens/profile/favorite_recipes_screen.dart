@@ -11,6 +11,7 @@ import 'package:smart_market_list/providers/navigation_provider.dart';
 
 import 'package:smart_market_list/providers/shopping_list_provider.dart';
 import 'package:smart_market_list/data/models/recipe.dart';
+import 'package:smart_market_list/l10n/generated/app_localizations.dart';
 
 class FavoriteRecipesScreen extends ConsumerWidget {
   const FavoriteRecipesScreen({super.key});
@@ -20,6 +21,7 @@ class FavoriteRecipesScreen extends ConsumerWidget {
     final recipesAsync = ref.watch(recipesProvider);
     final shoppingListsAsync = ref.watch(shoppingListsProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final l10n = AppLocalizations.of(context);
 
     // Get target list (current or first)
     final targetList = ref.watch(currentListProvider) ?? shoppingListsAsync.value?.firstOrNull;
@@ -30,9 +32,9 @@ class FavoriteRecipesScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        title: const Text(
-          'Receitas Favoritas',
-          style: TextStyle(fontWeight: FontWeight.bold),
+        title: Text(
+          l10n?.favoriteRecipesTitle ?? 'Receitas Favoritas',
+          style: const TextStyle(fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
         backgroundColor: Colors.transparent,
@@ -55,7 +57,7 @@ class FavoriteRecipesScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    'Nenhuma receita favorita',
+                    l10n?.noFavorites ?? 'Nenhuma receita favorita',
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w600,
@@ -64,7 +66,7 @@ class FavoriteRecipesScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Marque receitas com ❤️ para vê-las aqui',
+                    l10n?.noFavoritesSubtitle ?? 'Marque receitas com ❤️ para vê-las aqui',
                     style: TextStyle(
                       fontSize: 14,
                       color: isDark ? Colors.grey[600] : Colors.grey[500],
