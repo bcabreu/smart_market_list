@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:smart_market_list/core/theme/app_colors.dart';
+import 'package:smart_market_list/core/services/iap_service.dart';
 import 'package:smart_market_list/providers/theme_provider.dart';
 import 'package:smart_market_list/providers/user_provider.dart';
 import 'package:smart_market_list/ui/common/modals/paywall_modal.dart';
@@ -342,12 +344,12 @@ class ProfileScreen extends ConsumerWidget {
                         SettingsTile(
                           icon: Icons.credit_card,
                           title: l10n.manageSubscription,
-                          onTap: () {},
+                          onTap: () => _manageSubscription(context),
                         ),
                         SettingsTile(
                           icon: Icons.restore,
                           title: l10n.restorePurchase,
-                          onTap: () {},
+                          onTap: () => _restorePurchases(context, ref),
                         ),
                         SettingsTile(
                           icon: Icons.help_outline,
@@ -433,6 +435,70 @@ class ProfileScreen extends ConsumerWidget {
       case ThemeMode.system: return l10n.darkModeSystem;
       case ThemeMode.light: return l10n.darkModeLight;
       case ThemeMode.dark: return l10n.darkModeDark;
+    }
+  }
+
+  Future<void> _manageSubscription(BuildContext context) async {
+    final Uri url = Uri.parse('https://apps.apple.com/account/subscriptions');
+    try {
+      if (!await launchUrl(url)) {
+        throw Exception('Could not launch $url');
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Não foi possível abrir o gerenciamento de assinaturas.'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+      }
+    }
+
+
+  Future<void> _restorePurchases(BuildContext context, WidgetRef ref) async {
+    try {
+      LoadingDialog.show(context, 'Restaurando compras...');
+      
+      final service = ref.read(iapServiceProvider);
+      // Ensure service is initialized/listening
+      await service.initialize();
+      
+      final initiated = await service.restorePurchases();
+      
+      if (context.mounted) {
+        LoadingDialog.hide(context);
+        
+        if (initiated) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Solicitação enviada. Se houver compras ativas, elas serão restauradas em breve.'),
+              behavior: SnackBarBehavior.floating,
+              backgroundColor: Colors.green,
+            ),
+          );
+        } else {
+           ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Não foi possível conectar à loja.'),
+              behavior: SnackBarBehavior.floating,
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (context.mounted) {
+        LoadingDialog.hide(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Erro: $e'),
+            behavior: SnackBarBehavior.floating,
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 }
