@@ -39,7 +39,8 @@ class _RecipesScreenState extends ConsumerState<RecipesScreen> {
       final recipes = ref.read(recipesProvider).value ?? [];
       final service = ref.read(recipesServiceProvider);
       final currentLocale = ref.read(localeProvider);
-      final targetLang = currentLocale?.languageCode ?? 'en';
+      // Fix: If provider is null (system), use the actual resolved locale from context
+      final targetLang = currentLocale?.languageCode ?? Localizations.localeOf(context).languageCode;
       
       final lastFetchedLang = await service.getLastFetchedLanguage();
       
@@ -98,7 +99,7 @@ class _RecipesScreenState extends ConsumerState<RecipesScreen> {
       final newRecipes = await service.fetchRecipesPage(
         page: nextPage, 
         limit: 10,
-        languageCode: currentLocale?.languageCode ?? 'en',
+        languageCode: currentLocale?.languageCode ?? Localizations.localeOf(context).languageCode,
       );
       
       if (newRecipes.isNotEmpty) {
@@ -227,7 +228,7 @@ class _RecipesScreenState extends ConsumerState<RecipesScreen> {
                           // Use API search with current language
                           final results = await service.searchRecipes(
                             textEditingValue.text,
-                            languageCode: locale?.languageCode ?? 'en',
+                            languageCode: locale?.languageCode ?? Localizations.localeOf(context).languageCode,
                           );
                           return results;
                         },
