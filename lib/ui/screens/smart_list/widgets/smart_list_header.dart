@@ -5,7 +5,7 @@ import 'package:smart_market_list/core/theme/app_colors.dart';
 import 'package:smart_market_list/data/models/shopping_list.dart';
 import 'package:smart_market_list/providers/shopping_list_provider.dart';
 import 'package:smart_market_list/ui/screens/smart_list/modals/edit_list_modal.dart';
-import 'package:smart_market_list/providers/shopping_list_provider.dart';
+import 'package:smart_market_list/l10n/generated/app_localizations.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -213,7 +213,7 @@ class _SmartListHeaderState extends ConsumerState<SmartListHeader> {
                           Icon(Icons.auto_awesome, size: 12, color: AppColors.primary),
                           const SizedBox(width: 4),
                           Text(
-                            '$uncheckedCount itens restantes',
+                            AppLocalizations.of(context)!.itemsRemaining(uncheckedCount),
                             style: TextStyle(fontSize: 12, color: subtitleColor),
                           ),
                         ],

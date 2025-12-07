@@ -685,6 +685,120 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Choose from Gallery'**
   String get chooseFromGallery;
+
+  /// No description provided for @editItem.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Item'**
+  String get editItem;
+
+  /// No description provided for @addItemTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Item'**
+  String get addItemTitle;
+
+  /// No description provided for @fillFields.
+  ///
+  /// In en, this message translates to:
+  /// **'Fill in the fields'**
+  String get fillFields;
+
+  /// No description provided for @itemName.
+  ///
+  /// In en, this message translates to:
+  /// **'Item Name'**
+  String get itemName;
+
+  /// No description provided for @itemNameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Ex: Tomato, Bread, Milk...'**
+  String get itemNameHint;
+
+  /// No description provided for @suggestions.
+  ///
+  /// In en, this message translates to:
+  /// **'Suggestions (click to fill)'**
+  String get suggestions;
+
+  /// No description provided for @quantity.
+  ///
+  /// In en, this message translates to:
+  /// **'Quantity'**
+  String get quantity;
+
+  /// No description provided for @quantityHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Ex: 1kg, 2 liters, 500g...'**
+  String get quantityHint;
+
+  /// No description provided for @priceOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'Price (optional)'**
+  String get priceOptional;
+
+  /// No description provided for @category.
+  ///
+  /// In en, this message translates to:
+  /// **'Category'**
+  String get category;
+
+  /// No description provided for @newCategoryName.
+  ///
+  /// In en, this message translates to:
+  /// **'New category name'**
+  String get newCategoryName;
+
+  /// No description provided for @createCategory.
+  ///
+  /// In en, this message translates to:
+  /// **'Create new category'**
+  String get createCategory;
+
+  /// No description provided for @productPhotoOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'Product Photo (optional)'**
+  String get productPhotoOptional;
+
+  /// No description provided for @takePhotoOrGallery.
+  ///
+  /// In en, this message translates to:
+  /// **'Take photo or choose from gallery'**
+  String get takePhotoOrGallery;
+
+  /// No description provided for @confirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm'**
+  String get confirm;
+
+  /// No description provided for @currentTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Current Total'**
+  String get currentTotal;
+
+  /// No description provided for @budgetLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'Limit'**
+  String get budgetLimit;
+
+  /// No description provided for @allCategories.
+  ///
+  /// In en, this message translates to:
+  /// **'All categories'**
+  String get allCategories;
+
+  /// No description provided for @itemsRemaining.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} items remaining'**
+  String itemsRemaining(Object count);
 }
 
 class _AppLocalizationsDelegate

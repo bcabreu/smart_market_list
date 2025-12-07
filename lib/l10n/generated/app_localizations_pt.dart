@@ -313,4 +313,63 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get chooseFromGallery => 'Escolher da Galeria';
+
+  @override
+  String get editItem => 'Editar Item';
+
+  @override
+  String get addItemTitle => 'Adicionar Item';
+
+  @override
+  String get fillFields => 'Preencha os campos';
+
+  @override
+  String get itemName => 'Nome do Item';
+
+  @override
+  String get itemNameHint => 'Ex: Tomate, Pão, Leite...';
+
+  @override
+  String get suggestions => 'Sugestões (clique para preencher)';
+
+  @override
+  String get quantity => 'Quantidade';
+
+  @override
+  String get quantityHint => 'Ex: 1kg, 2 litros, 500g...';
+
+  @override
+  String get priceOptional => 'Preço (opcional)';
+
+  @override
+  String get category => 'Categoria';
+
+  @override
+  String get newCategoryName => 'Nome da nova categoria';
+
+  @override
+  String get createCategory => 'Criar nova categoria';
+
+  @override
+  String get productPhotoOptional => 'Foto do Produto (opcional)';
+
+  @override
+  String get takePhotoOrGallery => 'Tirar foto ou escolher da galeria';
+
+  @override
+  String get confirm => 'Confirmar';
+
+  @override
+  String get currentTotal => 'Total Atual';
+
+  @override
+  String get budgetLimit => 'Limite';
+
+  @override
+  String get allCategories => 'Todas as categorias';
+
+  @override
+  String itemsRemaining(Object count) {
+    return '$count itens restantes';
+  }
 }

@@ -6,10 +6,11 @@ import 'package:smart_market_list/core/utils/currency_input_formatter.dart';
 import 'package:smart_market_list/data/models/shopping_list.dart';
 import 'package:smart_market_list/providers/shopping_list_provider.dart';
 import 'package:intl/intl.dart';
+import 'package:smart_market_list/l10n/generated/app_localizations.dart';
 
 class BudgetInfoCard extends ConsumerStatefulWidget {
   final ShoppingList list;
-
+  
   const BudgetInfoCard({super.key, required this.list});
 
   @override
@@ -21,13 +22,30 @@ class _BudgetInfoCardState extends ConsumerState<BudgetInfoCard> {
   bool _isEditing = false;
   late TextEditingController _controller;
   final FocusNode _focusNode = FocusNode();
-  final _currencyFormat = NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$');
-  final _numberFormat = NumberFormat.decimalPattern('pt_BR');
+  
+  // These will be initialized in build or didChangeDependencies to respect locale
+  late NumberFormat _currencyFormat;
+  late NumberFormat _numberFormat;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final locale = Localizations.localeOf(context);
+    final symbol = locale.languageCode == 'pt' ? 'R\$' : '\$';
+    _currencyFormat = NumberFormat.currency(locale: locale.toString(), symbol: symbol);
+    _numberFormat = NumberFormat.decimalPattern(locale.toString());
+    
+    // Update controller text if not editing, to reflect new locale format
+    if (!_isEditing) {
+        _controller = TextEditingController(text: _formatBudget(widget.list.budget));
+    }
+  }
 
   @override
   void initState() {
     super.initState();
-    _controller = TextEditingController(text: _formatBudget(widget.list.budget));
+    // Controller will be re-initialized in didChangeDependencies
+    _controller = TextEditingController(text: ''); 
     _focusNode.addListener(_onFocusChange);
   }
 
@@ -66,8 +84,15 @@ class _BudgetInfoCardState extends ConsumerState<BudgetInfoCard> {
   }
 
   void _save() {
-    // Handle PT-BR number format: remove thousand separators (.), replace decimal separator (,) with (.)
-    String cleanText = _controller.text.replaceAll('.', '').replaceAll(',', '.');
+    final locale = Localizations.localeOf(context);
+    String cleanText = _controller.text;
+    
+    if (locale.languageCode == 'pt') {
+        cleanText = cleanText.replaceAll('.', '').replaceAll(',', '.');
+    } else {
+        cleanText = cleanText.replaceAll(',', '');
+    }
+
     final newBudget = double.tryParse(cleanText) ?? widget.list.budget;
     
     if (newBudget != widget.list.budget) {
@@ -85,6 +110,8 @@ class _BudgetInfoCardState extends ConsumerState<BudgetInfoCard> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final l10n = AppLocalizations.of(context)!;
+    final locale = Localizations.localeOf(context);
     
     final cardColor = isDark 
         ? const Color(0xFF1E2C2C)
@@ -115,7 +142,7 @@ class _BudgetInfoCardState extends ConsumerState<BudgetInfoCard> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Total Atual',
+                l10n.currentTotal,
                 style: TextStyle(
                   fontSize: 12,
                   color: labelColor,
@@ -150,7 +177,7 @@ class _BudgetInfoCardState extends ConsumerState<BudgetInfoCard> {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(
-                'Limite',
+                l10n.budgetLimit,
                 style: TextStyle(
                   fontSize: 12,
                   color: labelColor,
@@ -167,16 +194,16 @@ class _BudgetInfoCardState extends ConsumerState<BudgetInfoCard> {
                             controller: _controller,
                             focusNode: _focusNode,
                             keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                            inputFormatters: [CurrencyInputFormatter()],
+                            inputFormatters: [CurrencyInputFormatter(locale: locale.toString())],
                             textAlign: TextAlign.end,
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w500,
                               color: limitColor,
                             ),
-                            decoration: const InputDecoration(
-                              prefixText: 'R\$ ',
-                              contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                            decoration: InputDecoration(
+                              prefixText: locale.languageCode == 'pt' ? 'R\$ ' : '\$ ',
+                              contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
                               isDense: true,
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.zero,

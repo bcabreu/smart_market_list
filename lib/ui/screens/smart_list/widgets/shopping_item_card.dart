@@ -7,6 +7,7 @@ import 'package:shimmer/shimmer.dart';
 import 'package:smart_market_list/core/theme/app_colors.dart';
 import 'package:smart_market_list/core/utils/currency_input_formatter.dart';
 import 'package:smart_market_list/data/models/shopping_item.dart';
+import 'package:intl/intl.dart';
 
 class ShoppingItemCard extends ConsumerStatefulWidget {
   final ShoppingItem item;
@@ -37,7 +38,7 @@ class _ShoppingItemCardState extends ConsumerState<ShoppingItemCard> with Single
   @override
   void initState() {
     super.initState();
-    _priceController = TextEditingController(text: widget.item.price.toStringAsFixed(2).replaceAll('.', ','));
+    _priceController = TextEditingController(); // Content set in didChangeDependencies
     
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 400),
@@ -66,6 +67,15 @@ class _ShoppingItemCardState extends ConsumerState<ShoppingItemCard> with Single
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_isEditingPrice) {
+      final locale = Localizations.localeOf(context).toString();
+      _priceController.text = NumberFormat.currency(locale: locale, symbol: '', decimalDigits: 2).format(widget.item.price).trim();
+    }
+  }
+
+  @override
   void dispose() {
     _priceController.dispose();
     _animationController.dispose();
@@ -87,7 +97,8 @@ class _ShoppingItemCardState extends ConsumerState<ShoppingItemCard> with Single
   void didUpdateWidget(ShoppingItemCard oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.item.price != oldWidget.item.price && !_isEditingPrice) {
-      _priceController.text = widget.item.price.toStringAsFixed(2).replaceAll('.', ',');
+      final locale = Localizations.localeOf(context).toString();
+      _priceController.text = NumberFormat.currency(locale: locale, symbol: '', decimalDigits: 2).format(widget.item.price).trim();
     }
   }
 
@@ -96,8 +107,12 @@ class _ShoppingItemCardState extends ConsumerState<ShoppingItemCard> with Single
   }
 
   void _submitPrice() {
-    final newPrice = double.tryParse(_priceController.text.replaceAll('.', '').replaceAll(',', '.'));
-    if (newPrice != null && newPrice != widget.item.price) {
+    final locale = Localizations.localeOf(context).toString();
+    // Parse using the current locale
+    final numberFormat = NumberFormat.decimalPattern(locale);
+    final newPrice = numberFormat.parse(_priceController.text).toDouble();
+    
+    if (newPrice != widget.item.price) {
       widget.onPriceChanged(newPrice);
     }
     setState(() {
@@ -222,12 +237,15 @@ class _ShoppingItemCardState extends ConsumerState<ShoppingItemCard> with Single
                           crossAxisAlignment: CrossAxisAlignment.end,
                           children: [
                             // Price
+                                    // Price
+                                    // Price
                             InkWell(
                               onTap: () {
                                 if (!_isEditingPrice) {
                                   setState(() {
                                     _isEditingPrice = true;
-                                    _priceController.text = widget.item.price.toStringAsFixed(2).replaceAll('.', ',');
+                                    final locale = Localizations.localeOf(context).toString();
+                                    _priceController.text = NumberFormat.currency(locale: locale, symbol: '', decimalDigits: 2).format(widget.item.price).trim();
                                   });
                                 }
                               },
@@ -235,7 +253,7 @@ class _ShoppingItemCardState extends ConsumerState<ShoppingItemCard> with Single
                                 crossAxisAlignment: CrossAxisAlignment.end,
                                 children: [
                                   Text(
-                                    'R\$',
+                                    NumberFormat.simpleCurrency(locale: Localizations.localeOf(context).toString()).currencySymbol,
                                     style: TextStyle(
                                       fontSize: 10,
                                       color: isDark ? Colors.grey[400] : Colors.grey[600],
@@ -254,7 +272,7 @@ class _ShoppingItemCardState extends ConsumerState<ShoppingItemCard> with Single
                                               child: TextField(
                                                 controller: _priceController,
                                                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                                                inputFormatters: [CurrencyInputFormatter()],
+                                                inputFormatters: [CurrencyInputFormatter(locale: Localizations.localeOf(context).toString())],
                                                 autofocus: true,
                                                 textAlign: TextAlign.end,
                                                 style: const TextStyle(
@@ -305,7 +323,7 @@ class _ShoppingItemCardState extends ConsumerState<ShoppingItemCard> with Single
                                           mainAxisSize: MainAxisSize.min,
                                           children: [
                                             Text(
-                                              widget.item.price.toStringAsFixed(2).replaceAll('.', ','),
+                                              NumberFormat.currency(locale: Localizations.localeOf(context).toString(), symbol: '', decimalDigits: 2).format(widget.item.price).trim(),
                                               style: const TextStyle(
                                                 fontSize: 18,
                                                 fontWeight: FontWeight.bold,

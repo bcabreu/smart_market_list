@@ -7,14 +7,18 @@ import 'package:image_picker/image_picker.dart';
 import 'package:flutter/services.dart';
 import 'package:smart_market_list/core/theme/app_colors.dart';
 import 'package:smart_market_list/core/utils/currency_input_formatter.dart';
+import 'package:smart_market_list/data/models/shopping_list.dart';
 import 'package:smart_market_list/data/models/shopping_item.dart';
+import 'package:smart_market_list/core/theme/app_colors.dart';
 import 'package:smart_market_list/providers/autocomplete_provider.dart';
 import 'package:smart_market_list/providers/categories_provider.dart';
 import 'package:smart_market_list/data/models/product_suggestion.dart';
+import 'package:smart_market_list/l10n/generated/app_localizations.dart';
 
 import 'package:smart_market_list/data/static/product_catalog.dart';
 import 'package:smart_market_list/providers/hidden_suggestions_provider.dart';
 import 'package:smart_market_list/providers/history_provider.dart';
+import 'package:intl/intl.dart';
 
 class AddItemModal extends ConsumerStatefulWidget {
   final Function(ShoppingItem) onAdd;
@@ -53,6 +57,16 @@ class _AddItemModalState extends ConsumerState<AddItemModal> {
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final item = widget.itemToEdit;
+    final locale = Localizations.localeOf(context);
+    if (item != null) {
+       _priceController.text = NumberFormat.decimalPattern(locale.toString()).format(item.price);
+    }
+  }
+
+  @override
   void dispose() {
     _nameController.dispose();
     _qtyController.dispose();
@@ -76,7 +90,7 @@ class _AddItemModalState extends ConsumerState<AddItemModal> {
         id: widget.itemToEdit?.id, // Preserve ID if editing
         name: _nameController.text,
         quantity: _qtyController.text.isEmpty ? '1 un' : _qtyController.text,
-        price: double.tryParse(_priceController.text.replaceAll('.', '').replaceAll(',', '.')) ?? 0.0,
+        price: _parsePrice(_priceController.text),
         category: _selectedCategory,
         imageUrl: _imagePath ?? '',
         checked: widget.itemToEdit?.checked ?? false, // Preserve checked status
@@ -102,9 +116,20 @@ class _AddItemModalState extends ConsumerState<AddItemModal> {
     return ProductCatalog.items.any((item) => item.name.trim().toLowerCase() == cleanName);
   }
 
+  double _parsePrice(String text) {
+    final locale = Localizations.localeOf(context);
+    if (locale.languageCode == 'pt') {
+      return double.tryParse(text.replaceAll('.', '').replaceAll(',', '.')) ?? 0.0;
+    } else {
+       return double.tryParse(text.replaceAll(',', '')) ?? 0.0;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final suggestions = ref.watch(itemSuggestionsProvider);
+    final l10n = AppLocalizations.of(context)!;
+    final locale = Localizations.localeOf(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final backgroundColor = isDark ? const Color(0xFF1E1E1E) : Theme.of(context).scaffoldBackgroundColor;
     final inputFillColor = isDark ? const Color(0xFF2C2C2C) : Colors.grey[100];
@@ -135,7 +160,7 @@ class _AddItemModalState extends ConsumerState<AddItemModal> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      widget.itemToEdit != null ? 'Editar Item' : 'Adicionar Item',
+                      widget.itemToEdit != null ? l10n.editItem : l10n.addItemTitle,
                       style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
@@ -144,7 +169,7 @@ class _AddItemModalState extends ConsumerState<AddItemModal> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Preencha os campos',
+                      l10n.fillFields,
                       style: TextStyle(
                         fontSize: 14,
                         color: labelColor,
@@ -171,7 +196,7 @@ class _AddItemModalState extends ConsumerState<AddItemModal> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Name Field with Autocomplete
-                  _buildLabel('Nome do Item', Icons.inventory_2_outlined, isDark),
+                  _buildLabel(l10n.itemName, Icons.inventory_2_outlined, isDark),
                   const SizedBox(height: 8),
                   Autocomplete<ProductSuggestion>(
                     optionsBuilder: (TextEditingValue textEditingValue) {
@@ -209,7 +234,7 @@ class _AddItemModalState extends ConsumerState<AddItemModal> {
                           color: (widget.itemToEdit != null && isSystemItem) ? textColor.withOpacity(0.6) : textColor,
                         ),
                         decoration: _inputDecoration(
-                          'Ex: Tomate, Pão, Leite...', 
+                          l10n.itemNameHint, 
                           isDark,
                           suffixIcon: (widget.itemToEdit != null && isSystemItem)
                               ? Icon(Icons.lock_outline, color: (iconColor ?? Colors.grey).withOpacity(0.5), size: 20)
@@ -247,7 +272,7 @@ class _AddItemModalState extends ConsumerState<AddItemModal> {
                                       const Icon(Icons.auto_awesome, size: 16, color: Color(0xFFFFD700)), // Gold star
                                       const SizedBox(width: 8),
                                       Text(
-                                        'Sugestões (clique para preencher)',
+                                        l10n.suggestions,
                                         style: TextStyle(
                                           fontSize: 14,
                                           fontWeight: FontWeight.w500,
@@ -362,23 +387,23 @@ class _AddItemModalState extends ConsumerState<AddItemModal> {
                   const SizedBox(height: 20),
 
                   // Quantity Field
-                  _buildLabel('Quantidade', Icons.local_offer_outlined, isDark),
+                  _buildLabel(l10n.quantity, Icons.local_offer_outlined, isDark),
                   const SizedBox(height: 8),
                   TextField(
                     controller: _qtyController,
                     style: TextStyle(color: textColor),
-                    decoration: _inputDecoration('Ex: 1kg, 2 litros, 500g...', isDark),
+                    decoration: _inputDecoration(l10n.quantityHint, isDark),
                   ),
 
                   const SizedBox(height: 20),
 
                   // Price Field
-                  _buildLabel('Preço (opcional)', Icons.attach_money, isDark),
+                  _buildLabel(l10n.priceOptional, Icons.attach_money, isDark),
                   const SizedBox(height: 8),
                   Row(
                     children: [
                       Text(
-                        'R\$',
+                        locale.languageCode == 'pt' ? 'R\$' : '\$',
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
@@ -390,9 +415,9 @@ class _AddItemModalState extends ConsumerState<AddItemModal> {
                         child: TextField(
                           controller: _priceController,
                           keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                          inputFormatters: [CurrencyInputFormatter()],
+                          inputFormatters: [CurrencyInputFormatter(locale: locale.toString())],
                           style: TextStyle(color: textColor),
-                          decoration: _inputDecoration('0,00', isDark),
+                          decoration: _inputDecoration(locale.languageCode == 'pt' ? '0,00' : '0.00', isDark),
                         ),
                       ),
                     ],
@@ -401,7 +426,7 @@ class _AddItemModalState extends ConsumerState<AddItemModal> {
                   const SizedBox(height: 20),
 
                   // Category Field
-                  _buildLabel('Categoria', Icons.category_outlined, isDark),
+                  _buildLabel(l10n.category, Icons.category_outlined, isDark),
                   const SizedBox(height: 8),
                   Container(
                     decoration: BoxDecoration(
@@ -468,17 +493,17 @@ class _AddItemModalState extends ConsumerState<AddItemModal> {
                                   ),
                                 );
                               }),
-                              const PopupMenuItem<String>(
+                              PopupMenuItem<String>(
                                 value: 'new',
                                 child: Row(
                                   children: [
-                                    SizedBox(width: 16),
-                                    SizedBox(width: 8),
-                                    Icon(Icons.add, color: Colors.grey, size: 18),
-                                    SizedBox(width: 12),
+                                    const SizedBox(width: 16),
+                                    const SizedBox(width: 8),
+                                    const Icon(Icons.add, color: Colors.grey, size: 18),
+                                    const SizedBox(width: 12),
                                     Text(
-                                      'Criar nova categoria',
-                                      style: TextStyle(color: Colors.grey, fontWeight: FontWeight.w500),
+                                      l10n.createCategory,
+                                      style: const TextStyle(color: Colors.grey, fontWeight: FontWeight.w500),
                                     ),
                                   ],
                                 ),
@@ -525,7 +550,7 @@ class _AddItemModalState extends ConsumerState<AddItemModal> {
                             controller: _newCategoryController,
                             style: TextStyle(color: textColor),
                             decoration: InputDecoration(
-                              hintText: 'Nome da nova categoria',
+                              hintText: l10n.newCategoryName,
                               hintStyle: TextStyle(color: hintColor),
                               filled: true,
                               fillColor: inputFillColor,
@@ -595,7 +620,7 @@ class _AddItemModalState extends ConsumerState<AddItemModal> {
                   const SizedBox(height: 20),
 
                   // Photo Field
-                  _buildLabel('Foto do Produto (opcional)', Icons.camera_alt_outlined, isDark),
+                  _buildLabel(l10n.productPhotoOptional, Icons.camera_alt_outlined, isDark),
                   const SizedBox(height: 8),
                   if (_imagePath != null)
                     Stack(
@@ -641,32 +666,45 @@ class _AddItemModalState extends ConsumerState<AddItemModal> {
                           context: context,
                           backgroundColor: Colors.transparent,
                           builder: (context) => Container(
+                            padding: const EdgeInsets.all(24),
                             decoration: BoxDecoration(
-                              color: isDark ? const Color(0xFF2C2C2C) : Colors.white,
-                              borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+                              color: Theme.of(context).scaffoldBackgroundColor,
+                              borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
                             ),
-                            child: SafeArea(
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  ListTile(
-                                    leading: Icon(Icons.camera_alt, color: textColor),
-                                    title: Text('Tirar foto', style: TextStyle(color: textColor)),
-                                    onTap: () {
-                                      Navigator.pop(context);
-                                      _pickImage(ImageSource.camera);
-                                    },
-                                  ),
-                                  ListTile(
-                                    leading: Icon(Icons.photo_library, color: textColor),
-                                    title: Text('Escolher da galeria', style: TextStyle(color: textColor)),
-                                    onTap: () {
-                                      Navigator.pop(context);
-                                      _pickImage(ImageSource.gallery);
-                                    },
-                                  ),
-                                ],
-                              ),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  l10n.productPhotoOptional,
+                                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                                  textAlign: TextAlign.center,
+                                ),
+                                const SizedBox(height: 24),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                  children: [
+                                    _buildActionButton(
+                                      context,
+                                      icon: Icons.camera_alt,
+                                      label: l10n.camera,
+                                      onTap: () {
+                                        Navigator.pop(context);
+                                        _pickImage(ImageSource.camera);
+                                      },
+                                    ),
+                                    _buildActionButton(
+                                      context,
+                                      icon: Icons.photo_library,
+                                      label: l10n.gallery,
+                                      onTap: () {
+                                        Navigator.pop(context);
+                                        _pickImage(ImageSource.gallery);
+                                      },
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 16),
+                              ],
                             ),
                           ),
                         );
@@ -684,7 +722,7 @@ class _AddItemModalState extends ConsumerState<AddItemModal> {
                               Icon(Icons.camera_alt_outlined, size: 32, color: iconColor),
                               const SizedBox(height: 8),
                               Text(
-                                'Tirar foto ou escolher da galeria',
+                                l10n.takePhotoOrGallery,
                                 style: TextStyle(color: labelColor, fontSize: 14),
                               ),
                             ],
@@ -743,7 +781,7 @@ class _AddItemModalState extends ConsumerState<AddItemModal> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    widget.itemToEdit != null ? 'Editar Item' : 'Adicionar Item',
+                                    widget.itemToEdit != null ? l10n.editItem : l10n.addItemTitle,
                                     style: TextStyle(
                                       fontSize: 18,
                                       fontWeight: FontWeight.bold,
@@ -751,7 +789,7 @@ class _AddItemModalState extends ConsumerState<AddItemModal> {
                                     ),
                                   ),
                                   Text(
-                                    'Confirmar',
+                                    l10n.confirm,
                                     style: TextStyle(
                                       fontSize: 12,
                                       fontWeight: FontWeight.w400,
@@ -851,6 +889,39 @@ class _AddItemModalState extends ConsumerState<AddItemModal> {
       case 'outros': return '📦';
       default: return '✨';
     }
+  }
+  Widget _buildActionButton(
+    BuildContext context, {
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppColors.primary.withOpacity(0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, color: AppColors.primary, size: 32),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+              color: isDark ? Colors.grey[400] : Colors.grey[700],
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 
