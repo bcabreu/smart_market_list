@@ -47,7 +47,7 @@ class _AddItemModalState extends ConsumerState<AddItemModal> {
     final item = widget.itemToEdit;
     _nameController = TextEditingController(text: item?.name ?? '');
     _qtyController = TextEditingController(text: item?.quantity ?? '');
-    _priceController = TextEditingController(text: item?.price.toStringAsFixed(2).replaceAll('.', ',') ?? '');
+    _priceController = TextEditingController(); // Filled in didChangeDependencies
     _newCategoryController = TextEditingController();
     
     if (item != null) {
@@ -60,9 +60,9 @@ class _AddItemModalState extends ConsumerState<AddItemModal> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     final item = widget.itemToEdit;
-    final locale = Localizations.localeOf(context);
+    final locale = Localizations.localeOf(context).toString();
     if (item != null) {
-       _priceController.text = NumberFormat.decimalPattern(locale.toString()).format(item.price);
+       _priceController.text = NumberFormat.currency(locale: locale, symbol: '', decimalDigits: 2).format(item.price).trim();
     }
   }
 
@@ -113,7 +113,8 @@ class _AddItemModalState extends ConsumerState<AddItemModal> {
   bool _isSystemItem(String? name) {
     if (name == null) return false;
     final cleanName = name.trim().toLowerCase();
-    return ProductCatalog.items.any((item) => item.name.trim().toLowerCase() == cleanName);
+    final languageCode = Localizations.localeOf(context).languageCode;
+    return ProductCatalog.getItems(languageCode).any((item) => item.name.trim().toLowerCase() == cleanName);
   }
 
   double _parsePrice(String text) {
@@ -403,7 +404,7 @@ class _AddItemModalState extends ConsumerState<AddItemModal> {
                   Row(
                     children: [
                       Text(
-                        locale.languageCode == 'pt' ? 'R\$' : '\$',
+                        NumberFormat.simpleCurrency(locale: locale.toString()).currencySymbol,
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
@@ -471,10 +472,11 @@ class _AddItemModalState extends ConsumerState<AddItemModal> {
                                       const SizedBox(width: 12),
                                       Expanded(
                                         child: Text(
-                                          cat[0].toUpperCase() + cat.substring(1),
+                                          _getLocalizedCategoryName(cat, l10n),
                                           style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
                                         ),
                                       ),
+
                                       if (!isDefault)
                                         InkWell(
                                           onTap: () {
@@ -525,12 +527,13 @@ class _AddItemModalState extends ConsumerState<AddItemModal> {
                               Text(_getCategoryEmoji(_selectedCategory), style: const TextStyle(fontSize: 20)),
                               const SizedBox(width: 12),
                               Text(
-                                _selectedCategory[0].toUpperCase() + _selectedCategory.substring(1),
+                                _getLocalizedCategoryName(_selectedCategory, l10n),
                                 style: TextStyle(
                                   fontSize: 16,
                                   color: textColor,
                                 ),
                               ),
+
                               const Spacer(),
                               Icon(Icons.keyboard_arrow_down, color: iconColor),
                             ],
@@ -871,6 +874,28 @@ class _AddItemModalState extends ConsumerState<AddItemModal> {
       ),
     );
   }
+  String _getLocalizedCategoryName(String category, AppLocalizations l10n) {
+    switch (category.toLowerCase()) {
+      case 'hortifruti': return l10n.cat_hortifruti;
+      case 'padaria': return l10n.cat_padaria;
+      case 'laticinios': return l10n.cat_laticinios;
+      case 'acougue': return l10n.cat_acougue;
+      case 'mercearia': return l10n.cat_mercearia;
+      case 'bebidas': return l10n.cat_bebidas;
+      case 'limpeza': return l10n.cat_limpeza;
+      case 'higiene': return l10n.cat_higiene;
+      case 'congelados': return l10n.cat_congelados;
+      case 'doces': return l10n.cat_doces;
+      case 'pet': return l10n.cat_pet;
+      case 'bebe': return l10n.cat_bebe;
+      case 'utilidades': return l10n.cat_utilidades;
+      case 'outros': return l10n.cat_outros;
+      default: 
+        if (category.isEmpty) return category;
+        return category[0].toUpperCase() + category.substring(1);
+    }
+  }
+
   String _getCategoryEmoji(String category) {
     switch (category.toLowerCase()) {
       case 'hortifruti': return '🥬';

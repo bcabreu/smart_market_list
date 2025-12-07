@@ -372,4 +372,46 @@ class AppLocalizationsPt extends AppLocalizations {
   String itemsRemaining(Object count) {
     return '$count itens restantes';
   }
+
+  @override
+  String get cat_hortifruti => 'Hortifruti';
+
+  @override
+  String get cat_padaria => 'Padaria';
+
+  @override
+  String get cat_laticinios => 'Laticínios';
+
+  @override
+  String get cat_acougue => 'Açougue e Peixaria';
+
+  @override
+  String get cat_mercearia => 'Mercearia';
+
+  @override
+  String get cat_bebidas => 'Bebidas';
+
+  @override
+  String get cat_limpeza => 'Limpeza';
+
+  @override
+  String get cat_higiene => 'Higiene';
+
+  @override
+  String get cat_congelados => 'Congelados';
+
+  @override
+  String get cat_doces => 'Doces e Sobremesas';
+
+  @override
+  String get cat_pet => 'Pet Shop';
+
+  @override
+  String get cat_bebe => 'Bebê';
+
+  @override
+  String get cat_utilidades => 'Utilidades';
+
+  @override
+  String get cat_outros => 'Outros';
 }

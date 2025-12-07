@@ -115,5 +115,19 @@
   "currentTotal": "Total Atual",
   "budgetLimit": "Limite",
   "allCategories": "Todas as categorias",
-  "itemsRemaining": "{count} itens restantes"
+  "itemsRemaining": "{count} itens restantes",
+  "cat_hortifruti": "Hortifruti",
+  "cat_padaria": "Padaria",
+  "cat_laticinios": "Laticínios",
+  "cat_acougue": "Açougue e Peixaria",
+  "cat_mercearia": "Mercearia",
+  "cat_bebidas": "Bebidas",
+  "cat_limpeza": "Limpeza",
+  "cat_higiene": "Higiene",
+  "cat_congelados": "Congelados",
+  "cat_doces": "Doces e Sobremesas",
+  "cat_pet": "Pet Shop",
+  "cat_bebe": "Bebê",
+  "cat_utilidades": "Utilidades",
+  "cat_outros": "Outros"
 }

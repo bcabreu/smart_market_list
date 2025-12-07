@@ -6,12 +6,15 @@ import 'package:smart_market_list/providers/shopping_list_provider.dart';
 
 import 'package:smart_market_list/providers/hidden_suggestions_provider.dart';
 
+import 'package:smart_market_list/providers/locale_provider.dart';
 import 'package:smart_market_list/providers/history_provider.dart';
+import 'dart:ui' as ui;
 
 final itemSuggestionsProvider = Provider<List<ProductSuggestion>>((ref) {
   final listsAsync = ref.watch(shoppingListsProvider);
   final hiddenSuggestions = ref.watch(hiddenSuggestionsProvider);
   final historyItems = ref.watch(historyProvider);
+  final locale = ref.watch(localeProvider);
   
   // 1. Build a map of history items (Name -> Item) to get user preferences
   final Map<String, ShoppingItem> historyMap = {};
@@ -33,9 +36,11 @@ final itemSuggestionsProvider = Provider<List<ProductSuggestion>>((ref) {
   final List<ProductSuggestion> suggestions = [];
   final Set<String> processedNames = {};
   final hiddenSet = hiddenSuggestions.map((e) => e.toLowerCase()).toSet();
+  
+  final languageCode = locale?.languageCode ?? ui.window.locale.languageCode;
 
   // 2. Process Catalog Items (with overrides from history)
-  for (final catalogItem in ProductCatalog.items) {
+  for (final catalogItem in ProductCatalog.getItems(languageCode)) {
     final normalizedName = catalogItem.name.toLowerCase();
     
     // Skip if hidden

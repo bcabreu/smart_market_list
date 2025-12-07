@@ -799,6 +799,90 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count} items remaining'**
   String itemsRemaining(Object count);
+
+  /// No description provided for @cat_hortifruti.
+  ///
+  /// In en, this message translates to:
+  /// **'Produce'**
+  String get cat_hortifruti;
+
+  /// No description provided for @cat_padaria.
+  ///
+  /// In en, this message translates to:
+  /// **'Bakery'**
+  String get cat_padaria;
+
+  /// No description provided for @cat_laticinios.
+  ///
+  /// In en, this message translates to:
+  /// **'Dairy'**
+  String get cat_laticinios;
+
+  /// No description provided for @cat_acougue.
+  ///
+  /// In en, this message translates to:
+  /// **'Meat & Fish'**
+  String get cat_acougue;
+
+  /// No description provided for @cat_mercearia.
+  ///
+  /// In en, this message translates to:
+  /// **'Grocery'**
+  String get cat_mercearia;
+
+  /// No description provided for @cat_bebidas.
+  ///
+  /// In en, this message translates to:
+  /// **'Drinks'**
+  String get cat_bebidas;
+
+  /// No description provided for @cat_limpeza.
+  ///
+  /// In en, this message translates to:
+  /// **'Cleaning'**
+  String get cat_limpeza;
+
+  /// No description provided for @cat_higiene.
+  ///
+  /// In en, this message translates to:
+  /// **'Hygiene'**
+  String get cat_higiene;
+
+  /// No description provided for @cat_congelados.
+  ///
+  /// In en, this message translates to:
+  /// **'Frozen'**
+  String get cat_congelados;
+
+  /// No description provided for @cat_doces.
+  ///
+  /// In en, this message translates to:
+  /// **'Sweets'**
+  String get cat_doces;
+
+  /// No description provided for @cat_pet.
+  ///
+  /// In en, this message translates to:
+  /// **'Pet Shop'**
+  String get cat_pet;
+
+  /// No description provided for @cat_bebe.
+  ///
+  /// In en, this message translates to:
+  /// **'Baby'**
+  String get cat_bebe;
+
+  /// No description provided for @cat_utilidades.
+  ///
+  /// In en, this message translates to:
+  /// **'Utilities'**
+  String get cat_utilidades;
+
+  /// No description provided for @cat_outros.
+  ///
+  /// In en, this message translates to:
+  /// **'Others'**
+  String get cat_outros;
 }
 
 class _AppLocalizationsDelegate

@@ -115,5 +115,19 @@
   "currentTotal": "Current Total",
   "budgetLimit": "Limit",
   "allCategories": "All categories",
-  "itemsRemaining": "{count} items remaining"
+  "itemsRemaining": "{count} items remaining",
+  "cat_hortifruti": "Produce",
+  "cat_padaria": "Bakery",
+  "cat_laticinios": "Dairy",
+  "cat_acougue": "Meat & Fish",
+  "cat_mercearia": "Grocery",
+  "cat_bebidas": "Drinks",
+  "cat_limpeza": "Cleaning",
+  "cat_higiene": "Hygiene",
+  "cat_congelados": "Frozen",
+  "cat_doces": "Sweets",
+  "cat_pet": "Pet Shop",
+  "cat_bebe": "Baby",
+  "cat_utilidades": "Utilities",
+  "cat_outros": "Others"
 }
