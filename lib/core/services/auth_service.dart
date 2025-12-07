@@ -47,28 +47,48 @@ class AuthService {
     }
   }
 
-  // Sign In Anonymously
-  Future<UserCredential> signInAnonymously() async {
-    try {
-      return await _auth.signInAnonymously();
-    } catch (e) {
-      throw Exception('Anonymous Sign In Failed: $e');
-    }
-  }
-
   // Sign In with Apple
   Future<UserCredential?> signInWithApple() async {
     try {
-      // Note: Full nonce implementation requires 'crypto' package. 
-      // For brevity, using the package's recommended flow for Firebase.
-      // In production, ensure "Sign In with Apple" capability is added in Xcode.
-      
       final appleProvider = AppleAuthProvider();
+      appleProvider.addScope('email');
+      appleProvider.addScope('name');
       return await _auth.signInWithProvider(appleProvider);
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'canceled' || e.code == 'unknown') {
+         // 'unknown' is sometimes returned by the simulator for cancellation, or specific error texts.
+         // Checking message text as fallback if needed, but usually code is enough.
+         if (e.code == 'canceled') return null;
+         if (e.message?.contains('canceled') == true) return null;
+      }
+      rethrow;
     } catch (e) {
-      // Fallback for Android or specific flows not supported by signInWithProvider directly
-      // Or if checking strictly on iOS
        throw Exception('Apple Sign In Failed: $e');
+    }
+  }
+
+  // Send Password Reset Email
+  Future<void> sendPasswordResetEmail(String email) async {
+    await _auth.sendPasswordResetEmail(email: email.trim());
+  }
+
+  // Update Display Name
+  Future<void> updateDisplayName(String name) async {
+    final user = _auth.currentUser;
+    if (user != null) {
+      await user.updateDisplayName(name);
+      await user.reload(); // Ensure local user object is updated
+    }
+  }
+
+  // Delete Account
+  Future<void> deleteAccount() async {
+    final user = _auth.currentUser;
+    if (user != null) {
+      // Note: This requires recent login. If it fails, we should handle re-auth.
+      // For now, we assume the user session is valid.
+      await _googleSignIn.signOut(); // Disconnect Google Sign In if used
+      await user.delete();
     }
   }
 

@@ -15,13 +15,23 @@ class ProfileImageNotifier extends StateNotifier<String?> {
     final prefs = await SharedPreferences.getInstance();
     final savedPath = prefs.getString(_key);
     if (savedPath != null) {
-      if (await File(savedPath).exists()) {
+      if (savedPath.startsWith('http')) {
+        // It's a network URL
+        state = savedPath;
+      } else if (await File(savedPath).exists()) {
+        // It's a local file
          state = savedPath;
       } else {
          // Cleanup if file no longer exists
          await prefs.remove(_key);
       }
     }
+  }
+
+  Future<void> setNetworkImage(String url) async {
+    state = url;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_key, url);
   }
 
   Future<void> setImage(String sourcePath) async {
@@ -33,8 +43,8 @@ class ProfileImageNotifier extends StateNotifier<String?> {
       // Copy the file to the app's document directory
       final savedFile = await File(sourcePath).copy(newPath);
       
-      // Delete old image if it exists to save space
-      if (state != null) {
+      // Delete old image if it exists to save space (and is not a URL)
+      if (state != null && !state!.startsWith('http')) {
         final oldFile = File(state!);
         if (await oldFile.exists()) {
           await oldFile.delete();

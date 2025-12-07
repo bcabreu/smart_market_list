@@ -27,6 +27,79 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     super.dispose();
   }
 
+  Future<void> _showForgotPasswordDialog(BuildContext context) async {
+      final l10n = AppLocalizations.of(context)!;
+      final emailController = TextEditingController(text: _emailController.text);
+      
+      return showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: Text(l10n.resetPasswordTitle),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(l10n.resetPasswordDescription),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: emailController,
+                  decoration: InputDecoration(
+                    labelText: l10n.email,
+                    hintText: l10n.emailHint,
+                    border: const OutlineInputBorder(),
+                  ),
+                  keyboardType: TextInputType.emailAddress,
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text(l10n.cancel),
+              ),
+              TextButton(
+                onPressed: () async {
+                  final email = emailController.text.trim();
+                  if (email.isEmpty) return;
+                  
+                  Navigator.pop(context); // Close dialog
+                  LoadingDialog.show(context, l10n.processing);
+                  
+                  try {
+                     await ref.read(authServiceProvider).sendPasswordResetEmail(email);
+                     
+                     if (context.mounted) {
+                       LoadingDialog.hide(context);
+                       ScaffoldMessenger.of(context).showSnackBar(
+                         SnackBar(
+                           content: Text(l10n.resetLinkSentMessage),
+                           backgroundColor: Colors.green,
+                         ),
+                       );
+                     }
+                  } catch (e) {
+                     if (context.mounted) {
+                       LoadingDialog.hide(context);
+                       ScaffoldMessenger.of(context).showSnackBar(
+                         SnackBar(
+                           content: Text('Erro: ${e.toString()}'),
+                           backgroundColor: Colors.red,
+                         ),
+                       );
+                     }
+                  }
+                },
+                child: Text(l10n.sendLink),
+              ),
+            ],
+          );
+        },
+      );
+  }
+
+
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -88,17 +161,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 textInputAction: TextInputAction.done,
               ),
               
-              const SizedBox(height: 12),
+              // Forgot Password
               Align(
                 alignment: Alignment.centerRight,
                 child: TextButton(
-                  onPressed: () {},
-                  style: TextButton.styleFrom(
-                    foregroundColor: AppColors.primary,
-                  ),
+                  onPressed: () => _showForgotPasswordDialog(context),
                   child: Text(
                     l10n.forgotPassword,
-                    style: const TextStyle(fontWeight: FontWeight.w600),
+                    style: TextStyle(
+                      color: isDark ? Colors.grey[400] : Colors.grey[600],
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
                 ),
               ),
@@ -123,6 +196,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     
                     // Update global state on success
                     await ref.read(userEmailProvider.notifier).setEmail(email);
+                    
+                    // Fetch Name from Firebase
+                    final user = ref.read(authServiceProvider).currentUser;
+                    if (user?.displayName != null) {
+                      await ref.read(userNameProvider.notifier).setName(user!.displayName!);
+                    }
+                    
                     await ref.read(isLoggedInProvider.notifier).setLoggedIn(true);
                     
                     if (context.mounted) {

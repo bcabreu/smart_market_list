@@ -59,11 +59,12 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyD5-eXUl97Bw35t0sL8Leu7kzucVQoLD4M',
-    appId: '1:1033855354360:ios:1882cb2a7ca666c119020d',
+    appId: '1:1033855354360:ios:7da9a30076f4abc519020d',
     messagingSenderId: '1033855354360',
     projectId: 'smart-market-list-82bf7',
     storageBucket: 'smart-market-list-82bf7.firebasestorage.app',
-    iosClientId: '1033855354360-pfp6stmktqu0n9m7opdi56mg666dgtle.apps.googleusercontent.com',
-    iosBundleId: 'com.brunoabreu.smartMarketList',
+    iosClientId: '1033855354360-ck2d0r691lraob20tvq06n7hikqnombh.apps.googleusercontent.com',
+    iosBundleId: 'com.kepoweb.smartMarketList',
   );
+
 }

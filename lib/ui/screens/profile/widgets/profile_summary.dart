@@ -6,11 +6,13 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:smart_market_list/core/theme/app_colors.dart';
 import 'package:smart_market_list/providers/profile_provider.dart';
 import 'package:smart_market_list/providers/user_provider.dart';
+import 'package:smart_market_list/providers/auth_provider.dart';
 import 'package:intl/intl.dart';
 
 import 'package:smart_market_list/l10n/generated/app_localizations.dart';
 import 'package:smart_market_list/ui/screens/auth/login_screen.dart';
 import 'package:smart_market_list/ui/screens/auth/signup_screen.dart';
+import 'package:smart_market_list/ui/screens/auth/widgets/social_login_buttons.dart';
 
 class ProfileSummary extends ConsumerStatefulWidget {
   const ProfileSummary({super.key});
@@ -128,10 +130,14 @@ class _ProfileSummaryState extends ConsumerState<ProfileSummary> {
     );
   }
 
-  void _saveName() {
+  void _saveName() async {
     final newName = _nameController.text.trim();
     if (newName.isNotEmpty) {
-      ref.read(userNameProvider.notifier).setName(newName);
+      await ref.read(userNameProvider.notifier).setName(newName);
+      // Update Firebase Profile if logged in
+      if (ref.read(isLoggedInProvider)) {
+        await ref.read(authServiceProvider).updateDisplayName(newName);
+      }
     }
     ref.read(isEditingProfileNameProvider.notifier).state = false;
   }
@@ -195,7 +201,9 @@ class _ProfileSummaryState extends ConsumerState<ProfileSummary> {
                   ),
                   image: profileImagePath != null
                       ? DecorationImage(
-                          image: FileImage(File(profileImagePath)),
+                          image: profileImagePath.startsWith('http')
+                              ? NetworkImage(profileImagePath)
+                              : FileImage(File(profileImagePath)) as ImageProvider,
                           fit: BoxFit.cover,
                         )
                       : null,
@@ -346,6 +354,17 @@ class _ProfileSummaryState extends ConsumerState<ProfileSummary> {
                 letterSpacing: -0.5,
               ),
             ),
+            if (isLoggedIn && ref.watch(userEmailProvider) != null) ...[
+              const SizedBox(height: 4),
+              Text(
+                ref.watch(userEmailProvider)!,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.normal,
+                  color: isDark ? Colors.grey[400] : Colors.grey[600],
+                ),
+              ),
+            ],
             
           const SizedBox(height: 12),
 
@@ -477,40 +496,11 @@ class _ProfileSummaryState extends ConsumerState<ProfileSummary> {
               ),
             ),
             const SizedBox(height: 16),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                _buildSocialButton(context, FontAwesomeIcons.google, isDark),
-                const SizedBox(width: 16),
-                _buildSocialButton(context, FontAwesomeIcons.apple, isDark),
-              ],
-            ),
+            const SocialLoginButtons(),
           ],
         ],
       ),
     );
   }
 
-  Widget _buildSocialButton(BuildContext context, IconData icon, bool isDark) {
-    return Container(
-      width: 50,
-      height: 50,
-      decoration: BoxDecoration(
-        color: isDark ? Colors.white.withOpacity(0.05) : Colors.grey[100],
-        shape: BoxShape.circle,
-        border: Border.all(
-          color: isDark 
-              ? Colors.white.withOpacity(0.1) 
-              : Colors.black.withOpacity(0.05),
-        ),
-      ),
-      child: Center(
-        child: FaIcon(
-          icon,
-          size: 20,
-          color: isDark ? Colors.white : Colors.black87,
-        ),
-      ),
-    );
-  }
 }

@@ -25,6 +25,7 @@ import 'package:smart_market_list/providers/shopping_list_provider.dart';
 import 'package:smart_market_list/providers/shared_users_provider.dart';
 import 'package:smart_market_list/data/models/shopping_list.dart';
 import 'package:smart_market_list/providers/recipes_provider.dart';
+import 'package:smart_market_list/providers/auth_provider.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -604,6 +605,9 @@ class ProfileScreen extends ConsumerWidget {
          // 5. Clear Premium Status
          await ref.read(premiumSinceProvider.notifier).setPremium(false);
          
+         // 6. Delete Account from Firebase
+         await ref.read(authServiceProvider).deleteAccount();
+         
          // Wait a bit for UX
          await Future.delayed(const Duration(seconds: 1));
 
@@ -726,6 +730,9 @@ class ProfileScreen extends ConsumerWidget {
     );
 
     if (confirmed == true && context.mounted) {
+      // Clear Firebase Auth
+      await ref.read(authServiceProvider).signOut();
+
       // Clear user state
       await ref.read(isLoggedInProvider.notifier).setLoggedIn(false);
       await ref.read(userEmailProvider.notifier).clearEmail();

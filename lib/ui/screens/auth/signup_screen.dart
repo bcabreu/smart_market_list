@@ -52,6 +52,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
 
     try {
       await ref.read(authServiceProvider).signUp(email: email, password: password);
+      await ref.read(authServiceProvider).updateDisplayName(name); // Persist name to Firebase
       
       // Update global state
       await ref.read(userNameProvider.notifier).setName(name);

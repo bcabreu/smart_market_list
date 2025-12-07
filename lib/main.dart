@@ -24,7 +24,8 @@ void main() async {
       options: DefaultFirebaseOptions.currentPlatform,
     );
   } catch (e) {
-    print('⚠️ Firebase not initialized. Run `flutterfire configure` to generate firebase_options.dart');
+    print('⚠️ Firebase initialization failed: $e');
+    print('If this is a new installation, please rebuild the app (Stop -> Run).');
   }
 
   await Hive.initFlutter();

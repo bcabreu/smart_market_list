@@ -747,4 +747,21 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get privacyPolicyText =>
       'Última atualização: 07/12/2025\n\nA sua privacidade é importante para nós. É política do Smart Market List (doravante referido como \"Aplicativo\", \"Nós\" ou \"Nosso\") respeitar a sua privacidade em relação a qualquer informação sua que possamos coletar.\n\nAo baixar e utilizar nosso Aplicativo, você concorda com a coleta e uso de informações de acordo com esta política.\n\n1. Informações que Coletamos\nPara maximizar a utilidade do Aplicativo e fornecer uma experiência personalizada, coletamos os seguintes tipos de dados:\n\n1.1. Dados Pessoais (Cadastro)\nAo criar uma conta ou assinar nossos serviços Premium, podemos solicitar informações de identificação pessoal, incluindo, mas não se limitando a:\n• Nome completo: Para personalização do perfil.\n• Endereço de e-mail: Para login, recuperação de senha e comunicações importantes sobre o serviço.\n• Fotos/Imagens: Coletamos fotos apenas se você optar por fazer upload (ex: foto de perfil ou escaneamento de produtos/notas fiscais). O acesso à câmera e galeria é solicitado apenas no momento do uso.\n\n1.2. Dados de Localização\nColetamos dados precisos ou aproximados de localização do seu dispositivo.\n• Finalidade: Utilizamos a localização para oferecer funcionalidades como comparação de preços e exibir anúncios relevantes.\n• Controle: A coleta ocorre apenas se você conceder permissão explícita. Você pode revogar essa permissão a qualquer momento.\n\n1.3. Dados de Uso e Dispositivo\nColetamos automaticamente informações sobre como você interage com o app, modelo do aparelho, sistema operacional, identificadores únicos de publicidade (como Google Advertising ID ou IDFA) e relatórios de falhas.\n\n2. Como Usamos Suas Informações\nUtilizamos os dados coletados para:\n• Fornecer e manter o serviço (ex: salvar suas listas na nuvem).\n• Processar pagamentos de assinaturas.\n• Melhorar nossos algoritmos.\n• Exibir Publicidade: Utilizamos dados de localização e perfil para mostrar anúncios de terceiros.\n\n3. Publicidade e Terceiros\nPara manter a versão gratuita, exibimos anúncios. Compartilhamos dados não identificáveis (como ID de publicidade) com redes de anúncios parceiras (ex: Google AdMob, Facebook Audience Network).\n\n4. Assinaturas e Pagamentos\nTodas as transações financeiras são processadas diretamente pelas lojas de aplicativos (Google Play ou App Store). Não armazenamos os dados completos do seu cartão de crédito.\n\n5. Armazenamento e Segurança\nSeus dados são armazenados em servidores seguros (ex: Firebase, AWS) e adotamos medidas para protegê-los.\n\n6. Seus Direitos (LGPD)\nVocê tem direito a acessar, corrigir e solicitar a exclusão dos seus dados pessoais a qualquer momento através do menu \"Configurações\" ou entrando em contato conosco.\n\n7. Retenção de Dados\nManteremos suas informações apenas pelo tempo necessário para cumprir as finalidades descritas.\n\n8. Alterações nesta Política\nPodemos atualizar nossa Política de Privacidade periodicamente. Recomendamos que revise esta página regularmente.\n\n9. Contato\nSe tiver dúvidas, entre em contato:\nE-mail: contato@kepoweb.com\nResponsável pelos Dados: KepoWeb';
+
+  @override
+  String get resetPasswordTitle => 'Recuperar Senha';
+
+  @override
+  String get resetPasswordDescription =>
+      'Digite seu email para receber um link de redefinição.';
+
+  @override
+  String get sendLink => 'Enviar Link';
+
+  @override
+  String get resetLinkSent => 'Link Enviado';
+
+  @override
+  String get resetLinkSentMessage =>
+      'Verifique seu email para redefinir a senha.';
 }
