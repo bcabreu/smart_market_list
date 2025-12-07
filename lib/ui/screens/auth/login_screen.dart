@@ -35,10 +35,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Theme.of(context).iconTheme.color),
-          onPressed: () => Navigator.pop(context),
-        ),
+        leading: Navigator.canPop(context) 
+            ? IconButton(
+                icon: Icon(Icons.arrow_back, color: Theme.of(context).iconTheme.color),
+                onPressed: () => Navigator.pop(context),
+              )
+            : null,
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -107,7 +109,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   if (email.isNotEmpty) {
                     // Update global state
                     await ref.read(userEmailProvider.notifier).setEmail(email);
-                    ref.read(isLoggedInProvider.notifier).state = true;
+                    await ref.read(isLoggedInProvider.notifier).setLoggedIn(true);
                     if (mounted) Navigator.pop(context);
                   }
                 },

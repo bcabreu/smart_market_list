@@ -102,5 +102,26 @@ final userNameProvider = StateNotifierProvider<UserNameNotifier, String?>((ref) 
   return UserNameNotifier();
 });
 
-// Auth status provider
-final isLoggedInProvider = StateProvider<bool>((ref) => false);
+// Auth status provider using StateNotifier for persistence
+final isLoggedInProvider = StateNotifierProvider<IsLoggedInNotifier, bool>((ref) {
+  return IsLoggedInNotifier();
+});
+
+class IsLoggedInNotifier extends StateNotifier<bool> {
+  IsLoggedInNotifier() : super(false) {
+    _loadStatus();
+  }
+
+  static const _key = 'is_logged_in';
+
+  Future<void> _loadStatus() async {
+    final prefs = await SharedPreferences.getInstance();
+    state = prefs.getBool(_key) ?? false;
+  }
+
+  Future<void> setLoggedIn(bool value) async {
+    state = value;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_key, value);
+  }
+}

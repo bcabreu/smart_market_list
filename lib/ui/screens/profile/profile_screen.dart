@@ -23,6 +23,8 @@ import 'package:smart_market_list/providers/shopping_notes_provider.dart';
 import 'package:smart_market_list/l10n/generated/app_localizations.dart';
 import 'package:smart_market_list/providers/shopping_list_provider.dart';
 import 'package:smart_market_list/providers/shared_users_provider.dart';
+import 'package:smart_market_list/data/models/shopping_list.dart';
+import 'package:smart_market_list/providers/recipes_provider.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -579,18 +581,25 @@ class ProfileScreen extends ConsumerWidget {
        LoadingDialog.show(context, l10n.processing);
        
        try {
-         // 1. Wipe Hive Data
          final shoppingListService = ref.read(shoppingListServiceProvider);
          await shoppingListService.deleteAllData();
 
-         // 2. Clear Shared Preferences & User State
-         ref.read(isLoggedInProvider.notifier).state = false;
+         // 2. Create Default List (Fix for Infinite Loading)
+         final defaultList = ShoppingList(name: 'Compras do Mês', emoji: '🛒', budget: 500.0);
+         await shoppingListService.createList(defaultList);
+
+         // 3. Clear Shared Preferences & User State
+         await ref.read(isLoggedInProvider.notifier).setLoggedIn(false);
          await ref.read(userEmailProvider.notifier).clearEmail();
          await ref.read(userNameProvider.notifier).clearName();
          
          // 3. Clear Shopping Notes
          final notesService = ref.read(shoppingNotesServiceProvider);
          await notesService.deleteAllNotes();
+
+         // 4. Clear Favorite Recipes
+         final recipesService = ref.read(recipesServiceProvider);
+         await recipesService.clearRecipes();
          
          // Wait a bit for UX
          await Future.delayed(const Duration(seconds: 1));
@@ -715,7 +724,7 @@ class ProfileScreen extends ConsumerWidget {
 
     if (confirmed == true && context.mounted) {
       // Clear user state
-      ref.read(isLoggedInProvider.notifier).state = false;
+      await ref.read(isLoggedInProvider.notifier).setLoggedIn(false);
       await ref.read(userEmailProvider.notifier).clearEmail();
       await ref.read(userNameProvider.notifier).clearName();
 

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import '../models/shopping_list.dart';
 import '../models/shopping_item.dart';
@@ -81,12 +82,31 @@ class ShoppingListService {
   }
 
   Future<void> deleteAllData() async {
-    await _box.clear();
-    // Also clear other related boxes if accessible here, or handle in callers
-    final historyBox = Hive.box<ShoppingItem>('item_history');
-    await historyBox.clear();
+    // Clear Shopping Lists
+    try {
+      await _box.clear();
+    } catch (e) {
+      debugPrint('Error clearing shopping lists: $e');
+    }
+
+    // Clear Item History
+    try {
+      if (Hive.isBoxOpen('item_history')) {
+        final historyBox = Hive.box<ShoppingItem>('item_history');
+        await historyBox.clear();
+      }
+    } catch (e) {
+      debugPrint('Error clearing item history: $e');
+    }
     
-    final hiddenBox = Hive.box('hidden_suggestions');
-    await hiddenBox.clear();
+    // Clear Hidden Suggestions
+    try {
+      if (Hive.isBoxOpen('hidden_suggestions')) {
+        final hiddenBox = Hive.box<String>('hidden_suggestions');
+        await hiddenBox.clear();
+      }
+    } catch (e) {
+      debugPrint('Error clearing hidden suggestions: $e');
+    }
   }
 }
