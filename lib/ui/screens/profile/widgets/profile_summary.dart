@@ -349,7 +349,7 @@ class _ProfileSummaryState extends ConsumerState<ProfileSummary> {
           const SizedBox(height: 12),
 
           // Status Row (Only for Premium)
-          if (isPremium)
+          if (isPremium) ...[
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -383,8 +383,11 @@ class _ProfileSummaryState extends ConsumerState<ProfileSummary> {
                   ),
                 ),
               ],
-            )
-          else if (!isLoggedIn) ...[
+            ),
+            const SizedBox(height: 24),
+          ],
+          
+          if (!isLoggedIn) ...[
             Text(
               l10n.guestMessage,
               textAlign: TextAlign.center,
