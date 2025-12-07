@@ -28,6 +28,7 @@ void main() async {
   await Hive.openBox<List<String>>('categories');
   await Hive.openBox<String>('hidden_suggestions');
   await Hive.openBox<ShoppingItem>('item_history');
+  await Hive.openBox<double>('expense_goals');
   
   // Migration: Ensure all lists use ID as key
   final keys = box.keys.toList();
