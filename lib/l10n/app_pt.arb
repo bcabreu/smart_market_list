@@ -22,7 +22,7 @@
   "logout": "Sair da Conta",
   "recipesTitle": "Receitas pra Você 👨‍🍳",
   "recipesSubtitle": "Baseadas nos seus ingredientes",
-  "searchHint": "Buscar na API...",
+  "searchHint": "Localizar receita",
   "recipesFound": "Receitas Encontradas",
   "youCanCookNow": "Você Pode Fazer Agora",
   "youCanCookNowSubtitle": "Receitas com ingredientes que você já tem na lista",

@@ -239,7 +239,7 @@ abstract class AppLocalizations {
   /// No description provided for @searchHint.
   ///
   /// In en, this message translates to:
-  /// **'Search API...'**
+  /// **'Search recipe'**
   String get searchHint;
 
   /// No description provided for @recipesFound.

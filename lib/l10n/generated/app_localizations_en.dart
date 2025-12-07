@@ -78,7 +78,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get recipesSubtitle => 'Based on your ingredients';
 
   @override
-  String get searchHint => 'Search API...';
+  String get searchHint => 'Search recipe';
 
   @override
   String get recipesFound => 'Recipes Found';

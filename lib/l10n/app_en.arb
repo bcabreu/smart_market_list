@@ -22,7 +22,7 @@
   "logout": "Log Out",
   "recipesTitle": "Recipes for You 👨‍🍳",
   "recipesSubtitle": "Based on your ingredients",
-  "searchHint": "Search API...",
+  "searchHint": "Search recipe",
   "recipesFound": "Recipes Found",
   "youCanCookNow": "You Can Cook Now",
   "youCanCookNowSubtitle": "Recipes with ingredients you already have",
