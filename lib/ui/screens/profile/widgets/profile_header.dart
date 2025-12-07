@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:smart_market_list/core/theme/app_colors.dart';
+import 'package:smart_market_list/l10n/generated/app_localizations.dart';
 
 class ProfileHeader extends ConsumerWidget {
   const ProfileHeader({super.key});
@@ -8,6 +9,7 @@ class ProfileHeader extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final l10n = AppLocalizations.of(context)!;
 
     return Container(
       padding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
@@ -28,16 +30,16 @@ class ProfileHeader extends ConsumerWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                'Perfil 👤',
-                style: TextStyle(
+              Text(
+                l10n.profileTitle,
+                style: const TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
                 ),
               ),
               const SizedBox(height: 4),
               Text(
-                'Suas informações pessoais',
+                l10n.personalInfo,
                 style: TextStyle(
                   fontSize: 14,
                   color: isDark ? Colors.grey[400] : Colors.grey[600],
@@ -53,7 +55,7 @@ class ProfileHeader extends ConsumerWidget {
             child: IconButton(
               onPressed: () {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Editar perfil (Em breve)')),
+                  SnackBar(content: Text(l10n.editProfileSoon)),
                 );
               },
               icon: const Icon(Icons.edit_outlined, color: Color(0xFF009688)), // Teal

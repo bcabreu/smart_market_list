@@ -6,12 +6,15 @@ import 'package:smart_market_list/providers/shopping_notes_provider.dart';
 import 'package:smart_market_list/ui/screens/profile/favorite_recipes_screen.dart';
 import 'package:smart_market_list/providers/navigation_provider.dart';
 
+import 'package:smart_market_list/l10n/generated/app_localizations.dart';
+
 class ProfileStats extends ConsumerWidget {
   const ProfileStats({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     const double cardSpacing = 12.0;
+    final l10n = AppLocalizations.of(context)!;
     
     // Watch providers
     final recipesAsync = ref.watch(recipesProvider);
@@ -39,7 +42,7 @@ class ProfileStats extends ConsumerWidget {
             iconColor: Colors.white,
             iconBgColor: const Color(0xFFFF4081), // PinkAccent
             count: '$favoritesCount',
-            label: 'Receitas\nfavoritadas',
+            label: l10n.favoriteRecipesStats,
             onTap: () {
               Navigator.push(
                 context,
@@ -56,7 +59,7 @@ class ProfileStats extends ConsumerWidget {
             iconColor: Colors.white,
             iconBgColor: const Color(0xFFFF9800), // Orange
             count: '$notesCount',
-            label: 'Notas\nsalvas',
+            label: l10n.savedNotesStats,
             onTap: () {
                ref.read(bottomNavIndexProvider.notifier).state = 1;
             },
@@ -68,7 +71,7 @@ class ProfileStats extends ConsumerWidget {
             iconColor: Colors.white,
             iconBgColor: const Color(0xFF26A69A), // Teal
             count: '1',
-            label: 'Compartilhando\nListas',
+            label: l10n.sharingListsStats,
           ),
         ],
       ),

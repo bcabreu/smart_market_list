@@ -89,6 +89,7 @@ class ProfileScreen extends ConsumerWidget {
   }
 
   void _showPrivacyPolicy(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -111,10 +112,10 @@ class ProfileScreen extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: 16),
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 24),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
               child: Text(
-                'Política de Privacidade',
+                l10n.privacy,
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,

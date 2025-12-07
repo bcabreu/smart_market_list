@@ -202,4 +202,45 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get delete => 'Excluir';
+
+  @override
+  String get profileTitle => 'Perfil 👤';
+
+  @override
+  String get personalInfo => 'Suas informações pessoais';
+
+  @override
+  String get guest => 'Visitante';
+
+  @override
+  String get favoriteRecipesStats => 'Receitas\nfavoritadas';
+
+  @override
+  String get savedNotesStats => 'Notas\nsalvas';
+
+  @override
+  String get sharingListsStats => 'Compartilhando\nListas';
+
+  @override
+  String get editProfileSoon => 'Editar perfil (Em breve)';
+
+  @override
+  String get changePhoto => 'Alterar Foto de Perfil';
+
+  @override
+  String get camera => 'Câmera';
+
+  @override
+  String get gallery => 'Galeria';
+
+  @override
+  String imageError(Object error) {
+    return 'Erro ao selecionar imagem: $error';
+  }
+
+  @override
+  String get clientSince => 'Cliente desde';
+
+  @override
+  String get premiumLabel => 'Premium';
 }

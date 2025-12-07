@@ -61,5 +61,18 @@
   "imageNotFound": "Imagem não encontrada",
   "deleteNoteTitle": "Excluir Nota?",
   "deleteNoteMessage": "Tem certeza que deseja excluir esta nota permanentemente?",
-  "delete": "Excluir"
+  "delete": "Excluir",
+  "profileTitle": "Perfil 👤",
+  "personalInfo": "Suas informações pessoais",
+  "guest": "Visitante",
+  "favoriteRecipesStats": "Receitas\nfavoritadas",
+  "savedNotesStats": "Notas\nsalvas",
+  "sharingListsStats": "Compartilhando\nListas",
+  "editProfileSoon": "Editar perfil (Em breve)",
+  "changePhoto": "Alterar Foto de Perfil",
+  "camera": "Câmera",
+  "gallery": "Galeria",
+  "imageError": "Erro ao selecionar imagem: {error}",
+  "clientSince": "Cliente desde",
+  "premiumLabel": "Premium"
 }

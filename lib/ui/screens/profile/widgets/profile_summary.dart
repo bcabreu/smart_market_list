@@ -7,10 +7,13 @@ import 'package:smart_market_list/core/theme/app_colors.dart';
 import 'package:smart_market_list/providers/profile_provider.dart';
 import 'package:smart_market_list/providers/user_provider.dart';
 
+import 'package:smart_market_list/l10n/generated/app_localizations.dart';
+
 class ProfileSummary extends ConsumerWidget {
   const ProfileSummary({super.key});
 
   Future<void> _pickImage(BuildContext context, WidgetRef ref, ImageSource source) async {
+    final l10n = AppLocalizations.of(context)!;
     try {
       final picker = ImagePicker();
       final pickedFile = await picker.pickImage(
@@ -25,12 +28,13 @@ class ProfileSummary extends ConsumerWidget {
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erro ao selecionar imagem: $e')),
+        SnackBar(content: Text(l10n.imageError(e.toString()))),
       );
     }
   }
 
   void _showImageSourceActionSheet(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -43,9 +47,9 @@ class ProfileSummary extends ConsumerWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text(
-              'Alterar Foto de Perfil',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            Text(
+              l10n.changePhoto,
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 24),
             Row(
@@ -54,7 +58,7 @@ class ProfileSummary extends ConsumerWidget {
                 _buildActionButton(
                   context,
                   icon: Icons.camera_alt,
-                  label: 'Câmera',
+                  label: l10n.camera,
                   onTap: () {
                     Navigator.pop(context);
                     _pickImage(context, ref, ImageSource.camera);
@@ -63,7 +67,7 @@ class ProfileSummary extends ConsumerWidget {
                 _buildActionButton(
                   context,
                   icon: Icons.photo_library,
-                  label: 'Galeria',
+                  label: l10n.gallery,
                   onTap: () {
                     Navigator.pop(context);
                     _pickImage(context, ref, ImageSource.gallery);
@@ -230,7 +234,7 @@ class ProfileSummary extends ConsumerWidget {
 
           // Name
           Text(
-            userName,
+            userName ?? AppLocalizations.of(context)!.guest,
             style: const TextStyle(
               fontSize: 22,
               fontWeight: FontWeight.bold,
@@ -245,7 +249,7 @@ class ProfileSummary extends ConsumerWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  'Cliente desde Nov 2024',
+                  '${AppLocalizations.of(context)!.clientSince} Nov 2024',
                   style: TextStyle(
                     color: isDark ? Colors.grey[400] : Colors.grey[600],
                     fontSize: 14,
@@ -258,12 +262,12 @@ class ProfileSummary extends ConsumerWidget {
                     color: const Color(0xFFFF8F00), // Orange
                     borderRadius: BorderRadius.circular(20),
                   ),
-                  child: const Row(
+                  child: Row(
                     children: [
                       FaIcon(FontAwesomeIcons.crown, color: Colors.white, size: 12),
                       SizedBox(width: 6),
                       Text(
-                        'Premium',
+                        AppLocalizations.of(context)!.premiumLabel,
                         style: TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,

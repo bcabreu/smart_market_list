@@ -202,4 +202,45 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get delete => 'Delete';
+
+  @override
+  String get profileTitle => 'Profile 👤';
+
+  @override
+  String get personalInfo => 'Your personal information';
+
+  @override
+  String get guest => 'Guest';
+
+  @override
+  String get favoriteRecipesStats => 'Favorite\nRecipes';
+
+  @override
+  String get savedNotesStats => 'Saved\nNotes';
+
+  @override
+  String get sharingListsStats => 'Sharing\nLists';
+
+  @override
+  String get editProfileSoon => 'Edit profile (Coming soon)';
+
+  @override
+  String get changePhoto => 'Change Profile Photo';
+
+  @override
+  String get camera => 'Camera';
+
+  @override
+  String get gallery => 'Gallery';
+
+  @override
+  String imageError(Object error) {
+    return 'Error selecting image: $error';
+  }
+
+  @override
+  String get clientSince => 'Customer since';
+
+  @override
+  String get premiumLabel => 'Premium';
 }

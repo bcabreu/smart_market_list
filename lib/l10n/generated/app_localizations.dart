@@ -475,6 +475,84 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Delete'**
   String get delete;
+
+  /// No description provided for @profileTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile 👤'**
+  String get profileTitle;
+
+  /// No description provided for @personalInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'Your personal information'**
+  String get personalInfo;
+
+  /// No description provided for @guest.
+  ///
+  /// In en, this message translates to:
+  /// **'Guest'**
+  String get guest;
+
+  /// No description provided for @favoriteRecipesStats.
+  ///
+  /// In en, this message translates to:
+  /// **'Favorite\nRecipes'**
+  String get favoriteRecipesStats;
+
+  /// No description provided for @savedNotesStats.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved\nNotes'**
+  String get savedNotesStats;
+
+  /// No description provided for @sharingListsStats.
+  ///
+  /// In en, this message translates to:
+  /// **'Sharing\nLists'**
+  String get sharingListsStats;
+
+  /// No description provided for @editProfileSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit profile (Coming soon)'**
+  String get editProfileSoon;
+
+  /// No description provided for @changePhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Change Profile Photo'**
+  String get changePhoto;
+
+  /// No description provided for @camera.
+  ///
+  /// In en, this message translates to:
+  /// **'Camera'**
+  String get camera;
+
+  /// No description provided for @gallery.
+  ///
+  /// In en, this message translates to:
+  /// **'Gallery'**
+  String get gallery;
+
+  /// No description provided for @imageError.
+  ///
+  /// In en, this message translates to:
+  /// **'Error selecting image: {error}'**
+  String imageError(Object error);
+
+  /// No description provided for @clientSince.
+  ///
+  /// In en, this message translates to:
+  /// **'Customer since'**
+  String get clientSince;
+
+  /// No description provided for @premiumLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Premium'**
+  String get premiumLabel;
 }
 
 class _AppLocalizationsDelegate

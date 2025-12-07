@@ -61,5 +61,18 @@
   "imageNotFound": "Image not found",
   "deleteNoteTitle": "Delete Note?",
   "deleteNoteMessage": "Are you sure you want to delete this note permanently?",
-  "delete": "Delete"
+  "delete": "Delete",
+  "profileTitle": "Profile 👤",
+  "personalInfo": "Your personal information",
+  "guest": "Guest",
+  "favoriteRecipesStats": "Favorite\nRecipes",
+  "savedNotesStats": "Saved\nNotes",
+  "sharingListsStats": "Sharing\nLists",
+  "editProfileSoon": "Edit profile (Coming soon)",
+  "changePhoto": "Change Profile Photo",
+  "camera": "Camera",
+  "gallery": "Gallery",
+  "imageError": "Error selecting image: {error}",
+  "clientSince": "Customer since",
+  "premiumLabel": "Premium"
 }
