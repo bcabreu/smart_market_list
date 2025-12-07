@@ -13,8 +13,10 @@ import 'package:smart_market_list/ui/screens/profile/widgets/settings_card.dart'
 import 'package:smart_market_list/providers/notifications_provider.dart';
 import 'package:smart_market_list/ui/screens/profile/modals/share_list_modal.dart';
 import 'package:smart_market_list/ui/screens/profile/modals/expense_charts_modal.dart';
+import 'package:smart_market_list/ui/screens/profile/modals/help_support_modal.dart';
 import 'package:smart_market_list/providers/locale_provider.dart';
 import 'package:smart_market_list/ui/common/modals/loading_dialog.dart';
+import 'package:smart_market_list/ui/common/modals/status_feedback_modal.dart';
 import 'package:smart_market_list/core/services/pdf_service.dart';
 import 'package:smart_market_list/providers/goals_provider.dart';
 import 'package:smart_market_list/providers/shopping_notes_provider.dart';
@@ -100,109 +102,70 @@ class ProfileScreen extends ConsumerWidget {
 
   void _showPrivacyPolicy(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    showModalBottomSheet(
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    showDialog(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        height: MediaQuery.of(context).size.height * 0.8,
-        decoration: BoxDecoration(
-          color: Theme.of(context).scaffoldBackgroundColor,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-        ),
+      builder: (context) => Dialog(
+        backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            const SizedBox(height: 12),
-            Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: Colors.grey.withOpacity(0.3),
-                borderRadius: BorderRadius.circular(2),
+            Padding(
+              padding: const EdgeInsets.all(24),
+              child: Row(
+                children: [
+                   Text(
+                    l10n.privacy,
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: isDark ? Colors.white : Colors.black87,
+                    ),
+                  ),
+                  const Spacer(),
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: () => Navigator.of(context).pop(),
+                  ),
+                ],
               ),
             ),
-            const SizedBox(height: 16),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: Text(
-                l10n.privacy,
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
+            const Divider(height: 1),
+            Flexible(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(24),
+                child: Text(
+                  l10n.privacyPolicyText,
+                  style: TextStyle(
+                    fontSize: 14,
+                    height: 1.5,
+                    color: isDark ? Colors.grey[300] : Colors.grey[700],
+                  ),
                 ),
               ),
             ),
-            const SizedBox(height: 24),
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Última atualização: 06/12/2025',
-                      style: TextStyle(
-                        fontStyle: FontStyle.italic,
-                        color: Colors.grey,
-                      ),
+             Padding(
+              padding: const EdgeInsets.all(24),
+              child: SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                    const SizedBox(height: 16),
-                    _buildPolicySection(
-                      context,
-                      '1. Coleta de Dados',
-                      'Coletamos apenas as informações necessárias para o funcionamento do app, como suas listas de compras e receitas salvas. Todos os dados são armazenados localmente no seu dispositivo.',
-                    ),
-                    _buildPolicySection(
-                      context,
-                      '2. Uso das Informações',
-                      'Suas informações são utilizadas exclusivamente para personalizar sua experiência, sugerir receitas baseadas nos seus itens e facilitar suas compras.',
-                    ),
-                    _buildPolicySection(
-                      context,
-                      '3. Compartilhamento',
-                      'Não compartilhamos seus dados pessoais com terceiros. O recurso de compartilhamento de lista funciona através de links seguros gerados por você.',
-                    ),
-                    _buildPolicySection(
-                      context,
-                      '4. Segurança',
-                      'Empregamos medidas de segurança padrão da indústria para proteger suas informações contra acesso não autorizado.',
-                    ),
-                    const SizedBox(height: 32),
-                  ],
+                  ),
+                  child: const Text('OK'),
                 ),
               ),
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildPolicySection(BuildContext context, String title, String content) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            content,
-            style: TextStyle(
-              fontSize: 14,
-              height: 1.5,
-              color: Theme.of(context).brightness == Brightness.dark 
-                  ? Colors.grey[400] 
-                  : Colors.grey[600],
-            ),
-          ),
-        ],
       ),
     );
   }
@@ -354,7 +317,12 @@ class ProfileScreen extends ConsumerWidget {
                         SettingsTile(
                           icon: Icons.help_outline,
                           title: l10n.helpSupport,
-                          onTap: () {},
+                          onTap: () => showModalBottomSheet(
+                            context: context,
+                            isScrollControlled: true,
+                            backgroundColor: Colors.transparent,
+                            builder: (context) => const HelpSupportModal(),
+                          ),
                         ),
                         SettingsTile(
                           icon: Icons.privacy_tip_outlined,
@@ -362,9 +330,15 @@ class ProfileScreen extends ConsumerWidget {
                           onTap: () => _showPrivacyPolicy(context),
                         ),
                         SettingsTile(
+                          icon: Icons.delete_forever,
+                          title: l10n.deleteAccount,
+                          onTap: () => _deleteAccount(context, ref),
+                          textColor: Colors.red,
+                        ),
+                        SettingsTile(
                           icon: Icons.logout,
                           title: l10n.logout,
-                          onTap: () {},
+                          onTap: () => _logout(context, ref),
                           trailing: const SizedBox(), // Hide chevron
                         ),
                       ],
@@ -439,6 +413,7 @@ class ProfileScreen extends ConsumerWidget {
   }
 
   Future<void> _manageSubscription(BuildContext context) async {
+    final l10n = AppLocalizations.of(context)!;
     final Uri url = Uri.parse('https://apps.apple.com/account/subscriptions');
     try {
       if (!await launchUrl(url)) {
@@ -446,20 +421,20 @@ class ProfileScreen extends ConsumerWidget {
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Não foi possível abrir o gerenciamento de assinaturas.'),
-            behavior: SnackBarBehavior.floating,
-          ),
+        StatusFeedbackModal.show(
+          context,
+          title: l10n.errorTitle,
+          message: l10n.subscriptionManagementError,
+          type: FeedbackType.error,
         );
       }
-      }
     }
-
+  }
 
   Future<void> _restorePurchases(BuildContext context, WidgetRef ref) async {
+    final l10n = AppLocalizations.of(context)!;
     try {
-      LoadingDialog.show(context, 'Restaurando compras...');
+      LoadingDialog.show(context, l10n.restoringPurchases);
       
       final service = ref.read(iapServiceProvider);
       // Ensure service is initialized/listening
@@ -471,33 +446,281 @@ class ProfileScreen extends ConsumerWidget {
         LoadingDialog.hide(context);
         
         if (initiated) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Solicitação enviada. Se houver compras ativas, elas serão restauradas em breve.'),
-              behavior: SnackBarBehavior.floating,
-              backgroundColor: Colors.green,
-            ),
+          StatusFeedbackModal.show(
+            context,
+            title: l10n.requestSentTitle,
+            message: l10n.restoreSuccess,
+            type: FeedbackType.success,
           );
         } else {
-           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Não foi possível conectar à loja.'),
-              behavior: SnackBarBehavior.floating,
-              backgroundColor: Colors.red,
-            ),
+          StatusFeedbackModal.show(
+            context,
+            title: l10n.connectionErrorTitle,
+            message: l10n.restoreError,
+            type: FeedbackType.error,
           );
         }
       }
     } catch (e) {
       if (context.mounted) {
         LoadingDialog.hide(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Erro: $e'),
-            behavior: SnackBarBehavior.floating,
-            backgroundColor: Colors.red,
-          ),
+        StatusFeedbackModal.show(
+          context,
+          title: l10n.errorTitle,
+          message: e.toString(),
+          type: FeedbackType.error,
         );
+      }
+    }
+  }
+  Future<void> _deleteAccount(BuildContext context, WidgetRef ref) async {
+    final l10n = AppLocalizations.of(context)!;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(24),
+        ),
+        backgroundColor: Theme.of(context).cardColor,
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Icon
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFFEBEE), // Red 50
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.delete_forever_rounded,
+                  size: 32,
+                  color: Color(0xFFEF5350), // Red 400
+                ),
+              ),
+              const SizedBox(height: 16),
+              
+              // Title
+              Text(
+                l10n.deleteAccountTitle,
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: isDark ? Colors.white : Colors.black87,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 8),
+              
+              // Message
+              Text(
+                l10n.deleteAccountMessage,
+                style: TextStyle(
+                  fontSize: 14,
+                  color: isDark ? Colors.grey[400] : Colors.grey[600],
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              
+              // Buttons
+              Row(
+                children: [
+                  Expanded(
+                    child: TextButton(
+                      onPressed: () => Navigator.of(context).pop(false),
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: Text(
+                        l10n.cancel,
+                        style: TextStyle(
+                          color: isDark ? Colors.grey[400] : Colors.grey[600],
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () => Navigator.of(context).pop(true),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFEF5350), // Red 400
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: Text(
+                        l10n.confirmDelete,
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    if (confirmed == true && context.mounted) {
+       LoadingDialog.show(context, l10n.processing);
+       
+       try {
+         // 1. Wipe Hive Data
+         final shoppingListService = ref.read(shoppingListServiceProvider);
+         await shoppingListService.deleteAllData();
+
+         // 2. Clear Shared Preferences & User State
+         ref.read(isLoggedInProvider.notifier).state = false;
+         await ref.read(userEmailProvider.notifier).clearEmail();
+         await ref.read(userNameProvider.notifier).clearName();
+         
+         // 3. Clear Shopping Notes
+         final notesService = ref.read(shoppingNotesServiceProvider);
+         await notesService.deleteAllNotes();
+         
+         // Wait a bit for UX
+         await Future.delayed(const Duration(seconds: 1));
+
+         if (context.mounted) {
+           LoadingDialog.hide(context);
+           // Navigate to Root
+           Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => false);
+         }
+       } catch (e) {
+         if (context.mounted) {
+           LoadingDialog.hide(context);
+           ScaffoldMessenger.of(context).showSnackBar(
+             SnackBar(content: Text('Error deleting account: $e')),
+           );
+         }
+       }
+    }
+  }
+
+  Future<void> _logout(BuildContext context, WidgetRef ref) async {
+    final l10n = AppLocalizations.of(context)!;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(24),
+        ),
+        backgroundColor: Theme.of(context).cardColor,
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Icon
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFFEBEE), // Red 50
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.logout_rounded,
+                  size: 32,
+                  color: Color(0xFFEF5350), // Red 400
+                ),
+              ),
+              const SizedBox(height: 16),
+              
+              // Title
+              Text(
+                l10n.logoutTitle,
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: isDark ? Colors.white : Colors.black87,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 8),
+              
+              // Message
+              Text(
+                l10n.logoutMessage,
+                style: TextStyle(
+                  fontSize: 14,
+                  color: isDark ? Colors.grey[400] : Colors.grey[600],
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              
+              // Buttons
+              Row(
+                children: [
+                  Expanded(
+                    child: TextButton(
+                      onPressed: () => Navigator.of(context).pop(false),
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: Text(
+                        l10n.cancel,
+                        style: TextStyle(
+                          color: isDark ? Colors.grey[400] : Colors.grey[600],
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () => Navigator.of(context).pop(true),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFEF5350), // Red 400
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: Text(
+                        l10n.confirmLogout,
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    if (confirmed == true && context.mounted) {
+      // Clear user state
+      ref.read(isLoggedInProvider.notifier).state = false;
+      await ref.read(userEmailProvider.notifier).clearEmail();
+      await ref.read(userNameProvider.notifier).clearName();
+
+      if (context.mounted) {
+         Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => false);
       }
     }
   }

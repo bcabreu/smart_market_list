@@ -59,6 +59,12 @@ class UserNameNotifier extends StateNotifier<String?> {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_key, name);
   }
+
+  Future<void> clearName() async {
+    state = null;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_key);
+  }
 }
 
 // User email provider

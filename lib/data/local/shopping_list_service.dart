@@ -79,4 +79,14 @@ class ShoppingListService {
       await _box.put(listId, newList);
     }
   }
+
+  Future<void> deleteAllData() async {
+    await _box.clear();
+    // Also clear other related boxes if accessible here, or handle in callers
+    final historyBox = Hive.box<ShoppingItem>('item_history');
+    await historyBox.clear();
+    
+    final hiddenBox = Hive.box('hidden_suggestions');
+    await hiddenBox.clear();
+  }
 }

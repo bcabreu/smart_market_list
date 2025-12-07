@@ -17,4 +17,8 @@ class ShoppingNotesService {
   Future<void> deleteNote(String id) async {
     await _box.delete(id);
   }
+
+  Future<void> deleteAllNotes() async {
+    await _box.clear();
+  }
 }

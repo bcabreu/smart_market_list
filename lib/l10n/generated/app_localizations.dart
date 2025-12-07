@@ -1357,6 +1357,162 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Error adding items: {error}'**
   String errorAddingItems(Object error);
+
+  /// No description provided for @restoringPurchases.
+  ///
+  /// In en, this message translates to:
+  /// **'Restoring purchases...'**
+  String get restoringPurchases;
+
+  /// No description provided for @restoreSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Request sent. If there are active purchases, they will be restored soon.'**
+  String get restoreSuccess;
+
+  /// No description provided for @restoreError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not connect to the store.'**
+  String get restoreError;
+
+  /// No description provided for @subscriptionManagementError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not open subscription management.'**
+  String get subscriptionManagementError;
+
+  /// No description provided for @requestSentTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Request Sent'**
+  String get requestSentTitle;
+
+  /// No description provided for @connectionErrorTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Connection Error'**
+  String get connectionErrorTitle;
+
+  /// No description provided for @errorTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Error'**
+  String get errorTitle;
+
+  /// No description provided for @faq.
+  ///
+  /// In en, this message translates to:
+  /// **'Frequently Asked Questions'**
+  String get faq;
+
+  /// No description provided for @contactSupport.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact Support'**
+  String get contactSupport;
+
+  /// No description provided for @emailSubject.
+  ///
+  /// In en, this message translates to:
+  /// **'Smart Market List Support'**
+  String get emailSubject;
+
+  /// No description provided for @faqHowToShare.
+  ///
+  /// In en, this message translates to:
+  /// **'How do I share a list?'**
+  String get faqHowToShare;
+
+  /// No description provided for @faqHowToShareAnswer.
+  ///
+  /// In en, this message translates to:
+  /// **'Go to Profile > Share List to invite someone. You need to be Premium.'**
+  String get faqHowToShareAnswer;
+
+  /// No description provided for @faqPremiumBenefits.
+  ///
+  /// In en, this message translates to:
+  /// **'What are Premium benefits?'**
+  String get faqPremiumBenefits;
+
+  /// No description provided for @faqPremiumBenefitsAnswer.
+  ///
+  /// In en, this message translates to:
+  /// **'No ads, cloud saved lists, unlimited lists, sharing, expense charts, and PDF reports.'**
+  String get faqPremiumBenefitsAnswer;
+
+  /// No description provided for @faqRestore.
+  ///
+  /// In en, this message translates to:
+  /// **'How do I restore my purchase?'**
+  String get faqRestore;
+
+  /// No description provided for @faqRestoreAnswer.
+  ///
+  /// In en, this message translates to:
+  /// **'Go to Profile > Restore Purchase.'**
+  String get faqRestoreAnswer;
+
+  /// No description provided for @logoutTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Log Out?'**
+  String get logoutTitle;
+
+  /// No description provided for @logoutMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to log out?'**
+  String get logoutMessage;
+
+  /// No description provided for @confirmLogout.
+  ///
+  /// In en, this message translates to:
+  /// **'Log Out'**
+  String get confirmLogout;
+
+  /// No description provided for @deleteAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Account'**
+  String get deleteAccount;
+
+  /// No description provided for @deleteAccountTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Account?'**
+  String get deleteAccountTitle;
+
+  /// No description provided for @deleteAccountMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'This action is irreversible. All your lists, notes, and data will be permanently deleted.'**
+  String get deleteAccountMessage;
+
+  /// No description provided for @confirmDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Forever'**
+  String get confirmDelete;
+
+  /// No description provided for @processing.
+  ///
+  /// In en, this message translates to:
+  /// **'Processing...'**
+  String get processing;
+
+  /// No description provided for @appVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'App Version'**
+  String get appVersion;
+
+  /// No description provided for @privacyPolicyText.
+  ///
+  /// In en, this message translates to:
+  /// **'Last updated: 12/07/2025\n\nYour privacy is important to us. It is Smart Market List\'s policy (hereinafter referred to as \"App\", \"We\" or \"Our\") to respect your privacy regarding any information we may collect from you.\n\nBy downloading and using our App, you agree to the collection and use of information in accordance with this policy.\n\n1. Information We Collect\nTo maximize the utility of the App and provide a personalized experience, we collect the following types of data:\n\n1.1. Personal Data (Registration)\nWhen creating an account or subscribing to our Premium services, we may ask for personally identifiable information, including but not limited to:\n• Full name: For profile personalization.\n• Email address: For login, password recovery, and important service communications.\n• Photos/Images: We collect photos only if you choose to upload them (e.g., profile picture or product/receipt scanning). Access to camera/gallery is requested only at the time of use.\n\n1.2. Location Data\nWe collect precise or approximate location data from your device.\n• Purpose: We use location to offer features like price comparison and display relevant ads.\n• Control: Collection occurs only if you grant explicit permission. You can revoke this permission at any time.\n\n1.3. Usage and Device Data\nWe automatically collect information on how you interact with the app, device model, operating system, unique advertising identifiers (like Google Advertising ID or IDFA), and crash reports.\n\n2. How We Use Your Information\nWe use collected data to:\n• Provide and maintain the service (e.g., saving lists to the cloud).\n• Process subscription payments.\n• Improve our algorithms.\n• Display Advertising: We use location and profile data to show third-party ads.\n\n3. Advertising and Third Parties\nTo keep the free version of the app, we display ads. We share non-personally identifiable data (like advertising ID) with partner ad networks (e.g., Google AdMob, Facebook Audience Network).\n\n4. Subscriptions and Payments\nAll financial transactions are processed directly by app stores (Google Play or App Store). We do not store your full credit card details.\n\n5. Storage and Security\nYour data is stored on secure servers (e.g., Firebase, AWS) and we adopt measures to protect it.\n\n6. Your Rights (GDPR/LGPD)\nYou have the right to access, correct, and request deletion of your personal data at any time via the \"Settings\" menu or by contacting us.\n\n7. Data Retention\nWe will retain your information only for as long as necessary to fulfill the purposes described.\n\n8. Changes to This Policy\nWe may update our Privacy Policy periodically. We recommend reviewing this page regularly.\n\n9. Contact\nIf you have questions, please contact us:\nEmail: contato@kepoweb.com\nData Controller: KepoWeb'**
+  String get privacyPolicyText;
 }
 
 class _AppLocalizationsDelegate

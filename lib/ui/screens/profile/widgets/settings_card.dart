@@ -57,6 +57,8 @@ class SettingsTile extends StatelessWidget {
   final Widget? trailing;
   final VoidCallback? onTap;
   final bool isLocked;
+  final Color? textColor;
+  final Color? iconColor;
 
   const SettingsTile({
     super.key,
@@ -66,6 +68,8 @@ class SettingsTile extends StatelessWidget {
     this.trailing,
     this.onTap,
     this.isLocked = false,
+    this.textColor,
+    this.iconColor,
   });
 
   @override
@@ -75,12 +79,18 @@ class SettingsTile extends StatelessWidget {
       leading: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: AppColors.primary.withOpacity(0.1),
+          color: (iconColor ?? AppColors.primary).withOpacity(0.1),
           borderRadius: BorderRadius.circular(8),
         ),
-        child: Icon(icon, color: AppColors.primary),
+        child: Icon(icon, color: iconColor ?? AppColors.primary),
       ),
-      title: Text(title, style: const TextStyle(fontWeight: FontWeight.w500)),
+      title: Text(
+        title, 
+        style: TextStyle(
+          fontWeight: FontWeight.w500,
+          color: textColor,
+        ),
+      ),
       subtitle: subtitle != null ? Text(subtitle!, style: const TextStyle(fontSize: 12)) : null,
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
