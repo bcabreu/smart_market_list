@@ -200,5 +200,13 @@
   "pdfStatusOver": "Over Budget",
   "pdfStatusOk": "Within Goal",
   "pdfPage": "Page",
-  "pdfOf": "of"
+  "pdfOf": "of",
+  "servings": "{count} servings",
+  "ingredientsInList": "Ingredients in your list",
+  "missingIngredientsSectionTitle": "Missing ingredients",
+  "addItemsToList": "Add {count} items to list",
+  "instructionsTitle": "Instructions",
+  "noListFound": "No shopping list found!",
+  "itemsAdded": "{count} ingredients added to list \"{listName}\"!",
+  "errorAddingItems": "Error adding items: {error}"
 }

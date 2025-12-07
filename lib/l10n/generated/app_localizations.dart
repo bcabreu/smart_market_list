@@ -1309,6 +1309,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'of'**
   String get pdfOf;
+
+  /// No description provided for @servings.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} servings'**
+  String servings(Object count);
+
+  /// No description provided for @ingredientsInList.
+  ///
+  /// In en, this message translates to:
+  /// **'Ingredients in your list'**
+  String get ingredientsInList;
+
+  /// No description provided for @missingIngredientsSectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Missing ingredients'**
+  String get missingIngredientsSectionTitle;
+
+  /// No description provided for @addItemsToList.
+  ///
+  /// In en, this message translates to:
+  /// **'Add {count} items to list'**
+  String addItemsToList(Object count);
+
+  /// No description provided for @instructionsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Instructions'**
+  String get instructionsTitle;
+
+  /// No description provided for @noListFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No shopping list found!'**
+  String get noListFound;
+
+  /// No description provided for @itemsAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} ingredients added to list \"{listName}\"!'**
+  String itemsAdded(Object count, Object listName);
+
+  /// No description provided for @errorAddingItems.
+  ///
+  /// In en, this message translates to:
+  /// **'Error adding items: {error}'**
+  String errorAddingItems(Object error);
 }
 
 class _AppLocalizationsDelegate

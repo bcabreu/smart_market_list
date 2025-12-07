@@ -6,6 +6,7 @@ import 'package:smart_market_list/data/models/recipe.dart';
 import 'package:smart_market_list/data/models/shopping_item.dart';
 import 'package:smart_market_list/providers/shopping_list_provider.dart';
 import 'package:smart_market_list/providers/user_provider.dart';
+import 'package:smart_market_list/l10n/generated/app_localizations.dart';
 import 'package:smart_market_list/ui/common/modals/paywall_modal.dart';
 
 class RecipeDetailModal extends ConsumerWidget {
@@ -16,6 +17,7 @@ class RecipeDetailModal extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final shoppingListsAsync = ref.watch(shoppingListsProvider);
     final shoppingListService = ref.watch(shoppingListServiceProvider);
+    final l10n = AppLocalizations.of(context)!;
 
     // Get target list (current or first)
     final targetList = ref.watch(currentListProvider) ?? shoppingListsAsync.value?.firstOrNull;
@@ -44,7 +46,7 @@ class RecipeDetailModal extends ConsumerWidget {
     Future<void> addItems(List<String> ingredients) async {
       if (targetList == null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Nenhuma lista de compras encontrada!')),
+          SnackBar(content: Text(l10n.noListFound)),
         );
         return;
       }
@@ -70,7 +72,7 @@ class RecipeDetailModal extends ConsumerWidget {
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('${ingredients.length} ingredientes adicionados à lista "${targetList.name}"!'),
+              content: Text(l10n.itemsAdded(ingredients.length, targetList.name)),
               backgroundColor: const Color(0xFF4DB6AC),
               behavior: SnackBarBehavior.floating,
             ),
@@ -79,7 +81,7 @@ class RecipeDetailModal extends ConsumerWidget {
       } catch (e) {
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Erro ao adicionar itens: $e')),
+            SnackBar(content: Text(l10n.errorAddingItems(e.toString()))),
           );
         }
       }
@@ -134,7 +136,7 @@ class RecipeDetailModal extends ConsumerWidget {
                               borderRadius: BorderRadius.circular(20),
                             ),
                             child: Text(
-                              recipe.difficulty,
+                              _getLocalizedDifficulty(context, recipe.difficulty),
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontWeight: FontWeight.bold,
@@ -171,15 +173,15 @@ class RecipeDetailModal extends ConsumerWidget {
                             _buildChip(
                               context,
                               Icons.access_time,
-                              '${recipe.prepTime} min',
+                              '${recipe.prepTime} ${l10n.cookTime}',
                               const Color(0xFFE0F2F1), // Teal 50
                               const Color(0xFF009688), // Teal 500
                             ),
                             const SizedBox(width: 12),
-                            _buildChip(
+                             _buildChip(
                               context,
                               Icons.people_outline,
-                              '${recipe.servings} porções',
+                              l10n.servings(recipe.servings),
                               const Color(0xFFE3F2FD), // Blue 50
                               const Color(0xFF2196F3), // Blue 500
                             ),
@@ -190,12 +192,12 @@ class RecipeDetailModal extends ConsumerWidget {
                         // Available Ingredients
                         if (availableIngredients.isNotEmpty) ...[
                           Row(
-                            children: [
+                           children: [
                               const Icon(Icons.circle, size: 12, color: Color(0xFF4DB6AC)),
                               const SizedBox(width: 8),
-                              const Text(
-                                'Ingredientes na sua lista',
-                                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                              Text(
+                                l10n.ingredientsInList,
+                                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                               ),
                             ],
                           ),
@@ -210,9 +212,9 @@ class RecipeDetailModal extends ConsumerWidget {
                             children: [
                               const Icon(Icons.local_fire_department_rounded, size: 18, color: Color(0xFFFF7043)),
                               const SizedBox(width: 8),
-                              const Text(
-                                'Ingredientes faltando',
-                                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                              Text(
+                                l10n.missingIngredientsSectionTitle,
+                                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                               ),
                             ],
                           ),
@@ -227,9 +229,9 @@ class RecipeDetailModal extends ConsumerWidget {
                         ],
 
                         // Instructions
-                        const Text(
-                          'Modo de Preparo',
-                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        Text(
+                          l10n.instructionsTitle,
+                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                         ),
                         const SizedBox(height: 16),
                         ...recipe.instructions.asMap().entries.map((entry) => Padding(
@@ -311,7 +313,7 @@ class RecipeDetailModal extends ConsumerWidget {
                     ),
                     icon: const Icon(Icons.add),
                     label: Text(
-                      'Adicionar ${missingIngredients.length} à lista',
+                      l10n.addItemsToList(missingIngredients.length),
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
@@ -420,13 +422,33 @@ class RecipeDetailModal extends ConsumerWidget {
   Color _getDifficultyColor(String difficulty) {
     switch (difficulty.toLowerCase()) {
       case 'fácil':
+      case 'easy':
         return const Color(0xFF00C853); // Green
       case 'médio':
+      case 'medium':
         return const Color(0xFFFFA000); // Amber
       case 'difícil':
+      case 'hard':
         return const Color(0xFFD84315); // Deep Orange
       default:
         return Colors.grey;
+    }
+  }
+
+  String _getLocalizedDifficulty(BuildContext context, String difficulty) {
+    final l10n = AppLocalizations.of(context)!;
+    switch (difficulty.toLowerCase()) {
+      case 'fácil':
+      case 'easy':
+        return l10n.difficultyEasy;
+      case 'médio':
+      case 'medium':
+        return l10n.difficultyMedium;
+      case 'difícil':
+      case 'hard':
+        return l10n.difficultyHard;
+      default:
+        return difficulty; // Fallback to original if not matched
     }
   }
 }

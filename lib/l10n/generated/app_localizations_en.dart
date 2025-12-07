@@ -631,4 +631,36 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get pdfOf => 'of';
+
+  @override
+  String servings(Object count) {
+    return '$count servings';
+  }
+
+  @override
+  String get ingredientsInList => 'Ingredients in your list';
+
+  @override
+  String get missingIngredientsSectionTitle => 'Missing ingredients';
+
+  @override
+  String addItemsToList(Object count) {
+    return 'Add $count items to list';
+  }
+
+  @override
+  String get instructionsTitle => 'Instructions';
+
+  @override
+  String get noListFound => 'No shopping list found!';
+
+  @override
+  String itemsAdded(Object count, Object listName) {
+    return '$count ingredients added to list \"$listName\"!';
+  }
+
+  @override
+  String errorAddingItems(Object error) {
+    return 'Error adding items: $error';
+  }
 }

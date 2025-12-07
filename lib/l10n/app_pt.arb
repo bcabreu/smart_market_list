@@ -200,5 +200,13 @@
   "pdfStatusOver": "Estourou",
   "pdfStatusOk": "Dentro",
   "pdfPage": "Página",
-  "pdfOf": "de"
+  "pdfOf": "de",
+  "servings": "{count} porções",
+  "ingredientsInList": "Ingredientes na sua lista",
+  "missingIngredientsSectionTitle": "Ingredientes faltando",
+  "addItemsToList": "Adicionar {count} itens à lista",
+  "instructionsTitle": "Modo de Preparo",
+  "noListFound": "Nenhuma lista de compras encontrada!",
+  "itemsAdded": "{count} ingredientes adicionados à lista \"{listName}\"!",
+  "errorAddingItems": "Erro ao adicionar itens: {error}"
 }
