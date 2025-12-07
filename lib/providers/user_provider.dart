@@ -61,6 +61,36 @@ class UserNameNotifier extends StateNotifier<String?> {
   }
 }
 
+// User email provider
+final userEmailProvider = StateNotifierProvider<UserEmailNotifier, String?>((ref) {
+  return UserEmailNotifier();
+});
+
+class UserEmailNotifier extends StateNotifier<String?> {
+  UserEmailNotifier() : super(null) {
+    _loadEmail();
+  }
+
+  static const _key = 'user_email';
+
+  Future<void> _loadEmail() async {
+    final prefs = await SharedPreferences.getInstance();
+    state = prefs.getString(_key);
+  }
+
+  Future<void> setEmail(String email) async {
+    state = email;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_key, email);
+  }
+
+  Future<void> clearEmail() async {
+    state = null;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_key);
+  }
+}
+
 // User name provider
 final userNameProvider = StateNotifierProvider<UserNameNotifier, String?>((ref) {
   return UserNameNotifier();

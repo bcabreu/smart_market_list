@@ -378,7 +378,7 @@ class _RecipesScreenState extends ConsumerState<RecipesScreen> {
                                                         ),
                                                           const SizedBox(height: 4),
                                                           Text(
-                                                            '${option.difficulty} • ${option.prepTime} ${l10n.cookTime}',
+                                                            '${_getLocalizedDifficulty(option.difficulty, l10n)} • ${option.prepTime} ${l10n.cookTime}',
                                                           style: TextStyle(
                                                             fontSize: 13,
                                                             color: isDark ? Colors.grey[400] : Colors.grey[600],
@@ -661,5 +661,18 @@ class _RecipesScreenState extends ConsumerState<RecipesScreen> {
       backgroundColor: Colors.transparent,
       builder: (context) => RecipeDetailModal(recipe: recipe),
     );
+  }
+
+  String _getLocalizedDifficulty(String difficulty, AppLocalizations l10n) {
+    final lower = difficulty.toLowerCase().trim();
+    if (lower.contains('fácil') || lower.contains('facil') || lower.contains('easy')) {
+      return l10n.difficultyEasy;
+    } else if (lower.contains('médio') || lower.contains('medio') || lower.contains('medium')) {
+      return l10n.difficultyMedium;
+    } else if (lower.contains('difícil') || lower.contains('dificil') || lower.contains('hard') || lower.contains('difficile')) {
+      return l10n.difficultyHard;
+    }
+    // Default fallback
+    return l10n.difficultyMedium;
   }
 }

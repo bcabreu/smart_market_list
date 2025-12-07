@@ -1,12 +1,29 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:smart_market_list/core/theme/app_colors.dart';
 import 'package:smart_market_list/l10n/generated/app_localizations.dart';
+import 'package:smart_market_list/providers/user_provider.dart';
 import 'package:smart_market_list/ui/screens/auth/signup_screen.dart';
 import 'package:smart_market_list/ui/screens/auth/widgets/auth_text_field.dart';
 import 'package:smart_market_list/ui/screens/auth/widgets/social_login_buttons.dart';
 
-class LoginScreen extends StatelessWidget {
+class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
+
+  @override
+  ConsumerState<LoginScreen> createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends ConsumerState<LoginScreen> {
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -51,6 +68,7 @@ class LoginScreen extends StatelessWidget {
 
               // Inputs
               AuthTextField(
+                controller: _emailController,
                 label: l10n.email,
                 hint: l10n.emailHint,
                 icon: Icons.email_outlined,
@@ -58,6 +76,7 @@ class LoginScreen extends StatelessWidget {
               ),
               const SizedBox(height: 12), // Reduced from 20
               AuthTextField(
+                controller: _passwordController,
                 label: l10n.password,
                 hint: l10n.passwordHint,
                 icon: Icons.lock_outline,
@@ -83,7 +102,15 @@ class LoginScreen extends StatelessWidget {
 
               // Login Button
               ElevatedButton(
-                onPressed: () {},
+                onPressed: () async {
+                  final email = _emailController.text.trim();
+                  if (email.isNotEmpty) {
+                    // Update global state
+                    await ref.read(userEmailProvider.notifier).setEmail(email);
+                    ref.read(isLoggedInProvider.notifier).state = true;
+                    if (mounted) Navigator.pop(context);
+                  }
+                },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary,
                   foregroundColor: Colors.white,

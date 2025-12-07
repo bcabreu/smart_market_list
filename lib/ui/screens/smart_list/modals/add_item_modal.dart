@@ -346,7 +346,7 @@ class _AddItemModalState extends ConsumerState<AddItemModal> {
                                                     ),
                                                     const SizedBox(height: 4),
                                                     Text(
-                                                      '${option.category[0].toUpperCase()}${option.category.substring(1)} • ${option.defaultQuantity}',
+                                                      '${_getLocalizedCategoryName(option.category, l10n)} • ${option.defaultQuantity}',
                                                       style: TextStyle(
                                                         fontSize: 13,
                                                         color: isDark ? Colors.grey[400] : Colors.grey[600],
