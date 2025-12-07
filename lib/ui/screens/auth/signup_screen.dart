@@ -5,8 +5,72 @@ import 'package:smart_market_list/ui/screens/auth/login_screen.dart';
 import 'package:smart_market_list/ui/screens/auth/widgets/auth_text_field.dart';
 import 'package:smart_market_list/ui/screens/auth/widgets/social_login_buttons.dart';
 
-class SignUpScreen extends StatelessWidget {
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:smart_market_list/providers/user_provider.dart';
+import 'package:smart_market_list/providers/auth_provider.dart';
+import 'package:smart_market_list/ui/common/modals/loading_dialog.dart';
+
+class SignUpScreen extends ConsumerStatefulWidget {
   const SignUpScreen({super.key});
+
+  @override
+  ConsumerState<SignUpScreen> createState() => _SignUpScreenState();
+}
+
+class _SignUpScreenState extends ConsumerState<SignUpScreen> {
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _confirmPasswordController = TextEditingController();
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
+    _confirmPasswordController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _signUp() async {
+    final name = _nameController.text.trim();
+    final email = _emailController.text.trim();
+    final password = _passwordController.text;
+    final confirm = _confirmPasswordController.text;
+
+    if (name.isEmpty || email.isEmpty || password.isEmpty) return;
+
+    if (password != confirm) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('As senhas não coincidem'), backgroundColor: Colors.red),
+        );
+        return;
+    }
+
+    FocusScope.of(context).unfocus();
+    LoadingDialog.show(context, AppLocalizations.of(context)!.processing);
+
+    try {
+      await ref.read(authServiceProvider).signUp(email: email, password: password);
+      
+      // Update global state
+      await ref.read(userNameProvider.notifier).setName(name);
+      await ref.read(userEmailProvider.notifier).setEmail(email);
+      await ref.read(isLoggedInProvider.notifier).setLoggedIn(true);
+
+      if (mounted) {
+        LoadingDialog.hide(context);
+        Navigator.pop(context); // Go back to profile (or main)
+      }
+    } catch (e) {
+      if (mounted) {
+        LoadingDialog.hide(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erro: ${e.toString()}'), backgroundColor: Colors.red),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -51,6 +115,7 @@ class SignUpScreen extends StatelessWidget {
 
               // Inputs
               AuthTextField(
+                controller: _nameController,
                 label: l10n.name,
                 hint: l10n.nameHint,
                 icon: Icons.person_outline,
@@ -58,6 +123,7 @@ class SignUpScreen extends StatelessWidget {
               ),
               const SizedBox(height: 12), // Reduced from 20
               AuthTextField(
+                controller: _emailController,
                 label: l10n.email,
                 hint: l10n.emailHint,
                 icon: Icons.email_outlined,
@@ -65,6 +131,7 @@ class SignUpScreen extends StatelessWidget {
               ),
               const SizedBox(height: 12), // Reduced from 20
               AuthTextField(
+                controller: _passwordController,
                 label: l10n.password,
                 hint: l10n.passwordHint,
                 icon: Icons.lock_outline,
@@ -72,6 +139,7 @@ class SignUpScreen extends StatelessWidget {
               ),
               const SizedBox(height: 12), // Reduced from 20
               AuthTextField(
+                controller: _confirmPasswordController,
                 label: l10n.confirmPassword,
                 hint: l10n.passwordHint,
                 icon: Icons.lock_outline,
@@ -83,7 +151,7 @@ class SignUpScreen extends StatelessWidget {
 
               // Sign Up Button
               ElevatedButton(
-                onPressed: () {},
+                onPressed: _signUp,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary,
                   foregroundColor: Colors.white,

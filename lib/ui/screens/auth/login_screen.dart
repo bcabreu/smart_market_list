@@ -6,6 +6,8 @@ import 'package:smart_market_list/providers/user_provider.dart';
 import 'package:smart_market_list/ui/screens/auth/signup_screen.dart';
 import 'package:smart_market_list/ui/screens/auth/widgets/auth_text_field.dart';
 import 'package:smart_market_list/ui/screens/auth/widgets/social_login_buttons.dart';
+import 'package:smart_market_list/providers/auth_provider.dart';
+import 'package:smart_market_list/ui/common/modals/loading_dialog.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -106,11 +108,37 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               ElevatedButton(
                 onPressed: () async {
                   final email = _emailController.text.trim();
-                  if (email.isNotEmpty) {
-                    // Update global state
+                  final password = _passwordController.text;
+                  
+                  if (email.isEmpty || password.isEmpty) return;
+                  
+                  FocusScope.of(context).unfocus();
+                  LoadingDialog.show(context, l10n.processing);
+                  
+                  try {
+                    await ref.read(authServiceProvider).signIn(
+                      email: email, 
+                      password: password
+                    );
+                    
+                    // Update global state on success
                     await ref.read(userEmailProvider.notifier).setEmail(email);
                     await ref.read(isLoggedInProvider.notifier).setLoggedIn(true);
-                    if (mounted) Navigator.pop(context);
+                    
+                    if (context.mounted) {
+                      LoadingDialog.hide(context);
+                      Navigator.pop(context);
+                    }
+                  } catch (e) {
+                    if (context.mounted) {
+                      LoadingDialog.hide(context);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Erro: ${e.toString()}'),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                    }
                   }
                 },
                 style: ElevatedButton.styleFrom(

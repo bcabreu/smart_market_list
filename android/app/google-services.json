@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "1033855354360",
+    "project_id": "smart-market-list-82bf7",
+    "storage_bucket": "smart-market-list-82bf7.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1033855354360:android:5a3c9e18d822e46b19020d",
+        "android_client_info": {
+          "package_name": "com.brunoabreu.smart_market_list"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1033855354360-83m1vvn8q9uj4pa2fgegtdk62ucv1fl2.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAk7kcwGOfs-HvwrgpsU8yWIx6bCO8l9lQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1033855354360-83m1vvn8q9uj4pa2fgegtdk62ucv1fl2.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
