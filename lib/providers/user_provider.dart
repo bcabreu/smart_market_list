@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:smart_market_list/providers/user_profile_provider.dart';
 
 // Premium Status & Date Notifier
 class PremiumNotifier extends StateNotifier<DateTime?> {
@@ -39,7 +40,9 @@ final premiumSinceProvider = StateNotifierProvider<PremiumNotifier, DateTime?>((
 
 // Derived provider for boolean check (backward compatibility)
 final isPremiumProvider = Provider<bool>((ref) {
-  return ref.watch(premiumSinceProvider) != null;
+  final localPremium = ref.watch(premiumSinceProvider) != null;
+  final cloudProfile = ref.watch(userProfileProvider).asData?.value;
+  return localPremium || (cloudProfile?.isPremium ?? false);
 });
 
 class UserNameNotifier extends StateNotifier<String?> {

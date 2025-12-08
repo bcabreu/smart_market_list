@@ -763,4 +763,41 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get resetLinkSentMessage => 'Check your email to reset your password.';
+
+  @override
+  String get familyPlanTitle => 'Family Plan';
+
+  @override
+  String get familyPlanSubtitle => 'Share Premium with 1 person';
+
+  @override
+  String get inviteMember => 'Invite Member';
+
+  @override
+  String get memberEmailHint => 'Enter guest email';
+
+  @override
+  String get sendInvite => 'Send Invite';
+
+  @override
+  String get inviteSentTitle => 'Invite Sent!';
+
+  @override
+  String get inviteSentMessage =>
+      'The invited person must log in with this email to activate Premium.';
+
+  @override
+  String get alreadyInFamily => 'You are already in a family.';
+
+  @override
+  String get leaveFamily => 'Leave Family';
+
+  @override
+  String get premiumActive => 'Premium Active';
+
+  @override
+  String get planOwner => 'Owner';
+
+  @override
+  String get planGuest => 'Guest';
 }

@@ -239,5 +239,17 @@
   "resetPasswordDescription": "Digite seu email para receber um link de redefinição.",
   "sendLink": "Enviar Link",
   "resetLinkSent": "Link Enviado",
-  "resetLinkSentMessage": "Verifique seu email para redefinir a senha."
+  "resetLinkSentMessage": "Verifique seu email para redefinir a senha.",
+  "familyPlanTitle": "Plano Família",
+  "familyPlanSubtitle": "Compartilhe Premium com 1 pessoa",
+  "inviteMember": "Convidar Familiar",
+  "memberEmailHint": "Digite o email do convidado",
+  "sendInvite": "Enviar Convite",
+  "inviteSentTitle": "Convite Enviado!",
+  "inviteSentMessage": "A pessoa convidada deve entrar no app com este email para ativar o Premium.",
+  "alreadyInFamily": "Você já faz parte de uma família.",
+  "leaveFamily": "Sair da Família",
+  "premiumActive": "Premium Ativo",
+  "planOwner": "Titular",
+  "planGuest": "Convidado"
 }

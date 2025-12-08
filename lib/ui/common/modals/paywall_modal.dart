@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:smart_market_list/core/theme/app_colors.dart';
 import 'package:smart_market_list/providers/user_provider.dart';
+import 'package:smart_market_list/providers/auth_provider.dart';
+import 'package:smart_market_list/core/services/firestore_service.dart';
 
 class PaywallModal extends ConsumerWidget {
   const PaywallModal({super.key});
@@ -162,6 +164,12 @@ class PaywallModal extends ConsumerWidget {
   void _subscribe(BuildContext context, WidgetRef ref) {
     // Simulate subscription
     ref.read(premiumSinceProvider.notifier).setPremium(true);
+    
+    // Sync with Firestore if logged in
+    final user = ref.read(authServiceProvider).currentUser;
+    if (user != null) {
+      ref.read(firestoreServiceProvider).updateUserPremiumStatus(user.uid, true);
+    }
     Navigator.pop(context);
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(

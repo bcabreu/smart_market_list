@@ -21,6 +21,9 @@ class SmartListScreen extends ConsumerWidget {
     final currentList = ref.watch(currentListProvider);
     final service = ref.watch(shoppingListServiceProvider);
     final l10n = AppLocalizations.of(context)!;
+    
+    // Activate Sync Manager
+    ref.watch(syncManagerProvider);
 
     if (currentList == null) {
       return const Scaffold(

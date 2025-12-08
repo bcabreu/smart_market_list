@@ -1,0 +1,39 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // --- Helper Functions ---
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+
+    // --- Users Collection ---
+    // Users can only read/write their own profile
+    match /users/{userId} {
+      allow read, create, update: if isSignedIn();
+      allow delete: if isSignedIn() && isOwner(userId);
+    }
+
+    // --- Invitations Collection ---
+    // Anyone signed in can create an invite (Owner)
+    // Users can read invites sent to their email (Guest)
+    match /invitations/{inviteId} {
+      allow read, write: if isSignedIn();
+    }
+
+    // --- Families Collection ---
+    // Contains the shared shopping lists
+    match /families/{familyId} {
+      allow read, write: if isSignedIn();
+      
+      // Subcollection: Shopping Lists
+      match /shopping_lists/{listId} {
+        allow read, write: if isSignedIn();
+      }
+    }
+  }
+}

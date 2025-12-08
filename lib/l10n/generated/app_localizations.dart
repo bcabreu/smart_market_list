@@ -1543,6 +1543,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Check your email to reset your password.'**
   String get resetLinkSentMessage;
+
+  /// No description provided for @familyPlanTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Family Plan'**
+  String get familyPlanTitle;
+
+  /// No description provided for @familyPlanSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Share Premium with 1 person'**
+  String get familyPlanSubtitle;
+
+  /// No description provided for @inviteMember.
+  ///
+  /// In en, this message translates to:
+  /// **'Invite Member'**
+  String get inviteMember;
+
+  /// No description provided for @memberEmailHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter guest email'**
+  String get memberEmailHint;
+
+  /// No description provided for @sendInvite.
+  ///
+  /// In en, this message translates to:
+  /// **'Send Invite'**
+  String get sendInvite;
+
+  /// No description provided for @inviteSentTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Invite Sent!'**
+  String get inviteSentTitle;
+
+  /// No description provided for @inviteSentMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'The invited person must log in with this email to activate Premium.'**
+  String get inviteSentMessage;
+
+  /// No description provided for @alreadyInFamily.
+  ///
+  /// In en, this message translates to:
+  /// **'You are already in a family.'**
+  String get alreadyInFamily;
+
+  /// No description provided for @leaveFamily.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave Family'**
+  String get leaveFamily;
+
+  /// No description provided for @premiumActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Premium Active'**
+  String get premiumActive;
+
+  /// No description provided for @planOwner.
+  ///
+  /// In en, this message translates to:
+  /// **'Owner'**
+  String get planOwner;
+
+  /// No description provided for @planGuest.
+  ///
+  /// In en, this message translates to:
+  /// **'Guest'**
+  String get planGuest;
 }
 
 class _AppLocalizationsDelegate

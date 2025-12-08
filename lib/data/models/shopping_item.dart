@@ -68,4 +68,31 @@ class ShoppingItem extends HiveObject {
       statusChangedAt: statusChangedAt ?? this.statusChangedAt,
     );
   }
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'name': name,
+      'quantity': quantity,
+      'price': price,
+      'category': category,
+      'checked': checked,
+      'imageUrl': imageUrl,
+      'createdAt': createdAt.millisecondsSinceEpoch,
+      'statusChangedAt': statusChangedAt?.millisecondsSinceEpoch,
+    };
+  }
+
+  factory ShoppingItem.fromMap(Map<String, dynamic> map) {
+    return ShoppingItem(
+      id: map['id'],
+      name: map['name'] ?? '',
+      quantity: map['quantity'] ?? '1 un',
+      price: (map['price'] ?? 0.0).toDouble(),
+      category: map['category'] ?? 'outros',
+      checked: map['checked'] ?? false,
+      imageUrl: map['imageUrl'] ?? '',
+      createdAt: DateTime.fromMillisecondsSinceEpoch(map['createdAt'] ?? DateTime.now().millisecondsSinceEpoch),
+      statusChangedAt: map['statusChangedAt'] != null ? DateTime.fromMillisecondsSinceEpoch(map['statusChangedAt']) : null,
+    );
+  }
 }

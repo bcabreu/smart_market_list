@@ -56,4 +56,29 @@ class ShoppingList extends HiveObject {
       createdAt: createdAt ?? this.createdAt,
     );
   }
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'name': name,
+      'emoji': emoji,
+      'budget': budget,
+      'items': items.map((x) => x.toMap()).toList(),
+      'createdAt': createdAt.millisecondsSinceEpoch,
+    };
+  }
+
+  factory ShoppingList.fromMap(Map<String, dynamic> map) {
+    return ShoppingList(
+      id: map['id'],
+      name: map['name'] ?? '',
+      emoji: map['emoji'] ?? '🛒',
+      budget: (map['budget'] ?? 500.0).toDouble(),
+      items: List<ShoppingItem>.from(
+        (map['items'] as List<dynamic>? ?? []).map<ShoppingItem>(
+          (x) => ShoppingItem.fromMap(x as Map<String, dynamic>),
+        ),
+      ),
+      createdAt: DateTime.fromMillisecondsSinceEpoch(map['createdAt'] ?? DateTime.now().millisecondsSinceEpoch),
+    );
+  }
 }

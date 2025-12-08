@@ -1,11 +1,15 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:smart_market_list/core/services/firestore_service.dart';
 // Note: sign_in_with_apple package might be needed for advanced flows, 
 // but FirebaseAuth.instance.signInWithProvider(AppleAuthProvider()) is the modern native way.
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final GoogleSignIn _googleSignIn = GoogleSignIn();
+  final FirestoreService _firestoreService;
+
+  AuthService(this._firestoreService);
 
   // Stream of auth changes
   Stream<User?> get authStateChanges => _auth.authStateChanges();
@@ -15,18 +19,22 @@ class AuthService {
 
   // Sign In with Email & Password
   Future<UserCredential> signIn({required String email, required String password}) async {
-    return await _auth.signInWithEmailAndPassword(
+    final credential = await _auth.signInWithEmailAndPassword(
       email: email.trim(), 
       password: password
     );
+    await _syncUserData(credential.user);
+    return credential;
   }
 
   // Sign Up with Email & Password
   Future<UserCredential> signUp({required String email, required String password}) async {
-    return await _auth.createUserWithEmailAndPassword(
+    final credential = await _auth.createUserWithEmailAndPassword(
       email: email.trim(), 
       password: password
     );
+    await _syncUserData(credential.user);
+    return credential;
   }
 
   // Sign In with Google
@@ -41,7 +49,9 @@ class AuthService {
         idToken: googleAuth.idToken,
       );
 
-      return await _auth.signInWithCredential(credential);
+      final userCredential = await _auth.signInWithCredential(credential);
+      await _syncUserData(userCredential.user);
+      return userCredential;
     } catch (e) {
       throw Exception('Google Sign In Failed: $e');
     }
@@ -53,11 +63,11 @@ class AuthService {
       final appleProvider = AppleAuthProvider();
       appleProvider.addScope('email');
       appleProvider.addScope('name');
-      return await _auth.signInWithProvider(appleProvider);
+      final userCredential = await _auth.signInWithProvider(appleProvider);
+      await _syncUserData(userCredential.user);
+      return userCredential;
     } on FirebaseAuthException catch (e) {
       if (e.code == 'canceled' || e.code == 'unknown') {
-         // 'unknown' is sometimes returned by the simulator for cancellation, or specific error texts.
-         // Checking message text as fallback if needed, but usually code is enough.
          if (e.code == 'canceled') return null;
          if (e.message?.contains('canceled') == true) return null;
       }
@@ -78,6 +88,7 @@ class AuthService {
     if (user != null) {
       await user.updateDisplayName(name);
       await user.reload(); // Ensure local user object is updated
+      await _syncUserData(user, name: name);
     }
   }
 
@@ -86,9 +97,10 @@ class AuthService {
     final user = _auth.currentUser;
     if (user != null) {
       // Note: This requires recent login. If it fails, we should handle re-auth.
-      // For now, we assume the user session is valid.
-      await _googleSignIn.signOut(); // Disconnect Google Sign In if used
+      await _googleSignIn.signOut();
       await user.delete();
+      // Note: We might want to remove the Firestore doc too, or mark deleted.
+      // FirestoreService logic for delete could be added here.
     }
   }
 
@@ -96,5 +108,16 @@ class AuthService {
   Future<void> signOut() async {
     await _googleSignIn.signOut();
     await _auth.signOut();
+  }
+
+  // Helper to sync user data to Firestore
+  Future<void> _syncUserData(User? user, {String? name}) async {
+    if (user == null) return;
+    await _firestoreService.createOrUpdateUser(
+      user.uid, 
+      user.email ?? '',
+      name: name ?? user.displayName,
+      photoUrl: user.photoURL
+    );
   }
 }

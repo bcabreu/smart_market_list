@@ -764,4 +764,41 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get resetLinkSentMessage =>
       'Verifique seu email para redefinir a senha.';
+
+  @override
+  String get familyPlanTitle => 'Plano Família';
+
+  @override
+  String get familyPlanSubtitle => 'Compartilhe Premium com 1 pessoa';
+
+  @override
+  String get inviteMember => 'Convidar Familiar';
+
+  @override
+  String get memberEmailHint => 'Digite o email do convidado';
+
+  @override
+  String get sendInvite => 'Enviar Convite';
+
+  @override
+  String get inviteSentTitle => 'Convite Enviado!';
+
+  @override
+  String get inviteSentMessage =>
+      'A pessoa convidada deve entrar no app com este email para ativar o Premium.';
+
+  @override
+  String get alreadyInFamily => 'Você já faz parte de uma família.';
+
+  @override
+  String get leaveFamily => 'Sair da Família';
+
+  @override
+  String get premiumActive => 'Premium Ativo';
+
+  @override
+  String get planOwner => 'Titular';
+
+  @override
+  String get planGuest => 'Convidado';
 }

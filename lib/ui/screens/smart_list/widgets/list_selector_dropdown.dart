@@ -4,6 +4,7 @@ import 'package:smart_market_list/core/theme/app_colors.dart';
 import 'package:smart_market_list/data/models/shopping_list.dart';
 import 'package:intl/intl.dart';
 import 'package:smart_market_list/providers/shopping_list_provider.dart';
+import 'package:smart_market_list/providers/user_profile_provider.dart';
 import 'package:smart_market_list/l10n/generated/app_localizations.dart';
 
 class ListSelectorDropdown extends ConsumerStatefulWidget {
@@ -320,7 +321,11 @@ class _ListSelectorDropdownState extends ConsumerState<ListSelectorDropdown> {
                                 break;
                             }
                           },
-                          itemBuilder: (context) => [
+                          itemBuilder: (context) {
+                            // Check Guest Status
+                            final isGuest = ref.watch(isFamilyGuestProvider);
+                            
+                            return [
                             PopupMenuItem(
                               value: 'rename',
                               child: Row(
@@ -347,20 +352,22 @@ class _ListSelectorDropdownState extends ConsumerState<ListSelectorDropdown> {
                                 ],
                               ),
                             ),
-                            PopupMenuItem(
-                              value: 'delete',
-                              child: Row(
-                                children: [
-                                  const Icon(Icons.delete_outline, color: Colors.red, size: 20),
-                                  const SizedBox(width: 12),
-                                  Text(
-                                    AppLocalizations.of(context)!.deleteList,
-                                    style: const TextStyle(color: Colors.red),
-                                  ),
-                                ],
+                            if (!isGuest) // Hide Delete for Guests
+                              PopupMenuItem(
+                                value: 'delete',
+                                child: Row(
+                                  children: [
+                                    const Icon(Icons.delete_outline, color: Colors.red, size: 20),
+                                    const SizedBox(width: 12),
+                                    Text(
+                                      AppLocalizations.of(context)!.deleteList,
+                                      style: const TextStyle(color: Colors.red),
+                                    ),
+                                  ],
+                                ),
                               ),
-                            ),
-                          ],
+                          ];
+                          },
                         ),
                       ),
                     ],

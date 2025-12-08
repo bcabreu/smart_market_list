@@ -274,12 +274,7 @@ class ProfileScreen extends ConsumerWidget {
                                   context: context,
                                   isScrollControlled: true,
                                   backgroundColor: Colors.transparent,
-                                  builder: (context) => Padding(
-                                    padding: EdgeInsets.only(
-                                      bottom: MediaQuery.of(context).viewInsets.bottom,
-                                    ),
-                                    child: const ShareListModal(),
-                                  ),
+                                    builder: (context) => const ShareListModal(),
                                 ),
                         ),
                         SettingsTile(
@@ -303,6 +298,7 @@ class ProfileScreen extends ConsumerWidget {
                           isLocked: !isPremium,
                           onTap: !isPremium ? () => _showPaywall(context) : () => _generatePdfReport(context, ref),
                         ),
+
                       ],
                     ),
 
@@ -743,9 +739,10 @@ class ProfileScreen extends ConsumerWidget {
       // Clear user state
       await ref.read(isLoggedInProvider.notifier).setLoggedIn(false);
       await ref.read(userEmailProvider.notifier).clearEmail();
-      await ref.read(userEmailProvider.notifier).clearEmail();
+      await ref.read(userNameProvider.notifier).clearName();
       await ref.read(userNameProvider.notifier).clearName();
       await ref.read(profileImageProvider.notifier).clearImage();
+      await ref.read(premiumSinceProvider.notifier).setPremium(false);
 
       if (context.mounted) {
          Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => false);

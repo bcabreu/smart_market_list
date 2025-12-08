@@ -239,5 +239,17 @@
   "resetPasswordDescription": "Enter your email to receive a reset link.",
   "sendLink": "Send Link",
   "resetLinkSent": "Link Sent",
-  "resetLinkSentMessage": "Check your email to reset your password."
+  "resetLinkSentMessage": "Check your email to reset your password.",
+  "familyPlanTitle": "Family Plan",
+  "familyPlanSubtitle": "Share Premium with 1 person",
+  "inviteMember": "Invite Member",
+  "memberEmailHint": "Enter guest email",
+  "sendInvite": "Send Invite",
+  "inviteSentTitle": "Invite Sent!",
+  "inviteSentMessage": "The invited person must log in with this email to activate Premium.",
+  "alreadyInFamily": "You are already in a family.",
+  "leaveFamily": "Leave Family",
+  "premiumActive": "Premium Active",
+  "planOwner": "Owner",
+  "planGuest": "Guest"
 }

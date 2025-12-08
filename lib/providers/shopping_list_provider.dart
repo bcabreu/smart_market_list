@@ -3,6 +3,8 @@ import 'package:rxdart/rxdart.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import '../data/local/shopping_list_service.dart';
 import '../data/models/shopping_list.dart';
+import '../core/services/firestore_service.dart';
+import 'user_profile_provider.dart';
 
 final shoppingListBoxProvider = Provider<Box<ShoppingList>>((ref) {
   return Hive.box<ShoppingList>('shopping_lists');
@@ -10,7 +12,8 @@ final shoppingListBoxProvider = Provider<Box<ShoppingList>>((ref) {
 
 final shoppingListServiceProvider = Provider<ShoppingListService>((ref) {
   final box = ref.watch(shoppingListBoxProvider);
-  return ShoppingListService(box);
+  final firestoreService = ref.watch(firestoreServiceProvider);
+  return ShoppingListService(box, firestoreService);
 });
 
 final shoppingListsProvider = StreamProvider<List<ShoppingList>>((ref) {
@@ -34,4 +37,17 @@ final currentListProvider = Provider<ShoppingList?>((ref) {
     loading: () => null,
     error: (_, __) => null,
   );
+});
+
+final syncManagerProvider = Provider<void>((ref) {
+  final userProfileAsync = ref.watch(userProfileProvider);
+  final shoppingListService = ref.watch(shoppingListServiceProvider);
+  
+  userProfileAsync.whenData((profile) {
+    if (profile?.familyId != null) {
+      shoppingListService.startSync(profile!.familyId!);
+    } else {
+      shoppingListService.stopSync();
+    }
+  });
 });
