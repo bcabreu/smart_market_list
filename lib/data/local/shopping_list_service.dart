@@ -16,21 +16,25 @@ class ShoppingListService {
   ShoppingListService(this._box, [this._firestoreService]);
 
   // Start syncing with a specific family
-  void startSync(String familyId) {
+  Future<void> startSync(String familyId) async {
     if (_currentFamilyId == familyId) return;
     _currentFamilyId = familyId;
     _cloudSubscription?.cancel();
 
+    // 1. Upload Local Lists to Cloud (Ensure existing data is saved)
+    if (_firestoreService != null) {
+      final localLists = getAllLists();
+      for (var list in localLists) {
+        await _syncToCloud(list);
+      }
+    }
+
+    // 2. Listen for Cloud Updates
     if (_firestoreService != null) {
       _cloudSubscription = _firestoreService!.getFamilyLists(familyId).listen((cloudLists) async {
         for (var list in cloudLists) {
-          // Merge logic: Simple "Cloud overwrites Local" for now to ensure consistency
-          // Ideally: Check timestamps
           await _box.put(list.id, list); 
         }
-        // Identify deleted lists? 
-        // If a list exists locally but not in cloud list, and it WAS synced... 
-        // For MVP, valid lists are what come from cloud.
       });
     }
   }
@@ -56,13 +60,9 @@ class ShoppingListService {
 
   Future<void> deleteList(String id) async {
     await _box.delete(id);
-    // If we are in family mode, we should also delete from Cloud IF we are Owner?
-    // User requirement: Guest cannot delete.
-    // We assume the variable check happens in UI, but safe to check here if we had user role.
-    // For now, if ability to delete is triggered, we execute. 
-    // NOTE: FirestoreService needs a delete capability.
-    // await _firestoreService?.deleteList(_currentFamilyId, id);
-    // We haven't implemented deleteList in FirestoreService yet.
+    if (_currentFamilyId != null && _firestoreService != null) {
+      await _firestoreService!.deleteList(_currentFamilyId!, id);
+    }
   }
 
   Future<void> addItem(String listId, ShoppingItem item) async {

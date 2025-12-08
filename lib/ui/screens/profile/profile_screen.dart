@@ -17,6 +17,7 @@ import 'package:smart_market_list/ui/screens/profile/modals/help_support_modal.d
 import 'package:smart_market_list/providers/locale_provider.dart';
 import 'package:smart_market_list/ui/common/modals/loading_dialog.dart';
 import 'package:smart_market_list/ui/common/modals/status_feedback_modal.dart';
+import 'package:smart_market_list/ui/screens/main_screen.dart';
 import 'package:smart_market_list/core/services/pdf_service.dart';
 import 'package:smart_market_list/providers/goals_provider.dart';
 import 'package:smart_market_list/providers/shopping_notes_provider.dart';
@@ -609,7 +610,14 @@ class ProfileScreen extends ConsumerWidget {
          await ref.read(premiumSinceProvider.notifier).setPremium(false);
          
          // 6. Delete Account from Firebase
-         await ref.read(authServiceProvider).deleteAccount();
+         try {
+           await ref.read(authServiceProvider).deleteAccount();
+         } catch (e) {
+           // If user not found, they are already deleted. Proceed.
+           if (!e.toString().contains('user-not-found')) {
+             rethrow;
+           }
+         }
          
          // Wait a bit for UX
          await Future.delayed(const Duration(seconds: 1));
@@ -633,6 +641,15 @@ class ProfileScreen extends ConsumerWidget {
   Future<void> _logout(BuildContext context, WidgetRef ref) async {
     final l10n = AppLocalizations.of(context)!;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    
+    // Check if Premium to warn about data loss
+    final isPremium = ref.read(isPremiumProvider);
+    
+    // If not premium, warn heavily
+    final String title = isPremium ? l10n.logoutTitle : l10n.logoutTitleWarning;
+    final String message = isPremium 
+        ? l10n.logoutMessage 
+        : l10n.logoutMessageWarning; // "You are free. Data is local only. Reset?"
 
     final confirmed = await showDialog<bool>(
       context: context,
@@ -663,7 +680,7 @@ class ProfileScreen extends ConsumerWidget {
               
               // Title
               Text(
-                l10n.logoutTitle,
+                title,
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
@@ -675,7 +692,7 @@ class ProfileScreen extends ConsumerWidget {
               
               // Message
               Text(
-                l10n.logoutMessage,
+                message,
                 style: TextStyle(
                   fontSize: 14,
                   color: isDark ? Colors.grey[400] : Colors.grey[600],
@@ -719,7 +736,7 @@ class ProfileScreen extends ConsumerWidget {
                         ),
                       ),
                       child: Text(
-                        l10n.confirmLogout,
+                        l10n.confirmLogout, // "Sair" or "Sair e Apagar"
                         style: const TextStyle(fontWeight: FontWeight.bold),
                       ),
                     ),
@@ -733,20 +750,54 @@ class ProfileScreen extends ConsumerWidget {
     );
 
     if (confirmed == true && context.mounted) {
-      // Clear Firebase Auth
-      await ref.read(authServiceProvider).signOut();
+       LoadingDialog.show(context, l10n.processing);
+       
+       try {
+          print('LOGOUT DEBUG: Starting local data clear...');
+          
+          final shoppingListService = ref.read(shoppingListServiceProvider);
+          // Stop sync first to prevent conflicts
+          shoppingListService.stopSync();
+          await shoppingListService.deleteAllData();
+          print('LOGOUT DEBUG: Lists cleared.');
+          
+          final notesService = ref.read(shoppingNotesServiceProvider);
+          notesService.stopSync();
+          await notesService.deleteAllNotes();
+          print('LOGOUT DEBUG: Notes cleared.');
+          
+          // Clear Preferences
+          await ref.read(isLoggedInProvider.notifier).setLoggedIn(false);
+          await ref.read(userEmailProvider.notifier).clearEmail();
+          await ref.read(userNameProvider.notifier).clearName();
+          await ref.read(profileImageProvider.notifier).clearImage();
+          await ref.read(premiumSinceProvider.notifier).setPremium(false);
+          print('LOGOUT DEBUG: Providers cleared.');
 
-      // Clear user state
-      await ref.read(isLoggedInProvider.notifier).setLoggedIn(false);
-      await ref.read(userEmailProvider.notifier).clearEmail();
-      await ref.read(userNameProvider.notifier).clearName();
-      await ref.read(userNameProvider.notifier).clearName();
-      await ref.read(profileImageProvider.notifier).clearImage();
-      await ref.read(premiumSinceProvider.notifier).setPremium(false);
-
-      if (context.mounted) {
-         Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => false);
-      }
+          // Sign Out Firebase
+          await ref.read(authServiceProvider).signOut();
+          print('LOGOUT DEBUG: Firebase signed out.');
+          
+             if (context.mounted) {
+             LoadingDialog.hide(context);
+             print('LOGOUT DEBUG: Navigating to MainScreen...');
+             
+             // Removed explicit creation of default list to prevent duplicates on sync.
+             // SmartListScreen handles empty state.
+          
+             Navigator.of(context).pushAndRemoveUntil(
+               MaterialPageRoute(builder: (context) => const MainScreen()),
+               (route) => false,
+             );
+          }
+       } catch (e) {
+          print('LOGOUT DEBUG: Error caught: $e');
+          if (context.mounted) {
+             LoadingDialog.hide(context);
+             ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+          }
+       }
     }
   }
+
 }

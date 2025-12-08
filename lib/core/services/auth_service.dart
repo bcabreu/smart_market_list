@@ -119,5 +119,6 @@ class AuthService {
       name: name ?? user.displayName,
       photoUrl: user.photoURL
     );
+    await _firestoreService.ensureUserHasFamily(user.uid);
   }
 }

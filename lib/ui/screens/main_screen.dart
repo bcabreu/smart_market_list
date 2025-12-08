@@ -10,6 +10,9 @@ import 'package:smart_market_list/ui/navigation/custom_bottom_navigation.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:smart_market_list/providers/navigation_provider.dart';
+import 'package:smart_market_list/providers/auth_provider.dart';
+import 'package:smart_market_list/providers/user_provider.dart';
+import 'package:smart_market_list/providers/shopping_list_provider.dart';
 
 class MainScreen extends ConsumerStatefulWidget {
   const MainScreen({super.key});
@@ -40,12 +43,30 @@ class _MainScreenState extends ConsumerState<MainScreen> {
   @override
   Widget build(BuildContext context) {
     final currentIndex = ref.watch(bottomNavIndexProvider);
+    // Activate Sync Manager
+    ref.watch(syncManagerProvider);
     
     // Listen to changes to update previous index for animation
     ref.listen(bottomNavIndexProvider, (previous, next) {
       if (previous != null) {
         _previousIndex = previous;
       }
+    });
+
+    // Listen to Auth State to sync user data (Email/Name) on restart
+    ref.listen(authStateProvider, (previous, next) {
+      next.whenData((user) {
+        if (user != null) {
+          // Sync Email
+          if (user.email != null && user.email!.isNotEmpty) {
+             ref.read(userEmailProvider.notifier).setEmail(user.email!);
+          }
+          // Sync Name (if available)
+          if (user.displayName != null && user.displayName!.isNotEmpty) {
+             ref.read(userNameProvider.notifier).setName(user.displayName!);
+          }
+        }
+      });
     });
 
     return Scaffold(

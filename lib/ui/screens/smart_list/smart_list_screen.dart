@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:smart_market_list/core/theme/app_colors.dart';
 import 'package:smart_market_list/data/local/shopping_list_service.dart';
 import 'package:smart_market_list/data/models/shopping_item.dart';
+import 'package:smart_market_list/data/models/shopping_list.dart';
 import 'package:smart_market_list/providers/shopping_list_provider.dart';
 import 'package:smart_market_list/ui/screens/smart_list/widgets/shopping_item_card.dart';
 import 'package:smart_market_list/ui/screens/smart_list/widgets/smart_list_header.dart';
@@ -11,7 +12,9 @@ import 'package:smart_market_list/ui/screens/smart_list/widgets/budget_info_card
 import 'package:smart_market_list/ui/screens/smart_list/modals/add_item_modal.dart';
 import 'package:smart_market_list/ui/widgets/pulse_fab.dart';
 import 'package:smart_market_list/ui/common/animations/staggered_entry.dart';
+import 'package:smart_market_list/providers/user_profile_provider.dart';
 import 'package:smart_market_list/l10n/generated/app_localizations.dart';
+import 'package:smart_market_list/providers/user_provider.dart';
 
 class SmartListScreen extends ConsumerWidget {
   const SmartListScreen({super.key});
@@ -25,9 +28,73 @@ class SmartListScreen extends ConsumerWidget {
     // Activate Sync Manager
     ref.watch(syncManagerProvider);
 
+    // If we have a list, show it. If not, check if we need to show Empty State or Loading.
     if (currentList == null) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
+      final listsAsync = ref.watch(shoppingListsProvider);
+      
+      return listsAsync.when(
+        loading: () => const Scaffold(body: Center(child: CircularProgressIndicator())),
+        error: (e, s) => Scaffold(body: Center(child: Text('Erro: $e'))),
+        data: (lists) {
+          if (lists.isEmpty) {
+             // Check Profile State to avoid Race Condition
+             final userProfileAsync = ref.watch(userProfileProvider);
+             
+             return userProfileAsync.when(
+               data: (profile) {
+                 final isPremium = profile?.isPremium ?? false;
+                 
+                  if (!isPremium) {
+                    // Confirmed Guest: Auto-create immediately
+                    Future.microtask(() {
+                       final newList = ShoppingList(
+                          name: 'Compras do Mês',
+                          emoji: '🛒',
+                          budget: 500.0
+                       );
+                       service.createList(newList);
+                    });
+                    return const Scaffold(body: Center(child: CircularProgressIndicator()));
+                  } else {
+                    // Confirmed Premium: Wait for sync
+                    return Scaffold(
+                      body: Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const CircularProgressIndicator(),
+                            const SizedBox(height: 16),
+                            Text(
+                              l10n.processing, 
+                              style: TextStyle(color: Colors.grey),
+                            ),
+                             const SizedBox(height: 32),
+                             TextButton.icon(
+                               onPressed: () {
+                                  final newList = ShoppingList(
+                                    name: 'Compras do Mês',
+                                    emoji: '🛒',
+                                    budget: 500.0,
+                                  );
+                                  service.createList(newList);
+                               },
+                               icon: const Icon(Icons.add),
+                               label: const Text('Iniciar "Compras do Mês"'),
+                             )
+                          ],
+                        ),
+                      ),
+                    );
+                  }
+               },
+               loading: () => const Scaffold(body: Center(child: CircularProgressIndicator())),
+               error: (_, __) => const Scaffold(body: Center(child: CircularProgressIndicator())), 
+               // Treat error as loading or guest? Safer to wait or retry, but for UI smoothnes let's spin.
+             );
+          }
+          // Lists exist but current is null (loading specific list?)
+          return const Scaffold(body: Center(child: CircularProgressIndicator()));
+        },
       );
     }
 

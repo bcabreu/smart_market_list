@@ -1,5 +1,6 @@
 import 'package:hive/hive.dart';
 import 'package:uuid/uuid.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'shopping_item.dart';
 
 part 'shopping_note.g.dart';
@@ -39,4 +40,31 @@ class ShoppingNote extends HiveObject {
         items = items ?? [];
 
   double get total => items.fold(0.0, (sum, item) => sum + item.price);
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'storeName': storeName,
+      'storeEmoji': storeEmoji,
+      'date': Timestamp.fromDate(date),
+      'address': address,
+      'items': items.map((i) => i.toMap()).toList(),
+      'photoUrl': photoUrl,
+    };
+  }
+
+  factory ShoppingNote.fromMap(Map<String, dynamic> map) {
+    return ShoppingNote(
+      id: map['id'],
+      storeName: map['storeName'] ?? '',
+      storeEmoji: map['storeEmoji'] ?? '🏪',
+      date: (map['date'] as Timestamp).toDate(),
+      address: map['address'] ?? '',
+      items: (map['items'] as List<dynamic>?)
+          ?.where((x) => x is Map<String, dynamic>)
+          .map((x) => ShoppingItem.fromMap(x as Map<String, dynamic>))
+          .toList() ?? [],
+      photoUrl: map['photoUrl'],
+    );
+  }
 }

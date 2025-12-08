@@ -3,14 +3,15 @@ import 'package:rxdart/rxdart.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import '../data/local/shopping_notes_service.dart';
 import '../data/models/shopping_note.dart';
-
+import '../core/services/firestore_service.dart';
 final shoppingNotesBoxProvider = Provider<Box<ShoppingNote>>((ref) {
   return Hive.box<ShoppingNote>('shopping_notes');
 });
 
 final shoppingNotesServiceProvider = Provider<ShoppingNotesService>((ref) {
   final box = ref.watch(shoppingNotesBoxProvider);
-  return ShoppingNotesService(box);
+  final firestoreService = ref.watch(firestoreServiceProvider);
+  return ShoppingNotesService(box, firestoreService);
 });
 
 final shoppingNotesProvider = StreamProvider<List<ShoppingNote>>((ref) {

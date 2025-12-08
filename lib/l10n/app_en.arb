@@ -251,5 +251,11 @@
   "leaveFamily": "Leave Family",
   "premiumActive": "Premium Active",
   "planOwner": "Owner",
-  "planGuest": "Guest"
+  "planGuest": "Guest",
+  "invalidCredentialsError": "Invalid email or password",
+  "invalidEmailError": "The email entered is invalid",
+  "invalidEmailError": "The email entered is invalid",
+  "success": "Success",
+  "logoutTitleWarning": "Warning: Data Loss",
+  "logoutMessageWarning": "You are on the Free plan. Logging out will PERMANENTLY ERASE all your lists on this device. Do you want to continue?"
 }

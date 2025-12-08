@@ -251,5 +251,11 @@
   "leaveFamily": "Sair da Família",
   "premiumActive": "Premium Ativo",
   "planOwner": "Titular",
-  "planGuest": "Convidado"
+  "planGuest": "Convidado",
+  "invalidCredentialsError": "E-mail ou senha incorretos",
+  "invalidEmailError": "O e-mail digitado não é válido",
+  "invalidEmailError": "O e-mail digitado não é válido",
+  "success": "Sucesso",
+  "logoutTitleWarning": "Atenção: Perda de Dados",
+  "logoutMessageWarning": "Você está usando a versão Gratuita. Ao sair, TODAS as suas listas e dados neste aparelho serão APAGADOS permanentemente. Deseja continuar?"
 }

@@ -800,4 +800,20 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get planGuest => 'Guest';
+
+  @override
+  String get invalidCredentialsError => 'Invalid email or password';
+
+  @override
+  String get invalidEmailError => 'The email entered is invalid';
+
+  @override
+  String get success => 'Success';
+
+  @override
+  String get logoutTitleWarning => 'Warning: Data Loss';
+
+  @override
+  String get logoutMessageWarning =>
+      'You are on the Free plan. Logging out will PERMANENTLY ERASE all your lists on this device. Do you want to continue?';
 }

@@ -5,6 +5,7 @@ import '../data/local/shopping_list_service.dart';
 import '../data/models/shopping_list.dart';
 import '../core/services/firestore_service.dart';
 import 'user_profile_provider.dart';
+import 'shopping_notes_provider.dart';
 
 final shoppingListBoxProvider = Provider<Box<ShoppingList>>((ref) {
   return Hive.box<ShoppingList>('shopping_lists');
@@ -42,12 +43,15 @@ final currentListProvider = Provider<ShoppingList?>((ref) {
 final syncManagerProvider = Provider<void>((ref) {
   final userProfileAsync = ref.watch(userProfileProvider);
   final shoppingListService = ref.watch(shoppingListServiceProvider);
+  final notesService = ref.watch(shoppingNotesServiceProvider);
   
   userProfileAsync.whenData((profile) {
-    if (profile?.familyId != null) {
+    if (profile?.familyId != null && profile?.isPremium == true) {
       shoppingListService.startSync(profile!.familyId!);
+      notesService.startSync(profile!.familyId!);
     } else {
       shoppingListService.stopSync();
+      notesService.stopSync();
     }
   });
 });

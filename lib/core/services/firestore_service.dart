@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:smart_market_list/data/models/shopping_list.dart';
 import 'package:smart_market_list/data/models/shopping_item.dart';
+import 'package:smart_market_list/data/models/shopping_note.dart';
 
 final firestoreServiceProvider = Provider<FirestoreService>((ref) {
   return FirestoreService();
@@ -17,12 +18,14 @@ class FirestoreService {
   // --- User Management ---
 
   Future<void> createOrUpdateUser(String uid, String email, {String? name, String? photoUrl}) async {
-    await _users.doc(uid).set({
+    final data = {
       'email': email,
-      'name': name,
-      'photoUrl': photoUrl,
       'lastLogin': FieldValue.serverTimestamp(),
-    }, SetOptions(merge: true));
+    };
+    if (name != null) data['name'] = name;
+    if (photoUrl != null) data['photoUrl'] = photoUrl;
+
+    await _users.doc(uid).set(data, SetOptions(merge: true));
   }
 
   Future<Map<String, dynamic>?> getUserData(String uid) async {
@@ -42,6 +45,28 @@ class FirestoreService {
   }
 
   // --- Family & Invitations ---
+
+  Future<void> ensureUserHasFamily(String uid) async {
+    final userDoc = await _users.doc(uid).get();
+    if (!userDoc.exists) return; // Should not happen if called after createOrUpdateUser
+    
+    final userData = userDoc.data() as Map<String, dynamic>;
+    if (userData['familyId'] != null) return; // Already has family
+
+    // Create new Family
+    final familyRef = _families.doc();
+    await familyRef.set({
+      'ownerId': uid,
+      'createdAt': FieldValue.serverTimestamp(),
+      'members': [uid], // Optional: simplified member tracking
+    });
+
+    // Update User
+    await _users.doc(uid).set({
+      'familyId': familyRef.id,
+      'role': 'owner',
+    }, SetOptions(merge: true));
+  }
 
   Future<void> sendInvitation(String ownerUid, String guestEmail) async {
     // 1. Check if guest user exists (optional, depends on flow)
@@ -186,11 +211,14 @@ class FirestoreService {
         .snapshots()
         .map((snapshot) {
       return snapshot.docs.map((doc) {
-        final data = doc.data();
-        // We need a fromMap method in ShoppingList that handles JSON -> Object
-        // For now, let's assume standard Hive structure + key
-        return ShoppingList.fromMap(data..['id'] = doc.id);
-      }).toList();
+        try {
+          final data = doc.data();
+          return ShoppingList.fromMap(data..['id'] = doc.id);
+        } catch (e) {
+          print('Error parsing list ${doc.id}: $e');
+          return null;
+        }
+      }).where((list) => list != null).cast<ShoppingList>().toList();
     });
   }
 
@@ -200,5 +228,49 @@ class FirestoreService {
         .collection('shopping_lists')
         .doc(list.id)
         .set(list.toMap());
+  }
+
+  Future<void> deleteList(String familyId, String listId) async {
+    await _families
+        .doc(familyId)
+        .collection('shopping_lists')
+        .doc(listId)
+        .delete();
+  }
+
+  // --- Shopping Notes Sync ---
+
+  Stream<List<ShoppingNote>> getFamilyNotes(String familyId) {
+    return _families
+        .doc(familyId)
+        .collection('shopping_notes')
+        .snapshots()
+        .map((snapshot) {
+      return snapshot.docs.map((doc) {
+        try {
+          final data = doc.data();
+          return ShoppingNote.fromMap(data..['id'] = doc.id);
+        } catch (e) {
+          print('Error parsing note ${doc.id}: $e');
+          return null;
+        }
+      }).where((note) => note != null).cast<ShoppingNote>().toList();
+    });
+  }
+
+  Future<void> syncNote(String familyId, ShoppingNote note) async {
+    await _families
+        .doc(familyId)
+        .collection('shopping_notes')
+        .doc(note.id)
+        .set(note.toMap());
+  }
+
+  Future<void> deleteNote(String familyId, String noteId) async {
+    await _families
+        .doc(familyId)
+        .collection('shopping_notes')
+        .doc(noteId)
+        .delete();
   }
 }

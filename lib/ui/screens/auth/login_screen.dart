@@ -9,6 +9,7 @@ import 'package:smart_market_list/ui/screens/auth/widgets/auth_text_field.dart';
 import 'package:smart_market_list/ui/screens/auth/widgets/social_login_buttons.dart';
 import 'package:smart_market_list/providers/auth_provider.dart';
 import 'package:smart_market_list/ui/common/modals/loading_dialog.dart';
+import 'package:smart_market_list/ui/common/modals/status_feedback_modal.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -216,11 +217,21 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   } catch (e) {
                     if (context.mounted) {
                       LoadingDialog.hide(context);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('Erro: ${e.toString()}'),
-                          backgroundColor: Colors.red,
-                        ),
+                      
+                      String errorMessage = e.toString();
+                      if (errorMessage.contains('invalid-credential') || errorMessage.contains('user-not-found') || errorMessage.contains('wrong-password')) {
+                         errorMessage = l10n.invalidCredentialsError; // "E-mail ou senha incorretos"
+                      } else if (errorMessage.contains('invalid-email')) {
+                         errorMessage = l10n.invalidEmailError;
+                      } else {
+                         errorMessage = errorMessage.replaceAll('Exception: ', '');
+                      }
+
+                      StatusFeedbackModal.show(
+                        context,
+                        title: l10n.errorTitle,
+                        message: errorMessage,
+                        type: FeedbackType.error,
                       );
                     }
                   }

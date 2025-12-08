@@ -1615,6 +1615,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Guest'**
   String get planGuest;
+
+  /// No description provided for @invalidCredentialsError.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid email or password'**
+  String get invalidCredentialsError;
+
+  /// No description provided for @invalidEmailError.
+  ///
+  /// In en, this message translates to:
+  /// **'The email entered is invalid'**
+  String get invalidEmailError;
+
+  /// No description provided for @success.
+  ///
+  /// In en, this message translates to:
+  /// **'Success'**
+  String get success;
+
+  /// No description provided for @logoutTitleWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'Warning: Data Loss'**
+  String get logoutTitleWarning;
+
+  /// No description provided for @logoutMessageWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'You are on the Free plan. Logging out will PERMANENTLY ERASE all your lists on this device. Do you want to continue?'**
+  String get logoutMessageWarning;
 }
 
 class _AppLocalizationsDelegate

@@ -73,11 +73,10 @@ class ShoppingList extends HiveObject {
       name: map['name'] ?? '',
       emoji: map['emoji'] ?? '🛒',
       budget: (map['budget'] ?? 500.0).toDouble(),
-      items: List<ShoppingItem>.from(
-        (map['items'] as List<dynamic>? ?? []).map<ShoppingItem>(
-          (x) => ShoppingItem.fromMap(x as Map<String, dynamic>),
-        ),
-      ),
+      items: (map['items'] as List<dynamic>? ?? [])
+          .where((x) => x is Map<String, dynamic>)
+          .map<ShoppingItem>((x) => ShoppingItem.fromMap(x as Map<String, dynamic>))
+          .toList(),
       createdAt: DateTime.fromMillisecondsSinceEpoch(map['createdAt'] ?? DateTime.now().millisecondsSinceEpoch),
     );
   }

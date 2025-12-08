@@ -801,4 +801,20 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get planGuest => 'Convidado';
+
+  @override
+  String get invalidCredentialsError => 'E-mail ou senha incorretos';
+
+  @override
+  String get invalidEmailError => 'O e-mail digitado não é válido';
+
+  @override
+  String get success => 'Sucesso';
+
+  @override
+  String get logoutTitleWarning => 'Atenção: Perda de Dados';
+
+  @override
+  String get logoutMessageWarning =>
+      'Você está usando a versão Gratuita. Ao sair, TODAS as suas listas e dados neste aparelho serão APAGADOS permanentemente. Deseja continuar?';
 }
