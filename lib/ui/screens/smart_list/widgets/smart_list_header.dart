@@ -6,15 +6,12 @@ import 'package:smart_market_list/data/models/shopping_list.dart';
 import 'package:smart_market_list/providers/shopping_list_provider.dart';
 import 'package:smart_market_list/ui/screens/smart_list/modals/edit_list_modal.dart';
 import 'package:smart_market_list/l10n/generated/app_localizations.dart';
-
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:smart_market_list/core/theme/app_colors.dart';
-import 'package:smart_market_list/data/models/shopping_list.dart';
-import 'package:smart_market_list/providers/shopping_list_provider.dart';
-import 'package:smart_market_list/ui/screens/smart_list/modals/edit_list_modal.dart';
 import 'package:smart_market_list/ui/screens/smart_list/widgets/list_selector_dropdown.dart';
+import 'package:smart_market_list/providers/user_profile_provider.dart';
+import 'package:smart_market_list/ui/common/modals/paywall_modal.dart';
 import 'package:uuid/uuid.dart';
+
+
 
 class SmartListHeader extends ConsumerStatefulWidget {
   final ShoppingList list;
@@ -265,7 +262,7 @@ class _SmartListHeaderState extends ConsumerState<SmartListHeader> {
                         },
                       ),
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: 8),
                     InkWell(
                       onTap: () {
                         if (_isOpen) _closeDropdown();
@@ -292,6 +289,35 @@ class _SmartListHeaderState extends ConsumerState<SmartListHeader> {
                       duration: const Duration(milliseconds: 200),
                       turns: (forceOpen || _isOpen) ? 0.5 : 0,
                       child: Icon(Icons.keyboard_arrow_down, color: AppColors.primary, size: 24),
+                    ),
+                    const SizedBox(width: 8), // Gap
+                    InkWell(
+                      onTap: () {
+                         final isPremium = ref.read(userProfileProvider).value?.isPremium ?? false;
+                         
+                         if (!isPremium) {
+                           showModalBottomSheet(
+                             context: context,
+                             isScrollControlled: true,
+                             backgroundColor: Colors.transparent,
+                             builder: (context) => const PaywallModal(),
+                           );
+                         } else {
+                           // Share logic needed here later
+                           print('Share button tapped (Premium Access)');
+                         }
+                      },
+                      borderRadius: BorderRadius.circular(20),
+                      child: Container(
+                        width: 36,
+                        height: 36,
+                        decoration: BoxDecoration(
+                           color: isDark ? Colors.grey[800] : Colors.white.withOpacity(0.5),
+                           shape: BoxShape.circle,
+                           border: Border.all(color: borderColor),
+                        ),
+                        child: Icon(Icons.share, color: iconColor, size: 18),
+                      ),
                     ),
                   ],
                 ),
