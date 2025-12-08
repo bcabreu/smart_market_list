@@ -39,7 +39,7 @@ class _EditListModalState extends ConsumerState<EditListModal> {
     super.dispose();
   }
 
-  void _save() {
+  Future<void> _save() async {
     if (_nameController.text.isNotEmpty) {
       final name = _nameController.text;
       
@@ -66,10 +66,15 @@ class _EditListModalState extends ConsumerState<EditListModal> {
           items: [],
           createdAt: DateTime.now(),
         );
-        service.createList(newList);
+        await service.createList(newList);
+        
+        // Auto-select the new list
+        ref.read(currentListIdProvider.notifier).state = newList.id;
       }
       
-      Navigator.pop(context);
+      if (mounted) {
+        Navigator.pop(context);
+      }
     }
   }
 
