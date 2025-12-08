@@ -766,6 +766,11 @@ class ProfileScreen extends ConsumerWidget {
           await notesService.deleteAllNotes();
           print('LOGOUT DEBUG: Notes cleared.');
           
+          final recipesService = ref.read(recipesServiceProvider);
+          recipesService.stopSync();
+          await recipesService.deleteAllData();
+          print('LOGOUT DEBUG: Recipes cleared.');
+          
           // Clear Preferences
           await ref.read(isLoggedInProvider.notifier).setLoggedIn(false);
           await ref.read(userEmailProvider.notifier).clearEmail();

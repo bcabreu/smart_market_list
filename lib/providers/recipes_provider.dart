@@ -4,13 +4,16 @@ import 'package:hive_flutter/hive_flutter.dart';
 import '../data/local/recipes_service.dart';
 import '../data/models/recipe.dart';
 
+import '../core/services/firestore_service.dart';
+
 final recipesBoxProvider = Provider<Box<Recipe>>((ref) {
   return Hive.box<Recipe>('recipes');
 });
 
 final recipesServiceProvider = Provider<RecipesService>((ref) {
   final box = ref.watch(recipesBoxProvider);
-  return RecipesService(box);
+  final firestoreService = ref.watch(firestoreServiceProvider);
+  return RecipesService(box, firestoreService);
 });
 
 final recipesProvider = StreamProvider<List<Recipe>>((ref) {

@@ -73,4 +73,33 @@ class Recipe extends HiveObject {
       servings: servings ?? this.servings,
     );
   }
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'name': name,
+      'imageUrl': imageUrl,
+      'ingredients': ingredients,
+      'instructions': instructions,
+      'prepTime': prepTime,
+      'difficulty': difficulty,
+      'likes': likes,
+      'isFavorite': isFavorite,
+      'servings': servings,
+    };
+  }
+
+  factory Recipe.fromMap(Map<String, dynamic> map) {
+    return Recipe(
+      id: map['id'],
+      name: map['name'] ?? '',
+      imageUrl: map['imageUrl'] ?? '',
+      ingredients: List<String>.from(map['ingredients'] ?? []),
+      instructions: List<String>.from(map['instructions'] ?? []),
+      prepTime: map['prepTime'] ?? 30,
+      difficulty: map['difficulty'] ?? 'Médio',
+      likes: map['likes'] ?? 0,
+      isFavorite: map['isFavorite'] ?? false,
+      servings: map['servings'] ?? 2,
+    );
+  }
 }

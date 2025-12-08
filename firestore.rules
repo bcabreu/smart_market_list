@@ -34,6 +34,14 @@ service cloud.firestore {
       match /shopping_lists/{listId} {
         allow read, write: if isSignedIn();
       }
+      
+      match /shopping_notes/{noteId} {
+        allow read, write: if isSignedIn();
+      }
+
+      match /favorite_recipes/{recipeId} {
+        allow read, write: if isSignedIn();
+      }
     }
   }
 }

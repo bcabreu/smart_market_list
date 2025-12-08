@@ -1,15 +1,21 @@
 import 'dart:convert';
+import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:smart_market_list/data/models/recipe.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:smart_market_list/core/services/firestore_service.dart';
 import 'dart:math';
 
 class RecipesService {
   final Box<Recipe> _box;
+  final FirestoreService? _firestoreService;
+  
+  String? _currentFamilyId;
+  StreamSubscription? _cloudSubscription;
 
-  RecipesService(this._box);
+  RecipesService(this._box, [this._firestoreService]);
 
   List<Recipe> getAllRecipes() {
     return _box.values.toList();
@@ -19,32 +25,96 @@ class RecipesService {
     await _box.put(recipe.id, recipe);
   }
 
+  // --- Cloud Sync ---
+
+  Future<void> startSync(String familyId) async {
+    print('🔄 RECIPES SYNC: Starting for family $familyId');
+    if (_currentFamilyId == familyId) return;
+    _currentFamilyId = familyId;
+    _cloudSubscription?.cancel();
+
+    if (_firestoreService == null) {
+      print('❌ RECIPES SYNC: FirestoreService is null');
+      return;
+    }
+
+    // 1. Upload Local Favorites to Cloud
+    final localFavorites = _box.values.where((r) => r.isFavorite).toList();
+    print('⬆️ RECIPES SYNC: Uploading ${localFavorites.length} local favorites...');
+    for (var recipe in localFavorites) {
+       print('Creating/Updating cloud doc for: ${recipe.name}');
+       await _firestoreService!.syncFavoriteRecipe(familyId, recipe.toMap());
+    }
+
+    // 2. Listen for Cloud Updates
+    print('🎧 RECIPES SYNC: Listening for cloud updates...');
+    _cloudSubscription = _firestoreService!.getFavoriteRecipes(familyId).listen((cloudRecipesData) async {
+       print('⬇️ RECIPES SYNC: Received ${cloudRecipesData.length} recipes from cloud');
+       
+       // Create set of cloud favorite IDs for efficient lookup
+       final cloudFavIds = cloudRecipesData.map((d) => d['id']).toSet();
+       
+       // Handle incoming favorites
+       for (var data in cloudRecipesData) {
+         try {
+           final cloudRecipe = Recipe.fromMap(data);
+           final localRecipe = _box.get(cloudRecipe.id);
+           
+           if (localRecipe != null) {
+              // Update local if different or just mark as favorite
+              if (!localRecipe.isFavorite) {
+                 print('   -> Marking local "${localRecipe.name}" as favorite');
+                 localRecipe.isFavorite = true;
+                 await localRecipe.save();
+              }
+           } else {
+              // New recipe from cloud (favorite on another device)
+               print('   -> Saving new "${cloudRecipe.name}" from cloud');
+              await _box.put(cloudRecipe.id, cloudRecipe);
+           }
+         } catch (e) {
+           print('❌ RECIPES SYNC ERROR: $e');
+         }
+       }
+    });
+  }
+
+  void stopSync() {
+    _cloudSubscription?.cancel();
+    _currentFamilyId = null;
+  }
+
+  // --- Actions ---
+
   Future<void> toggleFavorite(String id) async {
     final recipe = _box.get(id);
     if (recipe != null) {
       recipe.isFavorite = !recipe.isFavorite;
       await recipe.save();
+
+      // Cloud Sync
+      if (_currentFamilyId != null && _firestoreService != null) {
+         if (recipe.isFavorite) {
+            await _firestoreService!.syncFavoriteRecipe(_currentFamilyId!, recipe.toMap());
+         } else {
+            await _firestoreService!.removeFavoriteRecipe(_currentFamilyId!, id);
+         }
+      }
     }
   }
 
-  Future<void> clearRecipes() async {
+  Future<void> deleteAllData() async {
+    stopSync();
     await _box.clear();
-    print('🧹 Banco de dados limpo manualmente.');
+    print('🧹 Receitas locais apagadas.');
   }
+
+  // Alias for backward compatibility
+  Future<void> clearRecipes() => deleteAllData();
 
   static const String _baseUrl = 'https://api-receitas.kepoweb.com';
 
   Future<String?> getLastFetchedLanguage() async {
-    // We can't easily inject SharedPreferences here without major refactor,
-    // but we can use Hive since we already depend on it.
-    // Let's assume there's a 'settings' box or we use the recipes box metadata if Hive supports it.
-    // Actually, Hive boxes can store random key-values if they are not strictly typed or if we use a separate box.
-    // Simpler: Just rely on the caller to handle logic? No, caller relies on Service.
-    
-    // Let's use a separate Hive box for settings if not existent, or just a static variable for session?
-    // Session static variable is not enough for app restarts.
-    
-    // I'll use SharedPreferences.
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString('recipes_last_lang');
   }
@@ -58,10 +128,6 @@ class RecipesService {
   Future<List<Recipe>> fetchRecipesPage({int page = 1, int limit = 10, String languageCode = 'pt'}) async {
     print('🚀 Buscando página $page (limit: $limit) na nova API (lang: $languageCode)...');
     try {
-      // User requested: 
-      // English -> https://api-receitas.kepoweb.com/recipes
-      // Portuguese -> https://api-receitas.kepoweb.com/recipes?lang=pt
-      
       String urlString = '$_baseUrl/recipes?page=$page&limit=$limit';
       if (languageCode == 'pt') {
         urlString += '&lang=pt';
@@ -76,7 +142,6 @@ class RecipesService {
       );
 
       if (response.statusCode == 200) {
-        // Save the language we successfully fetched
         await _saveFetchedLanguage(languageCode);
 
         final body = utf8.decode(response.bodyBytes);
@@ -89,7 +154,6 @@ class RecipesService {
 
         for (var item in data) {
           try {
-            // Handle Image URL (Relative vs Absolute)
             String imageUrl = item['imageUrl'] ?? '';
             if (imageUrl.startsWith('/')) {
               imageUrl = '$_baseUrl$imageUrl';
@@ -107,8 +171,13 @@ class RecipesService {
               likes: item['likes'] ?? 0,
             );
             
+            // Check if existing local version has favorite status
+            final existing = _box.get(recipe.id);
+            if (existing != null && existing.isFavorite) {
+               recipe.isFavorite = true;
+            }
+            
             recipes.add(recipe);
-            // Cache immediately to Hive
             await _box.put(recipe.id, recipe);
             
           } catch (e) {
@@ -156,7 +225,7 @@ class RecipesService {
             if (imageUrl.startsWith('/')) {
               imageUrl = '$_baseUrl$imageUrl';
             }
-            recipes.add(Recipe(
+            final recipe = Recipe(
               id: item['id'],
               name: item['name'] ?? 'Sem nome',
               imageUrl: imageUrl,
@@ -166,7 +235,14 @@ class RecipesService {
               difficulty: item['difficulty'] ?? 'Médio',
               servings: item['servings'] ?? 2,
               likes: item['likes'] ?? 0,
-            ));
+            );
+            
+            final existing = _box.get(recipe.id);
+            if (existing != null && existing.isFavorite) {
+               recipe.isFavorite = true;
+            }
+            
+            recipes.add(recipe);
          }
          return recipes;
       }
@@ -175,10 +251,5 @@ class RecipesService {
     }
     return [];
   } 
-
-  // Legacy method removed/replaced by above.
-  /*
-  Future<List<Recipe>> fetchRecipeBatch...
-  */
 }
 

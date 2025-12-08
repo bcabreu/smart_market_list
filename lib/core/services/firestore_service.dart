@@ -273,4 +273,36 @@ class FirestoreService {
         .doc(noteId)
         .delete();
   }
+
+  // --- Favorite Recipes Sync ---
+
+  Stream<List<Map<String, dynamic>>> getFavoriteRecipes(String familyId) {
+    return _families
+        .doc(familyId)
+        .collection('favorite_recipes')
+        .snapshots()
+        .map((snapshot) {
+      return snapshot.docs.map((doc) => doc.data()).toList();
+    });
+  }
+
+  Future<void> syncFavoriteRecipe(String familyId, Map<String, dynamic> recipeData) async {
+    // We expect recipeData to contain 'id'
+    final id = recipeData['id'];
+    if (id == null) return;
+    
+    await _families
+        .doc(familyId)
+        .collection('favorite_recipes')
+        .doc(id)
+        .set(recipeData);
+  }
+
+  Future<void> removeFavoriteRecipe(String familyId, String recipeId) async {
+    await _families
+        .doc(familyId)
+        .collection('favorite_recipes')
+        .doc(recipeId)
+        .delete();
+  }
 }
