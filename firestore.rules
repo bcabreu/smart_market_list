@@ -43,5 +43,11 @@ service cloud.firestore {
         allow read, write: if isSignedIn();
       }
     }
+
+    // --- Collection Group: shopping_lists ---
+    // Necessary for querying across all families where user is a member
+    match /{path=**}/shopping_lists/{listId} {
+      allow read, write: if isSignedIn();
+    }
   }
 }

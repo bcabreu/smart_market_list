@@ -3,4 +3,18 @@
     "rules": "firestore.rules",
     "indexes": "firestore.indexes.json"
   },
+  "hosting": {
+    "public": "public",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ]
+  },
   "flutter": {"platforms":{"android":{"default":{"projectId":"smart-market-list-82bf7","appId":"1:1033855354360:android:5a3c9e18d822e46b19020d","fileOutput":"android/app/google-services.json"}},"ios":{"default":{"projectId":"smart-market-list-82bf7","appId":"1:1033855354360:ios:7da9a30076f4abc519020d","uploadDebugSymbols":false,"fileOutput":"ios/Runner/GoogleService-Info.plist"}},"dart":{"lib/firebase_options.dart":{"projectId":"smart-market-list-82bf7","configurations":{"android":"1:1033855354360:android:5a3c9e18d822e46b19020d","ios":"1:1033855354360:ios:7da9a30076f4abc519020d"}}}}}}

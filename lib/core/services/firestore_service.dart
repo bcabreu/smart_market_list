@@ -238,6 +238,42 @@ class FirestoreService {
         .delete();
   }
 
+  // --- Shared Lists (Collection Group) ---
+
+  Future<void> addMemberToList(String familyId, String listId, String uid) async {
+    await _families
+        .doc(familyId)
+        .collection('shopping_lists')
+        .doc(listId)
+        .update({
+      'members': FieldValue.arrayUnion([uid])
+    });
+  }
+
+  Stream<List<ShoppingList>> getSharedLists(String uid) {
+    // Collection Group Query to find all lists where user is a member
+    return _firestore
+        .collectionGroup('shopping_lists')
+        .where('members', arrayContains: uid)
+        .snapshots()
+        .map((snapshot) {
+      return snapshot.docs.map((doc) {
+        try {
+          final data = doc.data() as Map<String, dynamic>;
+          // Extract familyId from the document path: families/{familyId}/shopping_lists/{listId}
+          final familyId = doc.reference.parent.parent?.id;
+          
+          return ShoppingList.fromMap(data
+            ..['id'] = doc.id
+            ..['familyId'] = familyId);
+        } catch (e) {
+          print('Error parsing shared list ${doc.id}: $e');
+          return null;
+        }
+      }).where((list) => list != null).cast<ShoppingList>().toList();
+    });
+  }
+
   // --- Shopping Notes Sync ---
 
   Stream<List<ShoppingNote>> getFamilyNotes(String familyId) {

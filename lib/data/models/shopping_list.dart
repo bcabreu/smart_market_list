@@ -24,6 +24,18 @@ class ShoppingList extends HiveObject {
   @HiveField(5)
   DateTime createdAt;
 
+  @HiveField(6)
+  List<String> members;
+
+  @HiveField(7)
+  String? ownerId;
+
+  @HiveField(8)
+  String? inviteCode;
+
+  @HiveField(9)
+  String? familyId;
+
   ShoppingList({
     String? id,
     required this.name,
@@ -31,8 +43,13 @@ class ShoppingList extends HiveObject {
     this.budget = 500.0,
     List<ShoppingItem>? items,
     DateTime? createdAt,
+    List<String>? members,
+    this.ownerId,
+    this.inviteCode,
+    this.familyId,
   })  : id = id ?? const Uuid().v4(),
         items = items ?? [],
+        members = members ?? [],
         createdAt = createdAt ?? DateTime.now();
 
   double get totalSpent => items.fold(0.0, (sum, item) => sum + (item.checked ? item.price : 0.0));
@@ -46,6 +63,10 @@ class ShoppingList extends HiveObject {
     double? budget,
     List<ShoppingItem>? items,
     DateTime? createdAt,
+    List<String>? members,
+    String? ownerId,
+    String? inviteCode,
+    String? familyId,
   }) {
     return ShoppingList(
       id: id ?? this.id,
@@ -54,6 +75,10 @@ class ShoppingList extends HiveObject {
       budget: budget ?? this.budget,
       items: items ?? this.items,
       createdAt: createdAt ?? this.createdAt,
+      members: members ?? this.members,
+      ownerId: ownerId ?? this.ownerId,
+      inviteCode: inviteCode ?? this.inviteCode,
+      familyId: familyId ?? this.familyId,
     );
   }
   Map<String, dynamic> toMap() {
@@ -64,6 +89,10 @@ class ShoppingList extends HiveObject {
       'budget': budget,
       'items': items.map((x) => x.toMap()).toList(),
       'createdAt': createdAt.millisecondsSinceEpoch,
+      'members': members,
+      'ownerId': ownerId,
+      'inviteCode': inviteCode,
+      'familyId': familyId,
     };
   }
 
@@ -78,6 +107,10 @@ class ShoppingList extends HiveObject {
           .map<ShoppingItem>((x) => ShoppingItem.fromMap(x as Map<String, dynamic>))
           .toList(),
       createdAt: DateTime.fromMillisecondsSinceEpoch(map['createdAt'] ?? DateTime.now().millisecondsSinceEpoch),
+      members: List<String>.from(map['members'] ?? []),
+      ownerId: map['ownerId'],
+      inviteCode: map['inviteCode'],
+      familyId: map['familyId'],
     );
   }
 }

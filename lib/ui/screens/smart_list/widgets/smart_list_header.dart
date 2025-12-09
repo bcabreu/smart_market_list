@@ -10,6 +10,7 @@ import 'package:smart_market_list/ui/screens/smart_list/widgets/list_selector_dr
 import 'package:smart_market_list/providers/user_profile_provider.dart';
 import 'package:smart_market_list/ui/common/modals/paywall_modal.dart';
 import 'package:uuid/uuid.dart';
+import 'package:smart_market_list/providers/sharing_provider.dart';
 
 
 
@@ -303,8 +304,18 @@ class _SmartListHeaderState extends ConsumerState<SmartListHeader> {
                              builder: (context) => const PaywallModal(),
                            );
                          } else {
-                           // Share logic needed here later
-                           print('Share button tapped (Premium Access)');
+                           // Share logic (Premium Access)
+                           final sharingService = ref.read(sharingServiceProvider);
+                           final profile = ref.read(userProfileProvider).value;
+                           final familyIdToUse = widget.list.familyId ?? profile?.familyId;
+                           
+                           if (familyIdToUse != null) {
+                              sharingService.shareList(widget.list, familyIdToUse);
+                           } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Erro: Lista não sincronizada ou família não encontrada.')),
+                              );
+                           }
                          }
                       },
                       borderRadius: BorderRadius.circular(20),

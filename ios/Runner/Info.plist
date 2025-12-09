@@ -30,6 +30,7 @@
 			<key>CFBundleURLSchemes</key>
 			<array>
 				<string>com.googleusercontent.apps.1033855354360-ck2d0r691lraob20tvq06n7hikqnombh</string>
+				<string>smartmarketlist</string>
 			</array>
 		</dict>
 	</array>

@@ -10,16 +10,22 @@ class ShoppingListService {
   final FirestoreService? _firestoreService;
   
   // Track current family ID for sync
+  // Track current family ID for sync
   String? _currentFamilyId;
-  StreamSubscription? _cloudSubscription;
+  String? _currentUid;
+  StreamSubscription? _familySubscription;
+  StreamSubscription? _sharedSubscription;
 
   ShoppingListService(this._box, [this._firestoreService]);
 
-  // Start syncing with a specific family
-  Future<void> startSync(String familyId) async {
-    if (_currentFamilyId == familyId) return;
+  // Start syncing with a specific family and user
+  Future<void> startSync(String familyId, String uid) async {
+    if (_currentFamilyId == familyId && _currentUid == uid) return;
     _currentFamilyId = familyId;
-    _cloudSubscription?.cancel();
+    _currentUid = uid;
+    
+    _familySubscription?.cancel();
+    _sharedSubscription?.cancel();
 
     // 1. Upload Local Lists to Cloud (Ensure existing data is saved)
     if (_firestoreService != null) {
@@ -29,19 +35,29 @@ class ShoppingListService {
       }
     }
 
-    // 2. Listen for Cloud Updates
+    // 2. Listen for Cloud Updates (Family Lists)
     if (_firestoreService != null) {
-      _cloudSubscription = _firestoreService!.getFamilyLists(familyId).listen((cloudLists) async {
+      _familySubscription = _firestoreService!.getFamilyLists(familyId).listen((cloudLists) async {
         for (var list in cloudLists) {
           await _box.put(list.id, list); 
+        }
+      });
+      
+      // 3. Listen for Cloud Updates (Shared Lists)
+      _sharedSubscription = _firestoreService!.getSharedLists(uid).listen((sharedLists) async {
+        for (var list in sharedLists) {
+             // Shared lists come with familyId populated from FirestoreService
+             await _box.put(list.id, list);
         }
       });
     }
   }
 
   void stopSync() {
-    _cloudSubscription?.cancel();
+    _familySubscription?.cancel();
+    _sharedSubscription?.cancel();
     _currentFamilyId = null;
+    _currentUid = null;
   }
 
   List<ShoppingList> getAllLists() {
@@ -49,8 +65,13 @@ class ShoppingListService {
   }
 
   Future<void> createList(ShoppingList list) async {
-    await _box.put(list.id, list);
-    await _syncToCloud(list);
+    // New lists default to current family
+    final listWithFamily = list.familyId == null && _currentFamilyId != null
+        ? list.copyWith(familyId: _currentFamilyId) 
+        : list;
+        
+    await _box.put(listWithFamily.id, listWithFamily);
+    await _syncToCloud(listWithFamily);
   }
 
   Future<void> updateList(ShoppingList list) async {
@@ -59,9 +80,16 @@ class ShoppingListService {
   }
 
   Future<void> deleteList(String id) async {
+    final list = _box.get(id);
+    final targetFamilyId = list?.familyId ?? _currentFamilyId;
+    
     await _box.delete(id);
-    if (_currentFamilyId != null && _firestoreService != null) {
-      await _firestoreService!.deleteList(_currentFamilyId!, id);
+    
+    if (targetFamilyId != null && _firestoreService != null) {
+      // If it's a shared list, we might want to just "leave" instead of delete?
+      // But if we are owner (or have permission), we delete it.
+      // For now, assume delete means delete. Logic for "Leaving" reduces complexity.
+      await _firestoreService!.deleteList(targetFamilyId, id);
     }
   }
 
@@ -157,8 +185,12 @@ class ShoppingListService {
   }
 
   Future<void> _syncToCloud(ShoppingList list) async {
-    if (_currentFamilyId != null && _firestoreService != null) {
-      await _firestoreService!.syncList(_currentFamilyId!, list);
+    final targetFamilyId = list.familyId ?? _currentFamilyId;
+    if (targetFamilyId != null && _firestoreService != null) {
+      // Ensure local list has familyId if not present (implicit ownership)
+      final listToSync = list.familyId == null ? list.copyWith(familyId: targetFamilyId) : list;
+      
+      await _firestoreService!.syncList(targetFamilyId, listToSync);
     }
   }
 }

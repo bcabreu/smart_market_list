@@ -1,0 +1,13 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.kepoweb.smart_market_list",
+      "sha256_cert_fingerprints": [
+        "FA:C6:17:45:35:E5:D3:2A:72:78:E2:DD:63:F5:E8:4A:E6:B0:12:3C:99:E1:68:04:16:34:64:94:07:95:50:6F",
+        "REPLACE_WITH_YOUR_RELEASE_SHA256_FROM_PLAY_CONSOLE"
+      ]
+    }
+  }
+]
