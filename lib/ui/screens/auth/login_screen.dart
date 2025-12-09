@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:smart_market_list/core/theme/app_colors.dart';
 import 'package:smart_market_list/l10n/generated/app_localizations.dart';
 import 'package:smart_market_list/providers/user_provider.dart';
-import 'package:smart_market_list/core/services/family_invitation_service.dart';
+
 import 'package:smart_market_list/ui/screens/auth/signup_screen.dart';
 import 'package:smart_market_list/ui/screens/auth/widgets/auth_text_field.dart';
 import 'package:smart_market_list/ui/screens/auth/widgets/social_login_buttons.dart';
@@ -209,8 +209,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     
                     await ref.read(isLoggedInProvider.notifier).setLoggedIn(true);
 
-                    // Check for pending family invitations
-                    await ref.read(familyInvitationServiceProvider).checkAndAcceptPendingInvites();
+
                     
                     // Check for pending Deep Link Joins (Universal Links)
                     if (SharingService.pendingListId != null && SharingService.pendingFamilyId != null) {

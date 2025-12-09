@@ -37,11 +37,20 @@ class FirestoreService {
     return _users.doc(uid).snapshots().map((doc) => doc.data() as Map<String, dynamic>?);
   }
 
-  Future<void> updateUserPremiumStatus(String uid, bool isPremium) async {
-    await _users.doc(uid).set({
+  Future<void> updateUserPremiumStatus(String uid, {required bool isPremium, String planType = 'premium_individual'}) async {
+    final data = {
       'isPremium': isPremium,
       'premiumSince': isPremium ? FieldValue.serverTimestamp() : FieldValue.delete(),
-    }, SetOptions(merge: true));
+    };
+    if (isPremium) {
+      data['planType'] = planType;
+       // maxFamilyMembers is derived from planType in UserProfile, but logic elsewhere might need simple flags.
+       // UserProfile logic is sufficient for the app.
+    } else {
+      data['planType'] = 'free';
+    }
+    
+    await _users.doc(uid).set(data, SetOptions(merge: true));
   }
 
   // --- Family & Invitations ---
@@ -99,43 +108,39 @@ class FirestoreService {
         .snapshots();
   }
 
-  Future<void> acceptInvitation(String inviteId, String guestUid, String ownerUid) async {
-    final batch = _firestore.batch();
+  // Join Family Logic (For Family Plan)
+  Future<void> joinFamily(String familyId, String userId) async {
+    // 1. Check Family Exists
+    final familyDoc = await _families.doc(familyId).get();
+    if (!familyDoc.exists) throw Exception('Family not found');
 
-    // 1. Create Family Document
-    final familyRef = _families.doc();
-    batch.set(familyRef, {
-      'ownerId': ownerUid,
-      'guestId': guestUid,
-      'createdAt': FieldValue.serverTimestamp(),
+    // 2. Check Limits
+    final Map<String, dynamic> data = familyDoc.data() as Map<String, dynamic>;
+    final List members = data['members'] ?? [];
+    
+    // Hard restriction: Family Plan allows Owner + 1 Guest = 2 Members
+    // Ideally we check the owner's plan, but for now we enforce the "Family" logic here.
+    if (members.length >= 2) {
+      throw Exception('Esta família já atingiu o limite de membros.');
+    }
+
+    // 3. Add to Family
+    await _families.doc(familyId).update({
+      'members': FieldValue.arrayUnion([userId]),
+      'guestId': userId, // Explicitly set guestId for easy query
     });
 
-    // 2. Update Owner User Doc
-    batch.update(_users.doc(ownerUid), {
-      'familyId': familyRef.id,
-      'role': 'owner',
-    });
-
-    // 3. Update Guest User Doc
-    batch.update(_users.doc(guestUid), {
-      'familyId': familyRef.id,
+    // 4. Update User Profile
+    await _users.doc(userId).update({
+      'familyId': familyId,
       'role': 'guest',
-      'connectedTo': ownerUid,
-       // Guest inherits premium implied by being in a family with an owner
+      'isPremium': true, // Inherit premium
+      'planType': 'premium_family_guest', 
     });
-
-    // 4. Update Invite Status
-    batch.update(_firestore.collection('invitations').doc(inviteId), {
-      'status': 'accepted',
-      'acceptedAt': FieldValue.serverTimestamp(),
-    });
-
-    await batch.commit();
   }
-
-  Future<void> cancelInvitation(String inviteId) async {
-    await _firestore.collection('invitations').doc(inviteId).delete();
-  }
+  
+  // Clean up legacy invite code if not used, or keep for other flows. 
+  // For this feature, we focus on Direct Join via Deep Link.
 
   // --- Family Member Management ---
 

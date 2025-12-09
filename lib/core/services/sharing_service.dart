@@ -17,19 +17,25 @@ class SharingService {
   SharingService(this._firestoreService);
 
   // Initialize Deep Link Listener
-  void initDeepLinks(Function(String listId, String familyId) onJoinList) {
+  void initDeepLinks({
+    required Function(String listId, String familyId) onJoinList,
+    required Function(String familyId) onJoinFamily,
+  }) {
     _linkSubscription = _appLinks.uriLinkStream.listen((uri) {
       print('🔗 Deep Link Received: $uri');
       
-      // Accept both Custom Scheme (smartmarketlist) and Universal Link (https)
       if (uri.scheme == 'smartmarketlist' || uri.scheme == 'https') {
-        // Format: 
-        // 1. smartmarketlist://share?listId=...
-        // 2. https://smart-market-list-82bf7.web.app/share?listId=...
-        
         final listId = uri.queryParameters['listId'];
         final familyId = uri.queryParameters['familyId'];
+        final action = uri.queryParameters['action'];
         
+        // Case 1: Join Family
+        if (action == 'join_family' && familyId != null) {
+          onJoinFamily(familyId);
+          return;
+        }
+
+        // Case 2: Join List (Legacy/Standard)
         if (listId != null && familyId != null) {
           onJoinList(listId, familyId);
         }
@@ -45,20 +51,30 @@ class SharingService {
 
   // Share List via WhatsApp/System Share
   Future<void> shareList(ShoppingList list, String familyId) async {
-    // Generate Universal Link (Firebase Hosting)
-    // Format: https://smart-market-list-82bf7.web.app/share?listId={id}&familyId={fid}&name={name}
     final String deepLink = 'https://smart-market-list-82bf7.web.app/share?listId=${list.id}&familyId=$familyId&name=${Uri.encodeComponent(list.name)}';
-    
-    // URL real da Play Store (baseado no applicationId que vi no build.gradle)
-    // Para iOS, você precisará do ID numérico gerado pelo App Store Connect (ex: 123456789)
-    const String androidUrl = 'https://play.google.com/store/apps/details?id=com.kepoweb.smart_market_list'; // Corrigido para kepoweb
-    const String iosUrl = 'https://apps.apple.com/app/id6756240280'; // Substitua pelo ID real
+    _shareMessage(
+      '🛒 *${list.name}*\nEntre na minha lista de compras compartilhada!',
+      deepLink,
+    );
+  }
+
+  // Share Family Access
+  Future<void> shareFamilyAccess(String familyId, String ownerName) async {
+    final String deepLink = 'https://smart-market-list-82bf7.web.app/invite?familyId=$familyId&action=join_family';
+    _shareMessage(
+      '🏠 *Convite para Família Premium*\n$ownerName te convidou para fazer parte da família no Smart Market List!\n\nVocê terá acesso Premium e todas as listas serão compartilhadas.',
+      deepLink,
+    );
+  }
+
+  Future<void> _shareMessage(String title, String deepLink) async {
+    const String androidUrl = 'https://play.google.com/store/apps/details?id=com.kepoweb.smart_market_list';
+    const String iosUrl = 'https://apps.apple.com/app/id6756240280';
     
     final String message = 
-        '🛒 *${list.name}*\n'
-        'Entre na minha lista de compras compartilhada!\n\n'
-        '🔗 *Link de Acesso (Deep Link):*\n$deepLink\n'
-        '_(Se não for clicável, copie e cole no Notas)_\n\n'
+        '$title\n\n'
+        '🔗 *Link de Acesso:*\n$deepLink\n'
+        '_(Se não funcionar, instale o app primeiro)_\n\n'
         '🤖 *Android:* $androidUrl\n'
         '🍎 *iOS:* $iosUrl';
 
@@ -72,6 +88,17 @@ class SharingService {
       print('✅ Joined list $listId via Deep Link');
     } catch (e) {
       print('❌ Error joining list: $e');
+      rethrow;
+    }
+  }
+
+  // Join Family Logic
+  Future<void> joinFamily(String familyId, String userId) async {
+    try {
+      await _firestoreService.joinFamily(familyId, userId);
+      print('✅ Joined Family $familyId via Deep Link');
+    } catch (e) {
+      print('❌ Error joining family: $e');
       rethrow;
     }
   }

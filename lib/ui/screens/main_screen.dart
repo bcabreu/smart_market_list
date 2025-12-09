@@ -45,9 +45,120 @@ class _MainScreenState extends ConsumerState<MainScreen> {
   }
 
   void _initDeepLinks() {
-    ref.read(sharingServiceProvider).initDeepLinks((listId, familyId) {
-      _handleJoinList(listId, familyId);
-    });
+    ref.read(sharingServiceProvider).initDeepLinks(
+      onJoinList: (listId, familyId) {
+        _handleJoinList(listId, familyId);
+      },
+      onJoinFamily: (familyId) {
+        _handleJoinFamily(familyId);
+      },
+    );
+  }
+  Future<void> _handleJoinFamily(String familyId) async {
+    final user = await ref.read(userProfileProvider.future);
+    
+    if (user != null) {
+      try {
+        await ref.read(sharingServiceProvider).joinFamily(familyId, user.uid);
+        if (mounted) {
+           ScaffoldMessenger.of(context).showSnackBar(
+             const SnackBar(
+               content: Text('Parabéns! Agora você faz parte da Família Premium! 🏠✨'),
+               backgroundColor: Colors.green,
+             ),
+           );
+           // Refresh profile
+           ref.refresh(userProfileProvider);
+        }
+      } catch (e) {
+        if (mounted) {
+           ScaffoldMessenger.of(context).showSnackBar(
+             SnackBar(content: Text('Erro ao entrar na família: $e'), backgroundColor: Colors.red),
+           );
+        }
+      }
+    } else {
+      print('⚠️ User not authenticated. Storing pending invite for family $familyId.');
+      SharingService.pendingFamilyId = familyId;
+      SharingService.pendingListId = null; 
+      
+      if (mounted) {
+        _showLoginSheet();
+      }
+    }
+  }
+
+  void _showLoginSheet() {
+      showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        builder: (context) => Container(
+          decoration: BoxDecoration(
+            color: Theme.of(context).scaffoldBackgroundColor,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.group_add_rounded, size: 48, color: AppColors.primary),
+              const SizedBox(height: 16),
+              const Text(
+                'Entrar na Família',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Para aceitar o convite da família, você precisa entrar ou criar uma conta.',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.grey),
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(context); 
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => LoginScreen()),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  child: const Text('Entrar'),
+                ),
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton(
+                  onPressed: () {
+                    Navigator.pop(context); 
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => SignUpScreen()),
+                    );
+                  },
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    side: const BorderSide(color: AppColors.primary),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  child: const Text('Criar Conta'),
+                ),
+              ),
+              const SizedBox(height: 20),
+            ],
+          ),
+        ),
+      );
   }
 
   Future<void> _handleJoinList(String listId, String familyId) async {
@@ -188,6 +299,17 @@ class _MainScreenState extends ConsumerState<MainScreen> {
           if (user.displayName != null && user.displayName!.isNotEmpty) {
              ref.read(userNameProvider.notifier).setName(user.displayName!);
           }
+          
+          // Check for Pending Invites
+          if (SharingService.pendingListId != null && SharingService.pendingFamilyId != null) {
+            _handleJoinList(SharingService.pendingListId!, SharingService.pendingFamilyId!);
+            SharingService.pendingListId = null;
+            SharingService.pendingFamilyId = null;
+          } else if (SharingService.pendingFamilyId != null && SharingService.pendingListId == null) {
+             // Pending Family Join (without list)
+            _handleJoinFamily(SharingService.pendingFamilyId!);
+            SharingService.pendingFamilyId = null;
+          }
         }
       });
     });
@@ -221,3 +343,4 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     );
   }
 }
+
