@@ -640,7 +640,12 @@ class SmartListScreen extends ConsumerWidget {
       case 'pet': return l10n.cat_pet;
       case 'bebe': return l10n.cat_bebe;
       case 'utilidades': return l10n.cat_utilidades;
-      default: return l10n.cat_outros;
+      case 'utilidades': return l10n.cat_utilidades;
+      case 'outros': return l10n.cat_outros;
+      default: 
+        // If it's a custom category, capitalize it
+        if (category.isEmpty) return l10n.cat_outros;
+        return category[0].toUpperCase() + category.substring(1);
     }
   }
 }

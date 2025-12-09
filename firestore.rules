@@ -21,6 +21,11 @@ service cloud.firestore {
       match /custom_items/{itemId} {
         allow read, write: if isSignedIn() && isOwner(userId);
       }
+
+      // Store custom categories
+      match /custom_categories/{categoryId} {
+        allow read, write: if isSignedIn() && isOwner(userId);
+      }
     }
 
     // --- Invitations Collection ---

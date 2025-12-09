@@ -414,4 +414,47 @@ class FirestoreService {
     
     print('DEBUG: Custom item delete sequence complete.');
   }
+
+  // --- Custom Categories Sync (Premium) ---
+
+  Future<void> syncCustomCategory(String uid, String category) async {
+    final docId = category.trim().toLowerCase().replaceAll(RegExp(r'\s+'), '_');
+    
+    await _users
+        .doc(uid)
+        .collection('custom_categories')
+        .doc(docId)
+        .set({'name': category.toLowerCase()}); // Store lowercase for consistency
+  }
+
+  Future<List<String>> getCustomCategories(String uid) async {
+    final snapshot = await _users
+        .doc(uid)
+        .collection('custom_categories')
+        .get();
+        
+    return snapshot.docs.map((doc) {
+      final data = doc.data();
+      return data['name'] as String?;
+    }).where((name) => name != null).cast<String>().toList();
+  }
+
+  Future<void> deleteCustomCategory(String uid, String category) async {
+    print('DEBUG: Attempting to delete custom category: "$category"');
+    
+    // 1. Try Deterministic ID
+    final docId = category.trim().toLowerCase().replaceAll(RegExp(r'\s+'), '_');
+    await _users.doc(uid).collection('custom_categories').doc(docId).delete();
+    
+    // 2. Fallback: Query by name
+    final querySnapshot = await _users
+        .doc(uid)
+        .collection('custom_categories')
+        .where('name', isEqualTo: category.toLowerCase())
+        .get();
+        
+    for (final doc in querySnapshot.docs) {
+       await doc.reference.delete();
+    }
+  }
 }

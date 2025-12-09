@@ -895,7 +895,7 @@ class _AddItemModalState extends ConsumerState<AddItemModal> {
       case 'utilidades': return l10n.cat_utilidades;
       case 'outros': return l10n.cat_outros;
       default: 
-        if (category.isEmpty) return category;
+        if (category.isEmpty) return l10n.cat_outros;
         return category[0].toUpperCase() + category.substring(1);
     }
   }
