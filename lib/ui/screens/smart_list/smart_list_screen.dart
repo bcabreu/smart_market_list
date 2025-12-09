@@ -539,7 +539,10 @@ class SmartListScreen extends ConsumerWidget {
     for (var category in sortedCategories) {
       widgets.add(_buildCategoryHeader(context, category));
       
-      for (var item in grouped[category]!) {
+      final categoryItems = grouped[category]!;
+      categoryItems.sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+
+      for (var item in categoryItems) {
         widgets.add(StaggeredEntry(
           index: index++,
           child: ShoppingItemCard(

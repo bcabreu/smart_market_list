@@ -9,6 +9,19 @@ class ProductCatalog {
     return itemsPt;
   }
 
+  static bool isSystemItem(String name) {
+    final cleanName = name.trim().toLowerCase();
+    // Check PT list
+    if (itemsPt.any((item) => item.name.trim().toLowerCase() == cleanName)) {
+      return true;
+    }
+    // Check EN list
+    if (itemsEn.any((item) => item.name.trim().toLowerCase() == cleanName)) {
+      return true;
+    }
+    return false;
+  }
+
   static const List<ProductSuggestion> itemsPt = [
     // Hortifruti
     ProductSuggestion(name: 'Abacate', category: 'hortifruti', defaultQuantity: '1 un', imageUrl: 'https://images.unsplash.com/photo-1523049673856-6468baca292f?auto=format&fit=crop&w=200&q=80'),

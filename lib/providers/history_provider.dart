@@ -6,6 +6,8 @@ import 'package:smart_market_list/core/services/firestore_service.dart';
 import 'package:smart_market_list/providers/auth_provider.dart';
 import 'package:smart_market_list/providers/user_profile_provider.dart';
 
+import 'package:smart_market_list/data/static/product_catalog.dart';
+
 class HistoryNotifier extends StateNotifier<List<ShoppingItem>> {
   final Ref ref;
 
@@ -41,11 +43,12 @@ class HistoryNotifier extends StateNotifier<List<ShoppingItem>> {
       // FirestoreService.syncCustomItem is efficient enough (set merge).
       // Ideally we would only sync dirty items, but for "catch up" this is safe.
       for (final item in localItems) {
-        // We can optionally check if it exists in cloud to save writes, 
-        // but set() is idempotent.
+        // Skip System Items
+        if (ProductCatalog.isSystemItem(item.name)) continue;
+
         await ref.read(firestoreServiceProvider).syncCustomItem(user.uid, item);
       }
-      print('Synced ${localItems.length} local items to cloud');
+      print('Synced custom items history to cloud');
     } catch (e) {
       print('Error syncing local history to cloud: $e');
     }
@@ -102,6 +105,9 @@ class HistoryNotifier extends StateNotifier<List<ShoppingItem>> {
       final isPremium = userProfile?.isPremium ?? false;
       
       if (user != null && isPremium) {
+         // Skip System Items
+         if (ProductCatalog.isSystemItem(item.name)) return;
+
          await ref.read(firestoreServiceProvider).syncCustomItem(user.uid, item);
       }
     } catch (e) {
@@ -126,6 +132,7 @@ class HistoryNotifier extends StateNotifier<List<ShoppingItem>> {
       final isPremium = userProfile?.isPremium ?? false;
       
       if (user != null && isPremium) {
+         // No need to check system item here, as removing it from cloud is fine (if it ended up there by mistake, we want to delete it) 
          await ref.read(firestoreServiceProvider).deleteCustomItem(user.uid, itemName);
       }
     } catch (e) {
