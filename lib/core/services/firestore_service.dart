@@ -341,4 +341,41 @@ class FirestoreService {
         .doc(recipeId)
         .delete();
   }
+
+  // --- Custom Items Sync (Premium) ---
+
+  Future<void> syncCustomItem(String uid, ShoppingItem item) async {
+    // We use the item name (normalized) as the ID or generate one.
+    // Using a hash or the name itself helps strict deduplication.
+    // Here we'll generate a doc ID but query by name to check, or just add.
+    // Simpler: Use a unique ID based on name hash or allow auto-id.
+    // Let's use auto-id but maybe we want to facilitate updates?
+    // Actually, history is usually Append-Only or Update-Last-Used.
+    
+    // Strategy: Use the item name (lowercase) as the Doc ID to ensure uniqueness.
+    final docId = item.name.trim().toLowerCase().replaceAll(RegExp(r'\s+'), '_');
+    
+    await _users
+        .doc(uid)
+        .collection('custom_items')
+        .doc(docId)
+        .set(item.toMap());
+  }
+
+  Future<List<ShoppingItem>> getCustomItems(String uid) async {
+    final snapshot = await _users
+        .doc(uid)
+        .collection('custom_items')
+        .get();
+        
+    return snapshot.docs.map((doc) {
+      try {
+        final data = doc.data();
+        return ShoppingItem.fromMap(data);
+      } catch (e) {
+        print('Error parsing custom item ${doc.id}: $e');
+        return null;
+      }
+    }).where((item) => item != null).cast<ShoppingItem>().toList();
+  }
 }
