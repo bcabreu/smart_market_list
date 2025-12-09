@@ -35,12 +35,14 @@ class ShoppingListService {
       }
     }
 
-    // 2. Listen for Cloud Updates (Family Lists)
+      // 2. Listen for Cloud Updates (Family Lists)
     if (_firestoreService != null) {
       _familySubscription = _firestoreService!.getFamilyLists(familyId).listen((cloudLists) async {
         for (var list in cloudLists) {
           await _box.put(list.id, list); 
         }
+      }, onError: (e) {
+        debugPrint('❌ Error syncing family lists: $e');
       });
       
       // 3. Listen for Cloud Updates (Shared Lists)
@@ -49,6 +51,8 @@ class ShoppingListService {
              // Shared lists come with familyId populated from FirestoreService
              await _box.put(list.id, list);
         }
+      }, onError: (e) {
+        debugPrint('❌ Error syncing shared lists: $e');
       });
     }
   }

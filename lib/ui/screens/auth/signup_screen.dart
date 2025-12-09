@@ -8,6 +8,8 @@ import 'package:smart_market_list/ui/screens/auth/widgets/social_login_buttons.d
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:smart_market_list/providers/user_provider.dart';
 import 'package:smart_market_list/providers/auth_provider.dart';
+import 'package:smart_market_list/core/services/sharing_service.dart';
+import 'package:smart_market_list/providers/sharing_provider.dart';
 import 'package:smart_market_list/ui/common/modals/loading_dialog.dart';
 
 class SignUpScreen extends ConsumerStatefulWidget {
@@ -58,6 +60,32 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
       await ref.read(userNameProvider.notifier).setName(name);
       await ref.read(userEmailProvider.notifier).setEmail(email);
       await ref.read(isLoggedInProvider.notifier).setLoggedIn(true);
+      
+      // Check for pending Deep Link Joins (Universal Links)
+      if (SharingService.pendingListId != null && SharingService.pendingFamilyId != null) {
+         try {
+           final currentUser = ref.read(authServiceProvider).currentUser;
+           if (currentUser != null) {
+              await ref.read(sharingServiceProvider).joinList(
+                SharingService.pendingListId!, 
+                SharingService.pendingFamilyId!, 
+                currentUser.uid
+              );
+              
+              // Clear pending
+              SharingService.pendingListId = null;
+              SharingService.pendingFamilyId = null;
+              
+              if (mounted) {
+                 ScaffoldMessenger.of(context).showSnackBar(
+                   const SnackBar(content: Text('Conta criada e lista compartilhada adicionada!')),
+                 );
+              }
+           }
+         } catch (e) {
+           print('Error joining pending list: $e');
+         }
+      }
 
       if (mounted) {
         LoadingDialog.hide(context);

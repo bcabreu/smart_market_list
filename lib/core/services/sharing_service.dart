@@ -9,6 +9,10 @@ class SharingService {
   final FirestoreService _firestoreService;
   final AppLinks _appLinks = AppLinks();
   StreamSubscription? _linkSubscription;
+  
+  // Store pending invite data for when user logs in
+  static String? pendingListId;
+  static String? pendingFamilyId;
 
   SharingService(this._firestoreService);
 

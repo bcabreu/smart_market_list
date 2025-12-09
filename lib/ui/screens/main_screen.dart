@@ -7,6 +7,8 @@ import 'package:smart_market_list/ui/screens/shopping_notes/shopping_notes_scree
 import 'package:smart_market_list/ui/screens/recipes/recipes_screen.dart';
 import 'package:smart_market_list/ui/screens/profile/profile_screen.dart';
 import 'package:smart_market_list/ui/navigation/custom_bottom_navigation.dart';
+import 'package:smart_market_list/ui/screens/auth/login_screen.dart';
+import 'package:smart_market_list/ui/screens/auth/signup_screen.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:smart_market_list/providers/navigation_provider.dart';
@@ -15,6 +17,7 @@ import 'package:smart_market_list/providers/user_provider.dart';
 import 'package:smart_market_list/providers/shopping_list_provider.dart';
 import 'package:smart_market_list/providers/user_profile_provider.dart';
 import 'package:smart_market_list/providers/sharing_provider.dart';
+import 'package:smart_market_list/core/services/sharing_service.dart';
 
 class MainScreen extends ConsumerStatefulWidget {
   const MainScreen({super.key});
@@ -48,7 +51,9 @@ class _MainScreenState extends ConsumerState<MainScreen> {
   }
 
   Future<void> _handleJoinList(String listId, String familyId) async {
-    final user = ref.read(userProfileProvider).value;
+    // Wait for the user profile to be loaded (handles cold start race condition)
+    final user = await ref.read(userProfileProvider.future);
+    
     if (user != null) {
       try {
         await ref.read(sharingServiceProvider).joinList(listId, familyId, user.uid);
@@ -66,6 +71,85 @@ class _MainScreenState extends ConsumerState<MainScreen> {
              SnackBar(content: Text('Erro ao entrar na lista: $e'), backgroundColor: Colors.red),
            );
         }
+      }
+    } else {
+      // User not authenticated. Store pending invite and redirect/prompt.
+      print('⚠️ User not authenticated. Storing pending invite for list $listId.');
+      SharingService.pendingListId = listId;
+      SharingService.pendingFamilyId = familyId;
+      
+      if (mounted) {
+        // Show a modal asking to Login or Signup to join the list
+        showModalBottomSheet(
+          context: context,
+          isScrollControlled: true,
+          backgroundColor: Colors.transparent,
+          builder: (context) => Container(
+            decoration: BoxDecoration(
+              color: Theme.of(context).scaffoldBackgroundColor,
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+            ),
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.group_add_rounded, size: 48, color: AppColors.primary),
+                const SizedBox(height: 16),
+                const Text(
+                  'Entrar na Lista Compartilhada',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'Para acessar esta lista, você precisa entrar ou criar uma conta.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: Colors.grey),
+                ),
+                const SizedBox(height: 24),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.pop(context); // Close sheet
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => LoginScreen()),
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                    child: const Text('Entrar'),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton(
+                    onPressed: () {
+                      Navigator.pop(context); // Close sheet
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => SignUpScreen()),
+                      );
+                    },
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      side: const BorderSide(color: AppColors.primary),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                    child: const Text('Criar Conta'),
+                  ),
+                ),
+                const SizedBox(height: 20),
+              ],
+            ),
+          ),
+        );
       }
     }
   }

@@ -8,6 +8,8 @@ import 'package:smart_market_list/ui/screens/auth/signup_screen.dart';
 import 'package:smart_market_list/ui/screens/auth/widgets/auth_text_field.dart';
 import 'package:smart_market_list/ui/screens/auth/widgets/social_login_buttons.dart';
 import 'package:smart_market_list/providers/auth_provider.dart';
+import 'package:smart_market_list/core/services/sharing_service.dart';
+import 'package:smart_market_list/providers/sharing_provider.dart';
 import 'package:smart_market_list/ui/common/modals/loading_dialog.dart';
 import 'package:smart_market_list/ui/common/modals/status_feedback_modal.dart';
 
@@ -209,6 +211,33 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
                     // Check for pending family invitations
                     await ref.read(familyInvitationServiceProvider).checkAndAcceptPendingInvites();
+                    
+                    // Check for pending Deep Link Joins (Universal Links)
+                    if (SharingService.pendingListId != null && SharingService.pendingFamilyId != null) {
+                       try {
+                         // We need the user UID, which we just fetched
+                         final currentUser = ref.read(authServiceProvider).currentUser;
+                         if (currentUser != null) {
+                            await ref.read(sharingServiceProvider).joinList(
+                              SharingService.pendingListId!, 
+                              SharingService.pendingFamilyId!, 
+                              currentUser.uid
+                            );
+                            
+                            // Clear pending
+                            SharingService.pendingListId = null;
+                            SharingService.pendingFamilyId = null;
+                            
+                            if (context.mounted) {
+                               ScaffoldMessenger.of(context).showSnackBar(
+                                 const SnackBar(content: Text('Lista compartilhada adicionada com sucesso!')),
+                               );
+                            }
+                         }
+                       } catch (e) {
+                         print('Error joining pending list: $e');
+                       }
+                    }
                     
                     if (context.mounted) {
                       LoadingDialog.hide(context);
