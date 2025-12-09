@@ -18,7 +18,37 @@ class HistoryNotifier extends StateNotifier<List<ShoppingItem>> {
     state = box.values.toList();
     
     // Attempt cloud sync on load if user is logged in
-    _syncFromCloud(); // Fire and forget
+    _syncFromCloud(); // Cloud -> Local (Fire and forget)
+    _syncAllLocalToCloud(); // Local -> Cloud (Fire and forget - Catch up)
+  }
+
+  Future<void> _syncAllLocalToCloud() async {
+    try {
+      final user = ref.read(authServiceProvider).currentUser;
+      if (user == null) return;
+
+      final userProfile = await ref.read(userProfileProvider.future);
+      final isPremium = userProfile?.isPremium ?? false;
+
+      if (!isPremium) return;
+
+      final box = Hive.box<ShoppingItem>('item_history');
+      final localItems = box.values.toList();
+      
+      if (localItems.isEmpty) return;
+
+      // Sync all items to cloud. 
+      // FirestoreService.syncCustomItem is efficient enough (set merge).
+      // Ideally we would only sync dirty items, but for "catch up" this is safe.
+      for (final item in localItems) {
+        // We can optionally check if it exists in cloud to save writes, 
+        // but set() is idempotent.
+        await ref.read(firestoreServiceProvider).syncCustomItem(user.uid, item);
+      }
+      print('Synced ${localItems.length} local items to cloud');
+    } catch (e) {
+      print('Error syncing local history to cloud: $e');
+    }
   }
 
   Future<void> _syncFromCloud() async {
@@ -26,7 +56,10 @@ class HistoryNotifier extends StateNotifier<List<ShoppingItem>> {
       final user = ref.read(authServiceProvider).currentUser;
       if (user == null) return;
 
-      final isPremium = ref.read(userProfileProvider).value?.isPremium ?? false;
+      // Ensure we have the latest profile data (await future handles AsyncLoading)
+      final userProfile = await ref.read(userProfileProvider.future);
+      final isPremium = userProfile?.isPremium ?? false;
+      
       if (!isPremium) return;
 
       // Fetch from Cloud
@@ -63,10 +96,13 @@ class HistoryNotifier extends StateNotifier<List<ShoppingItem>> {
     // Cloud Sync (Premium)
     try {
       final user = ref.read(authServiceProvider).currentUser;
-      final isPremium = ref.read(userProfileProvider).value?.isPremium ?? false;
+      
+      // Await the profile to be sure we aren't in Loading state
+      final userProfile = await ref.read(userProfileProvider.future);
+      final isPremium = userProfile?.isPremium ?? false;
       
       if (user != null && isPremium) {
-         ref.read(firestoreServiceProvider).syncCustomItem(user.uid, item);
+         await ref.read(firestoreServiceProvider).syncCustomItem(user.uid, item);
       }
     } catch (e) {
       // Silent fail for cloud sync (offline, etc)
