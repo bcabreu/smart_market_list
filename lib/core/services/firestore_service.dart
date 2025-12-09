@@ -250,6 +250,16 @@ class FirestoreService {
     });
   }
 
+  Future<void> removeMemberFromList(String familyId, String listId, String uid) async {
+    await _families
+        .doc(familyId)
+        .collection('shopping_lists')
+        .doc(listId)
+        .update({
+      'members': FieldValue.arrayRemove([uid])
+    });
+  }
+
   Stream<List<ShoppingList>> getSharedLists(String uid) {
     // Collection Group Query to find all lists where user is a member
     return _firestore

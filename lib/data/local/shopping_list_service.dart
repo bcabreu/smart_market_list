@@ -38,8 +38,24 @@ class ShoppingListService {
       // 2. Listen for Cloud Updates (Family Lists)
     if (_firestoreService != null) {
       _familySubscription = _firestoreService!.getFamilyLists(familyId).listen((cloudLists) async {
+        // Sync Updates
         for (var list in cloudLists) {
           await _box.put(list.id, list); 
+        }
+
+        // Handle Deletions (Local lists in this family that are NOT in cloud)
+        final cloudIds = cloudLists.map((l) => l.id).toSet();
+        final localLists = _box.values.toList();
+        
+        for (var local in localLists) {
+          // Check if it belongs to the current family (Primary)
+          // Treats null familyId as current/primary for backward compatibility if needed, 
+          // or strictly checks match if familyId is set.
+          final isAndShouldBeInFamily = local.familyId == familyId;
+          
+          if (isAndShouldBeInFamily && !cloudIds.contains(local.id)) {
+             await _box.delete(local.id);
+          }
         }
       }, onError: (e) {
         debugPrint('❌ Error syncing family lists: $e');
@@ -47,9 +63,24 @@ class ShoppingListService {
       
       // 3. Listen for Cloud Updates (Shared Lists)
       _sharedSubscription = _firestoreService!.getSharedLists(uid).listen((sharedLists) async {
+        // Sync Updates
         for (var list in sharedLists) {
              // Shared lists come with familyId populated from FirestoreService
              await _box.put(list.id, list);
+        }
+
+        // Handle Deletions (Local lists that are SHARED but NOT in cloud)
+        final cloudSharedIds = sharedLists.map((l) => l.id).toSet();
+        final localLists = _box.values.toList();
+
+        for (var local in localLists) {
+           // It is a shared list if its familyId is DIFFERENT from the current User's familyId
+           // (and isn't null, assuming null defaults to primary)
+           final isSharedList = local.familyId != null && local.familyId != familyId;
+           
+           if (isSharedList && !cloudSharedIds.contains(local.id)) {
+              await _box.delete(local.id);
+           }
         }
       }, onError: (e) {
         debugPrint('❌ Error syncing shared lists: $e');
@@ -87,13 +118,22 @@ class ShoppingListService {
     final list = _box.get(id);
     final targetFamilyId = list?.familyId ?? _currentFamilyId;
     
+    // Always remove from local box instantly
     await _box.delete(id);
     
     if (targetFamilyId != null && _firestoreService != null) {
-      // If it's a shared list, we might want to just "leave" instead of delete?
-      // But if we are owner (or have permission), we delete it.
-      // For now, assume delete means delete. Logic for "Leaving" reduces complexity.
-      await _firestoreService!.deleteList(targetFamilyId, id);
+      // Check ownership to decide: Delete vs Leave
+      final isOwner = targetFamilyId == _currentFamilyId;
+      
+      if (isOwner) {
+        // Owner: Hard delete
+        await _firestoreService!.deleteList(targetFamilyId, id);
+      } else {
+        // Guest: Just leave the list (remove from members)
+        if (_currentUid != null) {
+           await _firestoreService!.removeMemberFromList(targetFamilyId, id, _currentUid!);
+        }
+      }
     }
   }
 
