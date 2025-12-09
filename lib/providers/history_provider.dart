@@ -109,6 +109,29 @@ class HistoryNotifier extends StateNotifier<List<ShoppingItem>> {
       print('Cloud sync error for item: $e');
     }
   }
+
+  Future<void> remove(String itemName) async {
+    final box = Hive.box<ShoppingItem>('item_history');
+    final key = itemName.trim().toLowerCase();
+    
+    if (box.containsKey(key)) {
+      await box.delete(key);
+      state = box.values.toList();
+    }
+
+    // Cloud Sync (Premium) - Delete
+    try {
+      final user = ref.read(authServiceProvider).currentUser;
+      final userProfile = await ref.read(userProfileProvider.future);
+      final isPremium = userProfile?.isPremium ?? false;
+      
+      if (user != null && isPremium) {
+         await ref.read(firestoreServiceProvider).deleteCustomItem(user.uid, itemName);
+      }
+    } catch (e) {
+      print('Cloud sync error (delete) for item: $e');
+    }
+  }
   Future<void> clear() async {
     final box = Hive.box<ShoppingItem>('item_history');
     await box.clear();

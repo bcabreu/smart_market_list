@@ -388,4 +388,30 @@ class FirestoreService {
       }
     }).where((item) => item != null).cast<ShoppingItem>().toList();
   }
+
+  Future<void> deleteCustomItem(String uid, String itemName) async {
+    print('DEBUG: Attempting to delete custom item: "$itemName"');
+    
+    // 1. Try Deterministic ID (Standard path)
+    final docId = itemName.trim().toLowerCase().replaceAll(RegExp(r'\s+'), '_');
+    final docRef = _users.doc(uid).collection('custom_items').doc(docId);
+    
+    // We can just delete blindly, but let's check existence to debug or fall back
+    await docRef.delete(); // Delete if exists
+    
+    // 2. Fallback: Query by 'name' property (Catch-up for legacy/mismatched IDs)
+    // We query for the exact name strings
+    final querySnapshot = await _users
+        .doc(uid)
+        .collection('custom_items')
+        .where('name', isEqualTo: itemName)
+        .get();
+        
+    for (final doc in querySnapshot.docs) {
+      print('DEBUG: Found fallback item by name match. Deleting doc: ${doc.id}');
+      await doc.reference.delete();
+    }
+    
+    print('DEBUG: Custom item delete sequence complete.');
+  }
 }

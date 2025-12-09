@@ -359,7 +359,11 @@ class _AddItemModalState extends ConsumerState<AddItemModal> {
                                               if (!isSystem)
                                                 IconButton(
                                                   onPressed: () {
+                                                    // Hide from suggestions (Local preference)
                                                     ref.read(hiddenSuggestionsProvider.notifier).add(option.name);
+                                                    
+                                                    // Remove from history & Cloud (Permanent delete)
+                                                    ref.read(historyProvider.notifier).remove(option.name);
                                                   },
                                                   icon: Icon(Icons.delete_outline, color: Colors.red[300], size: 20),
                                                 ),
