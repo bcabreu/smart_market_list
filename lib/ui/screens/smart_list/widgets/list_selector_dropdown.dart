@@ -328,48 +328,56 @@ class _ListSelectorDropdownState extends ConsumerState<ListSelectorDropdown> {
                             final defaultListId = Hive.box('settings').get('default_list_id');
                             final isDefaultList = list.id == defaultListId;
                             
+                            // Permission Logic:
+                            // 1. Owner can always delete (isGuest == false)
+                            // 2. Family Member (Guest) can delete IF the list belongs to their family
+                            // 3. Shared List User (Guest) CANNOT delete (list.familyId != user.familyId)
+                            final userProfile = ref.watch(userProfileProvider).asData?.value;
+                            final isFamilyList = userProfile?.familyId != null && list.familyId == userProfile?.familyId;
+                            final canDelete = !isDefaultList && (!isGuest || isFamilyList);
+
                             return [
-                            PopupMenuItem(
-                              value: 'rename',
-                              child: Row(
-                                children: [
-                                  const Icon(Icons.edit_outlined, color: AppColors.primary, size: 20),
-                                  const SizedBox(width: 12),
-                                  Text(
-                                    AppLocalizations.of(context)!.renameList,
-                                    style: const TextStyle(color: AppColors.primary),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            PopupMenuItem(
-                              value: 'duplicate',
-                              child: Row(
-                                children: [
-                                  const Icon(Icons.copy_outlined, color: AppColors.primary, size: 20),
-                                  const SizedBox(width: 12),
-                                  Text(
-                                    AppLocalizations.of(context)!.duplicateList,
-                                    style: const TextStyle(color: AppColors.primary),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            if (!isGuest && !isDefaultList) // Hide Delete for Guests and Default List
                               PopupMenuItem(
-                                value: 'delete',
+                                value: 'rename',
                                 child: Row(
                                   children: [
-                                    const Icon(Icons.delete_outline, color: Colors.red, size: 20),
+                                    const Icon(Icons.edit_outlined, color: AppColors.primary, size: 20),
                                     const SizedBox(width: 12),
                                     Text(
-                                      AppLocalizations.of(context)!.deleteList,
-                                      style: const TextStyle(color: Colors.red),
+                                      AppLocalizations.of(context)!.renameList,
+                                      style: const TextStyle(color: AppColors.primary),
                                     ),
                                   ],
                                 ),
                               ),
-                          ];
+                              PopupMenuItem(
+                                value: 'duplicate',
+                                child: Row(
+                                  children: [
+                                    const Icon(Icons.copy_outlined, color: AppColors.primary, size: 20),
+                                    const SizedBox(width: 12),
+                                    Text(
+                                      AppLocalizations.of(context)!.duplicateList,
+                                      style: const TextStyle(color: AppColors.primary),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              if (canDelete) 
+                                PopupMenuItem(
+                                  value: 'delete',
+                                  child: Row(
+                                    children: [
+                                      const Icon(Icons.delete_outline, color: Colors.red, size: 20),
+                                      const SizedBox(width: 12),
+                                      Text(
+                                        AppLocalizations.of(context)!.deleteList,
+                                        style: const TextStyle(color: Colors.red),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                            ];
                           },
                         ),
                       ),

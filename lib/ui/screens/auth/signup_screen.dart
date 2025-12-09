@@ -7,6 +7,7 @@ import 'package:smart_market_list/ui/screens/auth/widgets/social_login_buttons.d
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:smart_market_list/providers/user_provider.dart';
+import 'package:smart_market_list/providers/user_profile_provider.dart';
 import 'package:smart_market_list/providers/auth_provider.dart';
 import 'package:smart_market_list/core/services/sharing_service.dart';
 import 'package:smart_market_list/providers/sharing_provider.dart';
@@ -84,6 +85,39 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
            }
          } catch (e) {
            print('Error joining pending list: $e');
+         }
+      } else if (SharingService.pendingFamilyId != null) {
+         // Pending Family Join (without list)
+         try {
+           final currentUser = ref.read(authServiceProvider).currentUser;
+           if (currentUser != null) {
+              await ref.read(sharingServiceProvider).joinFamily(
+                SharingService.pendingFamilyId!, 
+                currentUser.uid
+              );
+              
+              // Clear pending
+              SharingService.pendingFamilyId = null;
+              SharingService.pendingListId = null; // Just in case
+              
+              if (mounted) {
+                 ScaffoldMessenger.of(context).showSnackBar(
+                   const SnackBar(
+                     content: Text('Parabéns! Agora você faz parte da Família Premium! 🏠✨'),
+                     backgroundColor: Colors.green,
+                   ),
+                 );
+                 // Refresh profile
+                 ref.refresh(userProfileProvider);
+              }
+           }
+         } catch (e) {
+           print('Error joining pending family: $e');
+           if (mounted) {
+             ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Erro ao entrar na família: $e'), backgroundColor: Colors.red),
+             );
+           }
          }
       }
 

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:smart_market_list/core/theme/app_colors.dart';
 import 'package:smart_market_list/l10n/generated/app_localizations.dart';
 import 'package:smart_market_list/providers/user_provider.dart';
+import 'package:smart_market_list/providers/user_profile_provider.dart';
 
 import 'package:smart_market_list/ui/screens/auth/signup_screen.dart';
 import 'package:smart_market_list/ui/screens/auth/widgets/auth_text_field.dart';
@@ -235,6 +236,39 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                          }
                        } catch (e) {
                          print('Error joining pending list: $e');
+                       }
+                    } else if (SharingService.pendingFamilyId != null) {
+                        // Pending Family Join (without list)
+                       try {
+                         final currentUser = ref.read(authServiceProvider).currentUser;
+                         if (currentUser != null) {
+                            await ref.read(sharingServiceProvider).joinFamily(
+                              SharingService.pendingFamilyId!, 
+                              currentUser.uid
+                            );
+                            
+                            // Clear pending
+                            SharingService.pendingFamilyId = null;
+                            SharingService.pendingListId = null; // Just in case
+                            
+                            if (context.mounted) {
+                               ScaffoldMessenger.of(context).showSnackBar(
+                                 const SnackBar(
+                                   content: Text('Parabéns! Agora você faz parte da Família Premium! 🏠✨'),
+                                   backgroundColor: Colors.green,
+                                 ),
+                               );
+                               // Refresh profile to update UI immediately
+                               ref.refresh(userProfileProvider);
+                            }
+                         }
+                       } catch (e) {
+                         print('Error joining pending family: $e');
+                         if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                               SnackBar(content: Text('Erro ao entrar na família: $e'), backgroundColor: Colors.red),
+                            );
+                         }
                        }
                     }
                     
