@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:smart_market_list/core/theme/app_colors.dart';
 import 'package:smart_market_list/data/local/shopping_list_service.dart';
 import 'package:smart_market_list/data/models/shopping_item.dart';
@@ -46,13 +47,17 @@ class SmartListScreen extends ConsumerWidget {
                  
                   if (!isPremium) {
                     // Confirmed Guest: Auto-create immediately
-                    Future.microtask(() {
+                    Future.microtask(() async {
                        final newList = ShoppingList(
                           name: 'Compras do Mês',
                           emoji: '🛒',
                           budget: 500.0
                        );
-                       service.createList(newList);
+                       await service.createList(newList);
+                       // Set as default list
+                       if (Hive.isBoxOpen('settings')) {
+                         await Hive.box('settings').put('default_list_id', newList.id);
+                       }
                     });
                     return const Scaffold(body: Center(child: CircularProgressIndicator()));
                   } else {
@@ -70,13 +75,17 @@ class SmartListScreen extends ConsumerWidget {
                             ),
                              const SizedBox(height: 32),
                              TextButton.icon(
-                               onPressed: () {
+                               onPressed: () async {
                                   final newList = ShoppingList(
                                     name: 'Compras do Mês',
                                     emoji: '🛒',
                                     budget: 500.0,
                                   );
-                                  service.createList(newList);
+                                  await service.createList(newList);
+                                  // Set as default list
+                                  if (Hive.isBoxOpen('settings')) {
+                                    await Hive.box('settings').put('default_list_id', newList.id);
+                                  }
                                },
                                icon: const Icon(Icons.add),
                                label: const Text('Iniciar "Compras do Mês"'),

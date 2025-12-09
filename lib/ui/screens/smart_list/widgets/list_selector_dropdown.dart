@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:smart_market_list/core/theme/app_colors.dart';
 import 'package:smart_market_list/data/models/shopping_list.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:smart_market_list/providers/shopping_list_provider.dart';
 import 'package:smart_market_list/providers/user_profile_provider.dart';
@@ -324,6 +325,8 @@ class _ListSelectorDropdownState extends ConsumerState<ListSelectorDropdown> {
                           itemBuilder: (context) {
                             // Check Guest Status
                             final isGuest = ref.watch(isFamilyGuestProvider);
+                            final defaultListId = Hive.box('settings').get('default_list_id');
+                            final isDefaultList = list.id == defaultListId;
                             
                             return [
                             PopupMenuItem(
@@ -352,7 +355,7 @@ class _ListSelectorDropdownState extends ConsumerState<ListSelectorDropdown> {
                                 ],
                               ),
                             ),
-                            if (!isGuest) // Hide Delete for Guests
+                            if (!isGuest && !isDefaultList) // Hide Delete for Guests and Default List
                               PopupMenuItem(
                                 value: 'delete',
                                 child: Row(

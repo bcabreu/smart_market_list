@@ -44,6 +44,7 @@ void main() async {
   await Hive.openBox<ShoppingItem>('item_history');
   await Hive.openBox<double>('expense_goals');
   await Hive.openBox<List<String>>('list_shared_users');
+  await Hive.openBox('settings'); // Open settings box
   
   // Migration: Ensure all lists use ID as key
   final keys = box.keys.toList();
@@ -57,9 +58,22 @@ void main() async {
     }
   }
 
+  final settingsBox = Hive.box('settings');
+
   if (box.isEmpty) {
     final defaultList = ShoppingList(name: 'Compras do Mês', emoji: '🛒', budget: 500.0);
     await box.put(defaultList.id, defaultList);
+    await settingsBox.put('default_list_id', defaultList.id);
+  } else {
+    // Migration: If default_list_id is missing, try to find "Compras do Mês"
+    if (settingsBox.get('default_list_id') == null) {
+      try {
+        final defaultList = box.values.firstWhere((l) => l.name == 'Compras do Mês');
+        await settingsBox.put('default_list_id', defaultList.id);
+      } catch (_) {
+        // No default list found, maybe user renamed/deleted it. Do nothing.
+      }
+    }
   }
 
   // Migration: Populate item_history from existing lists
