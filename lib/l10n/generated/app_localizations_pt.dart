@@ -36,7 +36,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get premiumFeatures => 'Recursos Premium';
 
   @override
-  String get shareList => 'Compartilhar Lista';
+  String get shareList => 'Compartilhar App';
 
   @override
   String get shareListSubtitle => 'Sincronize com família';
@@ -817,4 +817,14 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get logoutMessageWarning =>
       'Você está usando a versão Gratuita. Ao sair, TODAS as suas listas e dados neste aparelho serão APAGADOS permanentemente. Deseja continuar?';
+
+  @override
+  String get familyPlanExclusiveFeature => 'Recurso exclusivo do Plano Família';
+
+  @override
+  String get familyPlanUpgradeDescription =>
+      'Com o plano Individual você tem acesso Premium, mas para compartilhar com alguém você precisa do Plano Família.';
+
+  @override
+  String get upgradeToFamily => 'Fazer Upgrade para Família';
 }

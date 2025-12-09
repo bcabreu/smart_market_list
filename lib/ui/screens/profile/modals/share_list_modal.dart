@@ -7,6 +7,7 @@ import 'package:smart_market_list/l10n/generated/app_localizations.dart';
 import 'package:smart_market_list/providers/user_profile_provider.dart';
 import 'package:smart_market_list/providers/sharing_provider.dart';
 import 'package:smart_market_list/core/services/firestore_service.dart';
+import 'package:smart_market_list/ui/common/modals/paywall_modal.dart';
 
 class ShareListModal extends ConsumerStatefulWidget {
   final String? familyId; // Optional: if null, we try to find it from user profile
@@ -144,43 +145,95 @@ class _ShareListModalState extends ConsumerState<ShareListModal> {
                   ),
                   const SizedBox(height: 32),
 
-                  // Action Button (Share Link)
-                  if (canAdd) 
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton.icon(
-                        onPressed: _shareLink,
-                        icon: const Icon(Icons.share, color: Colors.white),
-                        label: const Text('Convidar Familiar via Link'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primary,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                        ),
-                      ),
-                    )
-                  else
-                    Container(
-                      padding: const EdgeInsets.all(12),
+
+                  const SizedBox(height: 32),
+                  
+                  // Check Plan Type
+                  if (user.planType != 'premium_family') ...[
+                     Container(
+                      padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: Colors.orange.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Colors.orange.withOpacity(0.3)),
+                        color: Colors.amber.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: Colors.amber.withOpacity(0.5)),
                       ),
-                      child: Row(
+                      child: Column(
                         children: [
-                          const Icon(Icons.info_outline, color: Colors.orange),
-                          const SizedBox(width: 12),
-                          const Expanded(
-                            child: Text(
-                              'Limite de membros atingido (você + 1). Remova alguém para convidar novo membro.',
-                              style: TextStyle(fontSize: 12, color: Colors.orange),
+                          const Icon(Icons.lock_outline, size: 48, color: Colors.amber),
+                          const SizedBox(height: 12),
+                          Text(
+                            l10n.familyPlanExclusiveFeature,
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            l10n.familyPlanUpgradeDescription,
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(fontSize: 14),
+                          ),
+                          const SizedBox(height: 16),
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton(
+                              onPressed: () {
+                                Navigator.pop(context);
+                                showModalBottomSheet(
+                                  context: context,
+                                  isScrollControlled: true,
+                                  backgroundColor: Colors.transparent,
+                                  builder: (context) => const PaywallModal(), // User can select Family tab there
+                                );
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.amber[700],
+                                foregroundColor: Colors.white,
+                              ),
+                              child: Text(l10n.upgradeToFamily),
                             ),
                           ),
                         ],
                       ),
-                    ),
+                     ),
+                  ] else ...[ 
+                    // Action Button (Share Link)
+                    if (canAdd) 
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                          onPressed: _shareLink,
+                          icon: const Icon(Icons.share, color: Colors.white),
+                          label: const Text('Convidar Familiar via Link'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primary,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                          ),
+                        ),
+                      )
+                    else
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.orange.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.orange.withOpacity(0.3)),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.info_outline, color: Colors.orange),
+                            const SizedBox(width: 12),
+                            const Expanded(
+                              child: Text(
+                                'Limite de membros atingido (você + 1). Remova alguém para convidar novo membro.',
+                                style: TextStyle(fontSize: 12, color: Colors.orange),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                  ],
                   
                   const SizedBox(height: 32),
 

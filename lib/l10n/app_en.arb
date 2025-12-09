@@ -8,7 +8,7 @@
   "notificationsSubtitle": "Promotion alerts",
   "language": "Language",
   "premiumFeatures": "Premium Features",
-  "shareList": "Share List",
+  "shareList": "Share App",
   "shareListSubtitle": "Sync with family",
   "expenseCharts": "Expense Charts",
   "expenseChartsSubtitle": "Full monthly analysis",
@@ -257,5 +257,8 @@
   "invalidEmailError": "The email entered is invalid",
   "success": "Success",
   "logoutTitleWarning": "Warning: Data Loss",
-  "logoutMessageWarning": "You are on the Free plan. Logging out will PERMANENTLY ERASE all your lists on this device. Do you want to continue?"
+  "logoutMessageWarning": "You are on the Free plan. Logging out will PERMANENTLY ERASE all your lists on this device. Do you want to continue?",
+  "familyPlanExclusiveFeature": "Family Plan Exclusive Feature",
+  "familyPlanUpgradeDescription": "With the Individual plan you have Premium access, but to share with someone you need the Family Plan.",
+  "upgradeToFamily": "Upgrade to Family"
 }

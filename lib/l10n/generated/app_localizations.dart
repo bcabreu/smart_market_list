@@ -155,7 +155,7 @@ abstract class AppLocalizations {
   /// No description provided for @shareList.
   ///
   /// In en, this message translates to:
-  /// **'Share List'**
+  /// **'Share App'**
   String get shareList;
 
   /// No description provided for @shareListSubtitle.
@@ -1645,6 +1645,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'You are on the Free plan. Logging out will PERMANENTLY ERASE all your lists on this device. Do you want to continue?'**
   String get logoutMessageWarning;
+
+  /// No description provided for @familyPlanExclusiveFeature.
+  ///
+  /// In en, this message translates to:
+  /// **'Family Plan Exclusive Feature'**
+  String get familyPlanExclusiveFeature;
+
+  /// No description provided for @familyPlanUpgradeDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'With the Individual plan you have Premium access, but to share with someone you need the Family Plan.'**
+  String get familyPlanUpgradeDescription;
+
+  /// No description provided for @upgradeToFamily.
+  ///
+  /// In en, this message translates to:
+  /// **'Upgrade to Family'**
+  String get upgradeToFamily;
 }
 
 class _AppLocalizationsDelegate

@@ -8,7 +8,7 @@
   "notificationsSubtitle": "Alertas de promoção",
   "language": "Idioma",
   "premiumFeatures": "Recursos Premium",
-  "shareList": "Compartilhar Lista",
+  "shareList": "Compartilhar App",
   "shareListSubtitle": "Sincronize com família",
   "expenseCharts": "Gráficos de Gastos",
   "expenseChartsSubtitle": "Análise mensal completa",
@@ -257,5 +257,8 @@
   "invalidEmailError": "O e-mail digitado não é válido",
   "success": "Sucesso",
   "logoutTitleWarning": "Atenção: Perda de Dados",
-  "logoutMessageWarning": "Você está usando a versão Gratuita. Ao sair, TODAS as suas listas e dados neste aparelho serão APAGADOS permanentemente. Deseja continuar?"
+  "logoutMessageWarning": "Você está usando a versão Gratuita. Ao sair, TODAS as suas listas e dados neste aparelho serão APAGADOS permanentemente. Deseja continuar?",
+  "familyPlanExclusiveFeature": "Recurso exclusivo do Plano Família",
+  "familyPlanUpgradeDescription": "Com o plano Individual você tem acesso Premium, mas para compartilhar com alguém você precisa do Plano Família.",
+  "upgradeToFamily": "Fazer Upgrade para Família"
 }

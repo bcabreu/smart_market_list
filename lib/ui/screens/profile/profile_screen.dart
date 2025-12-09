@@ -29,6 +29,7 @@ import 'package:smart_market_list/providers/recipes_provider.dart';
 import 'package:smart_market_list/providers/auth_provider.dart';
 
 import 'package:smart_market_list/providers/profile_provider.dart';
+import 'package:smart_market_list/providers/user_profile_provider.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -192,10 +193,15 @@ class ProfileScreen extends ConsumerWidget {
         : <String>[];
     final sharedCount = sharedUsers.length;
 
+    final userProfile = ref.watch(userProfileProvider).value;
+    final isFamilyPlan = userProfile?.planType == 'premium_family';
+
     return Scaffold(
       body: SafeArea(
         child: Column(
           children: [
+            // ... (previous code)
+
             // Fixed Header
             const ProfileHeader(),
             
@@ -268,14 +274,12 @@ class ProfileScreen extends ConsumerWidget {
                                   ? 'Compartilhado com $sharedCount pessoa${sharedCount > 1 ? 's' : ''}' 
                                   : 'Shared with $sharedCount person${sharedCount > 1 ? 's' : ''}')
                               : l10n.shareListSubtitle,
-                          isLocked: !isPremium,
-                          onTap: !isPremium 
-                              ? () => _showPaywall(context) 
-                              : () => showModalBottomSheet(
+                          isLocked: !isFamilyPlan, 
+                          onTap: () => showModalBottomSheet(
                                   context: context,
                                   isScrollControlled: true,
                                   backgroundColor: Colors.transparent,
-                                    builder: (context) => const ShareListModal(),
+                                  builder: (context) => const ShareListModal(),
                                 ),
                         ),
                         SettingsTile(

@@ -36,7 +36,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get premiumFeatures => 'Premium Features';
 
   @override
-  String get shareList => 'Share List';
+  String get shareList => 'Share App';
 
   @override
   String get shareListSubtitle => 'Sync with family';
@@ -816,4 +816,14 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get logoutMessageWarning =>
       'You are on the Free plan. Logging out will PERMANENTLY ERASE all your lists on this device. Do you want to continue?';
+
+  @override
+  String get familyPlanExclusiveFeature => 'Family Plan Exclusive Feature';
+
+  @override
+  String get familyPlanUpgradeDescription =>
+      'With the Individual plan you have Premium access, but to share with someone you need the Family Plan.';
+
+  @override
+  String get upgradeToFamily => 'Upgrade to Family';
 }

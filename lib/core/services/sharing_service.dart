@@ -37,7 +37,11 @@ class SharingService {
 
         // Case 2: Join List (Legacy/Standard)
         if (listId != null && familyId != null) {
-          onJoinList(listId, familyId);
+          if (listId == 'invite' || action == 'join_family') {
+             onJoinFamily(familyId);
+          } else {
+             onJoinList(listId, familyId);
+          }
         }
       }
     }, onError: (err) {
@@ -60,7 +64,9 @@ class SharingService {
 
   // Share Family Access
   Future<void> shareFamilyAccess(String familyId, String ownerName) async {
-    final String deepLink = 'https://smart-market-list-82bf7.web.app/invite?familyId=$familyId&action=join_family';
+    // We add listId=invite to mimic the structure of regular list sharing links
+    // This often helps with Android/iOS intent filters that might be caching specific patterns
+    final String deepLink = 'https://smart-market-list-82bf7.web.app/share?listId=invite&familyId=$familyId&action=join_family';
     _shareMessage(
       '🏠 *Convite para Família Premium*\n$ownerName te convidou para fazer parte da família no Smart Market List!\n\nVocê terá acesso Premium e todas as listas serão compartilhadas.',
       deepLink,
