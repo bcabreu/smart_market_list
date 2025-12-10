@@ -28,8 +28,22 @@ class ShoppingNotesService {
     // 2. Listen for Cloud Updates
     if (_firestoreService != null) {
       _cloudSubscription = _firestoreService!.getFamilyNotes(familyId).listen((cloudNotes) async {
+        // 1. ADD / UPDATE: Sync INCOMING notes from Cloud -> Local
+        final cloudNoteIds = <String>{};
         for (var note in cloudNotes) {
+          cloudNoteIds.add(note.id);
           await _box.put(note.id, note);
+        }
+
+        // 2. DELETE: Sync REMOVALS from Cloud -> Local
+        // If a local note is NOT present in the incoming cloud list, it means it was deleted remotely.
+        // We must delete it locally to stay in sync.
+        final allLocalNotes = _box.values.toList();
+        for (var localNote in allLocalNotes) {
+          if (!cloudNoteIds.contains(localNote.id)) {
+             print('🗑️ Sync Deletion: Removing local note ${localNote.id} (not in cloud)');
+             await _box.delete(localNote.id);
+          }
         }
       });
     }
