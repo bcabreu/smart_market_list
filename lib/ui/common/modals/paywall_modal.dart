@@ -118,10 +118,10 @@ class _PaywallModalState extends ConsumerState<PaywallModal> {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          _buildToggleButton('Individual', !_isFamilyPlan, () {
+                          _buildToggleButton(l10n.planToggleIndividual, !_isFamilyPlan, () {
                             setState(() => _isFamilyPlan = false);
                           }),
-                          _buildToggleButton('Família', _isFamilyPlan, () {
+                          _buildToggleButton(l10n.planToggleFamily, _isFamilyPlan, () {
                             setState(() => _isFamilyPlan = true);
                           }),
                         ],
@@ -149,15 +149,18 @@ class _PaywallModalState extends ConsumerState<PaywallModal> {
                   
                   // Features List
                   if (_isFamilyPlan) ...[
-                     _buildFeatureCard(l10n.featureFamilyShare, l10n.featureFamilyShare, icon: Icons.group_add, color: const Color(0xFFFF4081), cardColor: cardColor),
+                     _buildFeatureCard(l10n.featureAllBenefits, l10n.featureAllBenefitsSubtitle, icon: Icons.star, color: Colors.purpleAccent, cardColor: cardColor),
+                     _buildFeatureCard(l10n.featureFamilyShare, l10n.shareAccessSubtitle, icon: Icons.group_add, color: const Color(0xFFFF4081), cardColor: cardColor),
                      _buildFeatureCard(l10n.featureAutoSync, l10n.shareListSubtitle, icon: Icons.sync, color: Colors.blueAccent, cardColor: cardColor),
-                     _buildFeatureCard(l10n.featurePremiumGuest, l10n.guestInviteMessage, icon: Icons.person_add, color: Colors.greenAccent, cardColor: cardColor),
+                     _buildFeatureCard(l10n.featurePremiumGuest, l10n.featurePremiumGuestSubtitle, icon: Icons.person_add, color: Colors.greenAccent, cardColor: cardColor),
                   ] else ...[
-                     _buildFeatureCard(l10n.featureUnlimitedLists, l10n.featureUnlimitedLists, icon: Icons.storefront, color: const Color(0xFF4DB6AC), cardColor: cardColor),
+                     _buildFeatureCard(l10n.featureReceiptScanning, l10n.featureReceiptScanningSubtitle, icon: Icons.receipt_long, color: Colors.orangeAccent, cardColor: cardColor),
+                     _buildFeatureCard(l10n.featureRealTimeShare, l10n.featureRealTimeShareSubtitle, icon: Icons.share, color: const Color(0xFF4DB6AC), cardColor: cardColor),
+                     _buildFeatureCard(l10n.featureNoAds, l10n.featureNoAds, icon: Icons.block, color: Colors.redAccent, cardColor: cardColor),
                      _buildFeatureCard(l10n.featureCharts, l10n.expenseChartsSubtitle, icon: Icons.show_chart, color: const Color(0xFF4FC3F7), cardColor: cardColor),
                      _buildFeatureCard(l10n.featureReports, l10n.exportReportsSubtitle, icon: Icons.description_outlined, color: const Color(0xFFFFF176), cardColor: cardColor),
+                     _buildFeatureCard(l10n.featureCloudBackup, l10n.featureCloudBackupSubtitle, icon: Icons.security, color: const Color(0xFFAED581), cardColor: cardColor),
                   ],
-                   _buildFeatureCard(l10n.featureCloudBackup, l10n.featureCloudBackupSubtitle, icon: Icons.security, color: const Color(0xFFAED581), cardColor: cardColor),
 
                   const SizedBox(height: 32),
 
@@ -181,7 +184,7 @@ class _PaywallModalState extends ConsumerState<PaywallModal> {
                         child: _buildPlanOption(
                           title: l10n.planMonthly,
                           price: _isFamilyPlan ? l10n.planFamilyMonthlyPrice.split('/')[0] : l10n.planMonthlyPrice,
-                          subtitle: l10n.pricePerMonth(_isFamilyPlan ? '14,90' : '9,90'),
+                          subtitle: _isFamilyPlan ? l10n.planFamilyMonthlySubtitle : l10n.planMonthlySubtitle,
                           yearPrice: '',
                           isSelected: _selectedPlanIndex == 0,
                           onTap: () => setState(() => _selectedPlanIndex = 0),
@@ -193,8 +196,8 @@ class _PaywallModalState extends ConsumerState<PaywallModal> {
                       Expanded(
                         child: _buildPlanOption(
                           title: l10n.planAnnual,
-                          price: _isFamilyPlan ? 'R\$ 10,83' : 'R\$ 5,90',
-                          subtitle: l10n.pricePerMonth(_isFamilyPlan ? '10,83' : '5,90'),
+                          price: _isFamilyPlan ? l10n.planFamilyAnnualBreakdown : l10n.planAnnualBreakdown,
+                          subtitle: _isFamilyPlan ? l10n.planFamilyAnnualSubtitle : l10n.planAnnualSubtitle,
                           yearPrice: _isFamilyPlan ? l10n.planFamilyAnnualPrice : l10n.planAnnualPrice,
                           isSelected: _selectedPlanIndex == 1,
                           badgeText: '-40%',
@@ -206,6 +209,34 @@ class _PaywallModalState extends ConsumerState<PaywallModal> {
                     ],
                   ),
                   
+                  const SizedBox(height: 16),
+
+                  // Savings Badge
+                  if (_selectedPlanIndex == 1)
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      decoration: BoxDecoration(
+                        color: cardColor,
+                        borderRadius: BorderRadius.circular(100),
+                        border: Border.all(color: const Color(0xFFFFA726)), // Orange border
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Text('💰 ', style: TextStyle(fontSize: 16)),
+                          Text(
+                            _isFamilyPlan ? l10n.saveYiarlyAmountFamily : l10n.saveYiarlyAmount,
+                            style: const TextStyle(
+                              color: Color(0xFFFFA726),
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
                   const SizedBox(height: 24),
 
                   // CTA Button
@@ -234,7 +265,7 @@ class _PaywallModalState extends ConsumerState<PaywallModal> {
                               const Icon(Icons.emoji_events_outlined, color: Colors.white, size: 24),
                               const SizedBox(width: 8),
                               Text(
-                                l10n.subscribeButton(_getButtonPrice()),
+                                l10n.subscribeButton(_getButtonPrice(l10n)),
                                 style: const TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.bold,
@@ -423,13 +454,14 @@ class _PaywallModalState extends ConsumerState<PaywallModal> {
     );
   }
 
-  String _getButtonPrice() {
+  // Helper updated to take l10n
+  String _getButtonPrice(AppLocalizations l10n) {
     if (_isFamilyPlan) {
-      if (_selectedPlanIndex == 1) return '10,83/mês';
-      return '14,90/mês';
+      if (_selectedPlanIndex == 1) return l10n.planFamilyAnnualSubtitle;
+      return l10n.planFamilyMonthlySubtitle;
     } else {
-      if (_selectedPlanIndex == 1) return '5,90/mês';
-      return '9,90/mês';
+      if (_selectedPlanIndex == 1) return l10n.planAnnualSubtitle;
+      return l10n.planMonthlySubtitle;
     }
   }
 

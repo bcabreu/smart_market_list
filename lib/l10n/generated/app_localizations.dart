@@ -1895,14 +1895,50 @@ abstract class AppLocalizations {
   /// No description provided for @featureNoAds.
   ///
   /// In en, this message translates to:
-  /// **'No Ads'**
+  /// **'No Ads (Clean browsing)'**
   String get featureNoAds;
 
   /// No description provided for @featureUnlimitedLists.
   ///
   /// In en, this message translates to:
-  /// **'Unlimited Notes & Lists'**
+  /// **'Unlimited lists & items'**
   String get featureUnlimitedLists;
+
+  /// No description provided for @featureAllBenefits.
+  ///
+  /// In en, this message translates to:
+  /// **'All Individual Plan benefits'**
+  String get featureAllBenefits;
+
+  /// No description provided for @featureAllBenefitsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No ads, receipt scanning & more'**
+  String get featureAllBenefitsSubtitle;
+
+  /// No description provided for @featureRealTimeShare.
+  ///
+  /// In en, this message translates to:
+  /// **'Real-time Sharing'**
+  String get featureRealTimeShare;
+
+  /// No description provided for @featureRealTimeShareSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Invite and edit lists with anyone'**
+  String get featureRealTimeShareSubtitle;
+
+  /// No description provided for @featureReceiptScanning.
+  ///
+  /// In en, this message translates to:
+  /// **'Receipt Import'**
+  String get featureReceiptScanning;
+
+  /// No description provided for @featureReceiptScanningSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan and save your receipts'**
+  String get featureReceiptScanningSubtitle;
 
   /// No description provided for @featureComparePrices.
   ///
@@ -1925,7 +1961,7 @@ abstract class AppLocalizations {
   /// No description provided for @featureFamilyShare.
   ///
   /// In en, this message translates to:
-  /// **'Share List'**
+  /// **'Share Subscription'**
   String get featureFamilyShare;
 
   /// No description provided for @featureAutoSync.
@@ -1937,8 +1973,14 @@ abstract class AppLocalizations {
   /// No description provided for @featurePremiumGuest.
   ///
   /// In en, this message translates to:
-  /// **'Premium access for guest'**
+  /// **'Guest becomes Premium too'**
   String get featurePremiumGuest;
+
+  /// No description provided for @featurePremiumGuestSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Invited person gets full access to all features'**
+  String get featurePremiumGuestSubtitle;
 
   /// No description provided for @featureCloudBackup.
   ///
@@ -1987,6 +2029,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'\$ 4.99/month'**
   String get planFamilyMonthlyPrice;
+
+  /// No description provided for @planAnnualBreakdown.
+  ///
+  /// In en, this message translates to:
+  /// **'\$ 1.66'**
+  String get planAnnualBreakdown;
+
+  /// No description provided for @planFamilyAnnualBreakdown.
+  ///
+  /// In en, this message translates to:
+  /// **'\$ 2.50'**
+  String get planFamilyAnnualBreakdown;
+
+  /// No description provided for @planMonthlySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'\$ 2.99/mo'**
+  String get planMonthlySubtitle;
+
+  /// No description provided for @planFamilyMonthlySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'\$ 4.99/mo'**
+  String get planFamilyMonthlySubtitle;
+
+  /// No description provided for @planToggleIndividual.
+  ///
+  /// In en, this message translates to:
+  /// **'Individual'**
+  String get planToggleIndividual;
+
+  /// No description provided for @planToggleFamily.
+  ///
+  /// In en, this message translates to:
+  /// **'Family'**
+  String get planToggleFamily;
+
+  /// No description provided for @planAnnualSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'\$ 1.66/mo'**
+  String get planAnnualSubtitle;
+
+  /// No description provided for @planFamilyAnnualSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'\$ 2.50/mo'**
+  String get planFamilyAnnualSubtitle;
 
   /// No description provided for @pricePerMonth.
   ///
@@ -2047,6 +2137,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Save \$ 16.00 per year!'**
   String get saveYiarlyAmount;
+
+  /// No description provided for @saveYiarlyAmountFamily.
+  ///
+  /// In en, this message translates to:
+  /// **'Save \$ 30.00 per year!'**
+  String get saveYiarlyAmountFamily;
 
   /// No description provided for @subscribeButton.
   ///

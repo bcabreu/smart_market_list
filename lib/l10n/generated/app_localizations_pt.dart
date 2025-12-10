@@ -971,10 +971,30 @@ class AppLocalizationsPt extends AppLocalizations {
       'Entre na minha lista de compras compartilhada!';
 
   @override
-  String get featureNoAds => 'Sem anúncios';
+  String get featureNoAds => 'Sem anúncios (Navegação limpa)';
 
   @override
-  String get featureUnlimitedLists => 'Notas e Listas ilimitados';
+  String get featureUnlimitedLists => 'Listas e itens ilimitados';
+
+  @override
+  String get featureAllBenefits => 'Todos os benefícios do plano Individual';
+
+  @override
+  String get featureAllBenefitsSubtitle => 'Sem anúncios, escaneamento e mais';
+
+  @override
+  String get featureRealTimeShare => 'Compartilhe em tempo real';
+
+  @override
+  String get featureRealTimeShareSubtitle =>
+      'Convide e edite listas com qualquer pessoa';
+
+  @override
+  String get featureReceiptScanning => 'Importação de Notas Fiscais';
+
+  @override
+  String get featureReceiptScanningSubtitle =>
+      'Escaneie e salve seus comprovantes';
 
   @override
   String get featureComparePrices => 'Comparar preços entre mercados';
@@ -986,13 +1006,17 @@ class AppLocalizationsPt extends AppLocalizations {
   String get featureReports => 'Exportar Relatórios';
 
   @override
-  String get featureFamilyShare => 'Compartilhar Lista';
+  String get featureFamilyShare => 'Compartilhar Assinatura';
 
   @override
   String get featureAutoSync => 'Sincronização com família';
 
   @override
-  String get featurePremiumGuest => 'Acesso Premium para o convidado';
+  String get featurePremiumGuest => 'Convidado também vira Premium';
+
+  @override
+  String get featurePremiumGuestSubtitle =>
+      'A pessoa convidada terá acesso total a todos os recursos';
 
   @override
   String get featureCloudBackup => 'Backup em Nuvem';
@@ -1017,6 +1041,30 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get planFamilyMonthlyPrice => 'R\$ 14,90/mês';
+
+  @override
+  String get planAnnualBreakdown => 'R\$ 5,90';
+
+  @override
+  String get planFamilyAnnualBreakdown => 'R\$ 10,83';
+
+  @override
+  String get planMonthlySubtitle => 'R\$ 9,90/mês';
+
+  @override
+  String get planFamilyMonthlySubtitle => 'R\$ 14,90/mês';
+
+  @override
+  String get planToggleIndividual => 'Individual';
+
+  @override
+  String get planToggleFamily => 'Família';
+
+  @override
+  String get planAnnualSubtitle => 'R\$ 5,90/mês';
+
+  @override
+  String get planFamilyAnnualSubtitle => 'R\$ 10,83/mês';
 
   @override
   String pricePerMonth(Object price) {
@@ -1050,6 +1098,9 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get saveYiarlyAmount => 'Economize R\$ 48,00 por ano!';
+
+  @override
+  String get saveYiarlyAmountFamily => 'Economize R\$ 48,90 por ano!';
 
   @override
   String subscribeButton(Object price) {
