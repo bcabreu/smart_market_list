@@ -28,7 +28,7 @@ class _ShareListModalState extends ConsumerState<ShareListModal> {
     if (user == null || user.familyId == null) return;
     
     final familyId = widget.familyId ?? user.familyId!;
-    final ownerName = user.name ?? 'Seu familiar';
+    final ownerName = user.name ?? l10n.yourFamilyMember;
 
     try {
       // Use SharingService to generate and share the link
@@ -36,7 +36,7 @@ class _ShareListModalState extends ConsumerState<ShareListModal> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro ao compartilhar: $e'), backgroundColor: Colors.red),
+          SnackBar(content: Text(l10n.errorSharing(e.toString())), backgroundColor: Colors.red),
         );
       }
     }
@@ -62,13 +62,13 @@ class _ShareListModalState extends ConsumerState<ShareListModal> {
       ),
       error: (e, st) => Padding(
         padding: const EdgeInsets.all(24), 
-        child: Text('Erro ao carregar perfil: $e')
+        child: Text(l10n.errorLoadingProfile(e.toString()))
       ),
       data: (user) {
         if (user == null || user.familyId == null) {
-          return const Padding(
-            padding: EdgeInsets.all(24),
-            child: Text('Você precisa criar uma família primeiro.'),
+          return Padding(
+            padding: const EdgeInsets.all(24),
+            child: Text(l10n.youNeedToCreateFamily),
           );
         }
         
@@ -117,14 +117,14 @@ class _ShareListModalState extends ConsumerState<ShareListModal> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Família Premium', 
+                              l10n.premiumFamilyTitle, 
                               style: const TextStyle(
                                 fontSize: 20,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
                             Text(
-                              'Compartilhe acesso com 1 pessoa', 
+                              l10n.shareAccessSubtitle, 
                               style: TextStyle(
                                 fontSize: 14,
                                 color: isDark ? Colors.grey[400] : Colors.grey[600],
@@ -150,51 +150,82 @@ class _ShareListModalState extends ConsumerState<ShareListModal> {
                   
                   // Check Plan Type
                   if (user.planType != 'premium_family') ...[
-                     Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.amber.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: Colors.amber.withOpacity(0.5)),
-                      ),
-                      child: Column(
-                        children: [
-                          const Icon(Icons.lock_outline, size: 48, color: Colors.amber),
-                          const SizedBox(height: 12),
-                          Text(
-                            l10n.familyPlanExclusiveFeature,
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                     // Logic: If user is NOT premium_family, but HAS a familyId, then they are a GUEST.
+                     // Guests cannot invite others.
+                     if (user.familyId != null) ...[
+                        Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: Colors.blue.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: Colors.blue.withOpacity(0.3)),
                           ),
-                          const SizedBox(height: 8),
-                          Text(
-                            l10n.familyPlanUpgradeDescription,
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(fontSize: 14),
-                          ),
-                          const SizedBox(height: 16),
-                          SizedBox(
-                            width: double.infinity,
-                            child: ElevatedButton(
-                              onPressed: () {
-                                Navigator.pop(context);
-                                showModalBottomSheet(
-                                  context: context,
-                                  isScrollControlled: true,
-                                  backgroundColor: Colors.transparent,
-                                  builder: (context) => const PaywallModal(), // User can select Family tab there
-                                );
-                              },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.amber[700],
-                                foregroundColor: Colors.white,
+                          child: Column(
+                            children: [
+                              const Icon(Icons.shield_outlined, size: 48, color: Colors.blue),
+                              const SizedBox(height: 12),
+                              Text(
+                                l10n.guestInviteTitle, // "Apenas o Dono pode convidar"
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                               ),
-                              child: Text(l10n.upgradeToFamily),
-                            ),
+                              const SizedBox(height: 8),
+                              Text(
+                                l10n.guestInviteMessage, // "Como membro..."
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(fontSize: 14),
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
-                     ),
+                        ),
+                     ] else ...[
+                       // Truly Individual plan (upsell)
+                        Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: Colors.amber.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: Colors.amber.withOpacity(0.5)),
+                          ),
+                          child: Column(
+                            children: [
+                              const Icon(Icons.lock_outline, size: 48, color: Colors.amber),
+                              const SizedBox(height: 12),
+                              Text(
+                                l10n.familyPlanExclusiveFeature,
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                l10n.familyPlanUpgradeDescription,
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(fontSize: 14),
+                              ),
+                              const SizedBox(height: 16),
+                              SizedBox(
+                                width: double.infinity,
+                                child: ElevatedButton(
+                                  onPressed: () {
+                                    Navigator.pop(context);
+                                    showModalBottomSheet(
+                                      context: context,
+                                      isScrollControlled: true,
+                                      backgroundColor: Colors.transparent,
+                                      builder: (context) => const PaywallModal(), // User can select Family tab there
+                                    );
+                                  },
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.amber[700],
+                                    foregroundColor: Colors.white,
+                                  ),
+                                  child: Text(l10n.upgradeToFamily),
+                                ),
+                              ),
+                            ],
+                          ),
+                         ),
+                     ]
                   ] else ...[ 
                     // Action Button (Share Link)
                     if (canAdd) 
@@ -203,7 +234,7 @@ class _ShareListModalState extends ConsumerState<ShareListModal> {
                         child: ElevatedButton.icon(
                           onPressed: _shareLink,
                           icon: const Icon(Icons.share, color: Colors.white),
-                          label: const Text('Convidar Familiar via Link'),
+                          label: Text(l10n.inviteViaLink),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppColors.primary,
                             foregroundColor: Colors.white,
@@ -224,10 +255,10 @@ class _ShareListModalState extends ConsumerState<ShareListModal> {
                           children: [
                             const Icon(Icons.info_outline, color: Colors.orange),
                             const SizedBox(width: 12),
-                            const Expanded(
+                            Expanded(
                               child: Text(
-                                'Limite de membros atingido (você + 1). Remova alguém para convidar novo membro.',
-                                style: TextStyle(fontSize: 12, color: Colors.orange),
+                                l10n.memberLimitReached,
+                                style: const TextStyle(fontSize: 12, color: Colors.orange),
                               ),
                             ),
                           ],
@@ -239,7 +270,7 @@ class _ShareListModalState extends ConsumerState<ShareListModal> {
 
                   // Members List
                   Text(
-                    'Membros da Família',
+                    l10n.familyMembersTitle,
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
@@ -249,9 +280,9 @@ class _ShareListModalState extends ConsumerState<ShareListModal> {
                   const SizedBox(height: 12),
                   
                   if (otherMembers.isEmpty)
-                     const Padding(
-                       padding: EdgeInsets.symmetric(vertical: 8.0),
-                       child: Text('Nenhum membro convidado ainda.', style: TextStyle(color: Colors.grey)),
+                     Padding(
+                       padding: const EdgeInsets.symmetric(vertical: 8.0),
+                       child: Text(l10n.noMembersYet, style: const TextStyle(color: Colors.grey)),
                      ),
 
                   ...otherMembers.map((member) {
@@ -286,7 +317,7 @@ class _ShareListModalState extends ConsumerState<ShareListModal> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  member['name'] ?? 'Familiar',
+                                  member['name'] ?? l10n.unknownMember,
                                   style: const TextStyle(fontWeight: FontWeight.w500),
                                 ),
                                 Text(

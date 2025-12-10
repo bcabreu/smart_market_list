@@ -275,5 +275,18 @@
   "requiresRecentLogin": "For your security, please log in again before deleting your account.",
   "emailAlreadyInUse": "This email is already in use by another account.",
   "inviteInvalidOrExpired": "This invite link is invalid or has already been used.",
-  "familyAlreadyHasMember": "This family is full."
+  "familyAlreadyHasMember": "This family is full.",
+  "guestInviteTitle": "Only Owner can invite",
+  "guestInviteMessage": "As a family member, you have Premium access, but only the plan owner can add or remove people.",
+  "premiumFamilyTitle": "Premium Family",
+  "shareAccessSubtitle": "Share access with 1 person",
+  "inviteViaLink": "Invite Family Member via Link",
+  "memberLimitReached": "Member limit reached (you + 1). Remove someone to invite a new member.",
+  "familyMembersTitle": "Family Members",
+  "noMembersYet": "No members invited yet.",
+  "yourFamilyMember": "Your family member",
+  "youNeedToCreateFamily": "You need to create a family first.",
+  "errorLoadingProfile": "Error loading profile: {error}",
+  "errorSharing": "Error sharing: {error}",
+  "unknownMember": "Unknown"
 }

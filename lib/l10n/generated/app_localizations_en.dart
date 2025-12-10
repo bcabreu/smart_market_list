@@ -886,4 +886,49 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get familyAlreadyHasMember => 'This family is full.';
+
+  @override
+  String get guestInviteTitle => 'Only Owner can invite';
+
+  @override
+  String get guestInviteMessage =>
+      'As a family member, you have Premium access, but only the plan owner can add or remove people.';
+
+  @override
+  String get premiumFamilyTitle => 'Premium Family';
+
+  @override
+  String get shareAccessSubtitle => 'Share access with 1 person';
+
+  @override
+  String get inviteViaLink => 'Invite Family Member via Link';
+
+  @override
+  String get memberLimitReached =>
+      'Member limit reached (you + 1). Remove someone to invite a new member.';
+
+  @override
+  String get familyMembersTitle => 'Family Members';
+
+  @override
+  String get noMembersYet => 'No members invited yet.';
+
+  @override
+  String get yourFamilyMember => 'Your family member';
+
+  @override
+  String get youNeedToCreateFamily => 'You need to create a family first.';
+
+  @override
+  String errorLoadingProfile(Object error) {
+    return 'Error loading profile: $error';
+  }
+
+  @override
+  String errorSharing(Object error) {
+    return 'Error sharing: $error';
+  }
+
+  @override
+  String get unknownMember => 'Unknown';
 }

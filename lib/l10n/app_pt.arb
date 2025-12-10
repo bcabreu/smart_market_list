@@ -275,5 +275,18 @@
   "requiresRecentLogin": "Para sua segurança, faça login novamente antes de excluir a conta.",
   "emailAlreadyInUse": "Este email já está sendo usado por outra conta.",
   "inviteInvalidOrExpired": "Este link expirou ou já foi usado. Peça para o dono da família gerar um NOVO link.",
-  "familyAlreadyHasMember": "Esta família está cheia."
+  "familyAlreadyHasMember": "Esta família está cheia.",
+  "guestInviteTitle": "Apenas o Dono pode convidar",
+  "guestInviteMessage": "Como membro da família, você tem acesso Premium, mas apenas o dono do plano pode adicionar ou remover pessoas.",
+  "premiumFamilyTitle": "Família Premium",
+  "shareAccessSubtitle": "Compartilhe acesso com 1 pessoa",
+  "inviteViaLink": "Convidar Familiar via Link",
+  "memberLimitReached": "Limite de membros atingido (você + 1). Remova alguém para convidar novo membro.",
+  "familyMembersTitle": "Membros da Família",
+  "noMembersYet": "Nenhum membro convidado ainda.",
+  "yourFamilyMember": "Seu familiar",
+  "youNeedToCreateFamily": "Você precisa criar uma família primeiro.",
+  "errorLoadingProfile": "Erro ao carregar perfil: {error}",
+  "errorSharing": "Erro ao compartilhar: {error}",
+  "unknownMember": "Desconhecido"
 }

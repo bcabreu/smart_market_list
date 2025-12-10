@@ -1753,6 +1753,84 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This family is full.'**
   String get familyAlreadyHasMember;
+
+  /// No description provided for @guestInviteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Only Owner can invite'**
+  String get guestInviteTitle;
+
+  /// No description provided for @guestInviteMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'As a family member, you have Premium access, but only the plan owner can add or remove people.'**
+  String get guestInviteMessage;
+
+  /// No description provided for @premiumFamilyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Premium Family'**
+  String get premiumFamilyTitle;
+
+  /// No description provided for @shareAccessSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Share access with 1 person'**
+  String get shareAccessSubtitle;
+
+  /// No description provided for @inviteViaLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Invite Family Member via Link'**
+  String get inviteViaLink;
+
+  /// No description provided for @memberLimitReached.
+  ///
+  /// In en, this message translates to:
+  /// **'Member limit reached (you + 1). Remove someone to invite a new member.'**
+  String get memberLimitReached;
+
+  /// No description provided for @familyMembersTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Family Members'**
+  String get familyMembersTitle;
+
+  /// No description provided for @noMembersYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No members invited yet.'**
+  String get noMembersYet;
+
+  /// No description provided for @yourFamilyMember.
+  ///
+  /// In en, this message translates to:
+  /// **'Your family member'**
+  String get yourFamilyMember;
+
+  /// No description provided for @youNeedToCreateFamily.
+  ///
+  /// In en, this message translates to:
+  /// **'You need to create a family first.'**
+  String get youNeedToCreateFamily;
+
+  /// No description provided for @errorLoadingProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Error loading profile: {error}'**
+  String errorLoadingProfile(Object error);
+
+  /// No description provided for @errorSharing.
+  ///
+  /// In en, this message translates to:
+  /// **'Error sharing: {error}'**
+  String errorSharing(Object error);
+
+  /// No description provided for @unknownMember.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown'**
+  String get unknownMember;
 }
 
 class _AppLocalizationsDelegate
