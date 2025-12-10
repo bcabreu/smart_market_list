@@ -22,6 +22,14 @@ class _PaywallModalState extends ConsumerState<PaywallModal> {
   bool _isFamilyPlan = false;
 
   @override
+  void initState() {
+    super.initState();
+    if (widget.initialTabIndex == 1) {
+      _isFamilyPlan = true;
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     
