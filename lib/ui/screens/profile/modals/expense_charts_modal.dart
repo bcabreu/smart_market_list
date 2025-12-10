@@ -29,6 +29,8 @@ class _ExpenseChartsModalState extends ConsumerState<ExpenseChartsModal> {
 
     final controller = TextEditingController(text: currentGoal.toStringAsFixed(2));
 
+    final currencyFormat = NumberFormat.simpleCurrency(locale: Localizations.localeOf(context).toString());
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -38,7 +40,7 @@ class _ExpenseChartsModalState extends ConsumerState<ExpenseChartsModal> {
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
           decoration: InputDecoration(
             hintText: l10n.editGoalHint,
-            prefixText: 'R\$ ',
+            prefixText: '${currencyFormat.currencySymbol} ',
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
           ),
         ),
