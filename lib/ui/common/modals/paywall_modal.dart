@@ -1,254 +1,443 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:smart_market_list/core/theme/app_colors.dart';
-import 'package:smart_market_list/data/models/user_profile.dart';
-import 'package:smart_market_list/providers/user_provider.dart';
 import 'package:smart_market_list/providers/auth_provider.dart';
 import 'package:smart_market_list/core/services/firestore_service.dart';
 import 'package:smart_market_list/ui/common/modals/premium_success_modal.dart';
+import 'package:smart_market_list/l10n/generated/app_localizations.dart';
+import 'package:smart_market_list/providers/user_provider.dart';
 
-class PaywallModal extends ConsumerWidget {
-  final int initialTabIndex;
+class PaywallModal extends ConsumerStatefulWidget {
+  final int initialTabIndex; // Kept for compatibility
 
   const PaywallModal({super.key, this.initialTabIndex = 0});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return DefaultTabController(
-      length: 2,
-      initialIndex: initialTabIndex,
-      child: Container(
-        padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [Color(0xFFFF9A9E), Color(0xFFFECFEF)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.2),
-              blurRadius: 20,
-              offset: const Offset(0, -5),
+  ConsumerState<PaywallModal> createState() => _PaywallModalState();
+}
+
+class _PaywallModalState extends ConsumerState<PaywallModal> {
+  // 0 = Monthly, 1 = Annual
+  int _selectedPlanIndex = 1; 
+  bool _isFamilyPlan = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    
+    // Gradient from Image (Orange -> Pink)
+    final mainGradient = const LinearGradient(
+      colors: [Color(0xFFFFA726), Color(0xFFFF4081)],
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+    );
+
+    final backgroundColor = const Color(0xFF121212);
+    final cardColor = const Color(0xFF1E1E1E);
+    final textColor = Colors.white;
+
+    return Scaffold(
+      backgroundColor: backgroundColor,
+      body: Column(
+        children: [
+          // 1. Header with Gradient
+          Container(
+            width: double.infinity,
+            padding: EdgeInsets.only(
+              top: MediaQuery.of(context).padding.top + 60, // Increased to clear status bar
+              bottom: 32, 
+              left: 24, 
+              right: 24
             ),
-          ],
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Align(
-              alignment: Alignment.centerRight,
-              child: IconButton(
-                icon: const Icon(Icons.close, color: Colors.white),
-                onPressed: () => Navigator.pop(context),
-              ),
+            decoration: BoxDecoration(
+              gradient: mainGradient,
+              borderRadius: const BorderRadius.vertical(bottom: Radius.circular(32)),
             ),
-            const Icon(Icons.star, size: 50, color: Colors.white),
-            const SizedBox(height: 8),
-            const Text(
-              'Premium',
-              style: TextStyle(
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
-            ),
-            const SizedBox(height: 16),
-            
-            // Tabs
-            Container(
-              height: 40,
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.2),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: TabBar(
-                indicator: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(20),
+            child: Column(
+              children: [
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: GestureDetector(
+                    onTap: () => Navigator.pop(context),
+                    child: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withOpacity(0.2),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.close, color: Colors.white, size: 24),
+                    ),
+                  ),
                 ),
-                labelColor: const Color(0xFFFF9A9E),
-                unselectedLabelColor: Colors.white,
-                labelStyle: const TextStyle(fontWeight: FontWeight.bold),
-                splashBorderRadius: BorderRadius.circular(20),
-                tabs: const [
-                  Tab(text: 'Individual'),
-                  Tab(text: 'Família (+1)'),
-                ],
-              ),
+                const SizedBox(height: 8),
+                const Icon(
+                  Icons.emoji_events_outlined, 
+                  size: 64, 
+                  color: Colors.white
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  _isFamilyPlan ? l10n.premiumFamilyTitle : l10n.bePremium,
+                  style: const TextStyle(
+                    fontSize: 32,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  _isFamilyPlan ? l10n.shareAccessSubtitle : l10n.unlockResources,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    color: Colors.white,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
             ),
-            
-            const SizedBox(height: 16),
-            
-            SizedBox(
-              height: 280, // Fixed height for constraints
-              child: TabBarView(
+          ),
+
+          // Scrollable Content
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Individual Tab
-                  Column(
-                    children: [
-                      _buildFeatureItem('Salvar notas fiscais ilimitadas'),
-                      _buildFeatureItem('Comparar preços entre mercados'),
-                      _buildFeatureItem('Gráficos de gastos mensais'),
-                      const Spacer(),
-                      Row(
+                  // Toggle Individual / Family
+                  Center(
+                    child: Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        color: cardColor,
+                        borderRadius: BorderRadius.circular(100),
+                        border: Border.all(color: Colors.white10),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
                         children: [
-                          Expanded(
-                            child: _buildPlanCard(
-                              title: 'ANUAL',
-                              price: 'R\$ 89,90/ano',
-                              subtitle: 'Economize 25%',
-                              isPopular: true,
-                              onTap: () => _subscribe(context, ref, isFamily: false, isAnnual: true),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: _buildPlanCard(
-                              title: 'MENSAL',
-                              price: 'R\$ 9,90/mês',
-                              subtitle: 'Cancele quando quiser',
-                              isPopular: false,
-                              onTap: () => _subscribe(context, ref, isFamily: false, isAnnual: false),
-                            ),
-                          ),
+                          _buildToggleButton('Individual', !_isFamilyPlan, () {
+                            setState(() => _isFamilyPlan = false);
+                          }),
+                          _buildToggleButton('Família', _isFamilyPlan, () {
+                            setState(() => _isFamilyPlan = true);
+                          }),
                         ],
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  Row(
+                    children: [
+                      Icon(Icons.auto_awesome, color: const Color(0xFF80CBC4), size: 20),
+                      const SizedBox(width: 8),
+                      Text(
+                        l10n.exclusiveResources,
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: textColor
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  
+                  // Features List
+                  if (_isFamilyPlan) ...[
+                     _buildFeatureCard(l10n.featureFamilyShare, l10n.featureFamilyShare, icon: Icons.group_add, color: const Color(0xFFFF4081), cardColor: cardColor),
+                     _buildFeatureCard(l10n.featureAutoSync, l10n.shareListSubtitle, icon: Icons.sync, color: Colors.blueAccent, cardColor: cardColor),
+                     _buildFeatureCard(l10n.featurePremiumGuest, l10n.guestInviteMessage, icon: Icons.person_add, color: Colors.greenAccent, cardColor: cardColor),
+                  ] else ...[
+                     _buildFeatureCard(l10n.featureUnlimitedLists, l10n.featureUnlimitedLists, icon: Icons.storefront, color: const Color(0xFF4DB6AC), cardColor: cardColor),
+                     _buildFeatureCard(l10n.featureCharts, l10n.expenseChartsSubtitle, icon: Icons.show_chart, color: const Color(0xFF4FC3F7), cardColor: cardColor),
+                     _buildFeatureCard(l10n.featureReports, l10n.exportReportsSubtitle, icon: Icons.description_outlined, color: const Color(0xFFFFF176), cardColor: cardColor),
+                  ],
+                   _buildFeatureCard(l10n.featureCloudBackup, l10n.featureCloudBackupSubtitle, icon: Icons.security, color: const Color(0xFFAED581), cardColor: cardColor),
+
+                  const SizedBox(height: 32),
+
+                  // "Escolha seu plano"
+                  Center(
+                    child: Text(
+                      l10n.chooseYourPlan,
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: textColor
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Plans Row
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _buildPlanOption(
+                          title: l10n.planMonthly,
+                          price: _isFamilyPlan ? l10n.planFamilyMonthlyPrice.split('/')[0] : l10n.planMonthlyPrice,
+                          subtitle: l10n.pricePerMonth(_isFamilyPlan ? '14,90' : '9,90'),
+                          yearPrice: '',
+                          isSelected: _selectedPlanIndex == 0,
+                          onTap: () => setState(() => _selectedPlanIndex = 0),
+                          cardColor: cardColor,
+                          highlightColor: const Color(0xFFFFA726),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: _buildPlanOption(
+                          title: l10n.planAnnual,
+                          price: _isFamilyPlan ? 'R\$ 10,83' : 'R\$ 5,90',
+                          subtitle: l10n.pricePerMonth(_isFamilyPlan ? '10,83' : '5,90'),
+                          yearPrice: _isFamilyPlan ? l10n.planFamilyAnnualPrice : l10n.planAnnualPrice,
+                          isSelected: _selectedPlanIndex == 1,
+                          badgeText: '-40%',
+                          onTap: () => setState(() => _selectedPlanIndex = 1),
+                          cardColor: cardColor,
+                          highlightColor: const Color(0xFFFFA726),
+                        ),
                       ),
                     ],
                   ),
                   
-                  // Family Tab
-                  Column(
-                    children: [
-                      _buildFeatureItem('Tudo do Individual para 2 pessoas'),
-                      _buildFeatureItem('Compartilhamento Automático'),
-                      _buildFeatureItem('Acesso Premium para o convidado'),
-                      const Spacer(),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _buildPlanCard(
-                              title: 'ANUAL',
-                              price: 'R\$ 129,90/ano',
-                              subtitle: 'Apenas R\$ 5,41/pessoa/mês',
-                              isPopular: true,
-                              onTap: () => _subscribe(context, ref, isFamily: true, isAnnual: true),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: _buildPlanCard(
-                              title: 'MENSAL',
-                              price: 'R\$ 14,90/mês',
-                              subtitle: '2 Contas Premium',
-                              isPopular: false,
-                              onTap: () => _subscribe(context, ref, isFamily: true, isAnnual: false),
-                            ),
-                          ),
-                        ],
+                  const SizedBox(height: 24),
+
+                  // CTA Button
+                  SizedBox(
+                    width: double.infinity,
+                    height: 56,
+                    child: ElevatedButton(
+                      onPressed: () => _subscribe(context, ref),
+                      style: ElevatedButton.styleFrom(
+                        padding: EdgeInsets.zero,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        elevation: 0,
                       ),
-                    ],
+                      child: Ink(
+                        decoration: BoxDecoration(
+                          gradient: mainGradient,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Container(
+                          alignment: Alignment.center,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(Icons.emoji_events_outlined, color: Colors.white, size: 24),
+                              const SizedBox(width: 8),
+                              Text(
+                                l10n.subscribeButton(_getButtonPrice()),
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
                   ),
+
+                  const SizedBox(height: 16),
+
+                  // Footer Text
+                  Center(
+                     child: Text(
+                       '${l10n.cancelAnytime} • ${l10n.sevenDaysFree}',
+                       style: TextStyle(color: Colors.grey[400], fontSize: 13),
+                     ),
+                  ),
+                  const SizedBox(height: 32),
                 ],
               ),
             ),
-
-            const SizedBox(height: 24),
-            const Text(
-              'Pagamento seguro via App Store/Play Store',
-              style: TextStyle(color: Colors.white70, fontSize: 12),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildFeatureItem(String text) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        children: [
-          const Icon(Icons.check_circle, color: Colors.white, size: 20),
-          const SizedBox(width: 8),
-          Text(text, style: const TextStyle(color: Colors.white, fontSize: 14)),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildPlanCard({
-    required String title,
-    required String price,
-    required String subtitle,
-    required bool isPopular,
-    required VoidCallback onTap,
-  }) {
+  Widget _buildToggleButton(String text, bool isSelected, VoidCallback onTap) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        height: 110,
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
         decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: isPopular ? Border.all(color: AppColors.secondary, width: 2) : null,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
+          color: isSelected ? const Color(0xFFFFA726) : Colors.transparent,
+          borderRadius: BorderRadius.circular(100),
         ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            if (isPopular)
-              Container(
-                margin: const EdgeInsets.only(bottom: 4),
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                decoration: BoxDecoration(
-                  color: AppColors.secondary,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Text(
-                  'MAIS POPULAR',
-                  style: TextStyle(color: Colors.white, fontSize: 8, fontWeight: FontWeight.bold),
-                ),
-              ),
-            Text(
-              title,
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              price,
-              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              subtitle,
-              textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 9, color: Colors.grey),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ],
+        child: Text(
+          text,
+          style: TextStyle(
+            color: isSelected ? Colors.white : Colors.grey,
+            fontWeight: FontWeight.bold,
+            fontSize: 14,
+          ),
         ),
       ),
     );
   }
 
-  void _subscribe(BuildContext context, WidgetRef ref, {required bool isFamily, required bool isAnnual}) {
-    // Simulate subscription logic
-    final planType = isFamily ? 'premium_family' : 'premium_individual';
+  Widget _buildFeatureCard(String title, String subtitle, {required IconData icon, required Color color, required Color cardColor}) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: cardColor,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.2),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, color: color, size: 24),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                    color: Colors.white,
+                  ),
+                ),
+                Text(
+                  subtitle,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey[400],
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+          const Icon(Icons.check, color: Color(0xFF80CBC4)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPlanOption({
+    required String title,
+    required String price,
+    required String subtitle,
+    required String yearPrice,
+    required bool isSelected,
+    required VoidCallback onTap,
+    required Color cardColor,
+    required Color highlightColor,
+    String? badgeText,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: cardColor,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: isSelected ? highlightColor : Colors.transparent,
+                width: 1.5,
+              ),
+            ),
+            child: Column(
+              children: [
+                if (isSelected)
+                  Align(
+                    alignment: Alignment.topLeft,
+                    child: Icon(Icons.check_circle, color: highlightColor, size: 24),
+                  )
+                else
+                  const SizedBox(height: 24),
+                
+                Text(
+                  title,
+                  style: const TextStyle(fontSize: 12, color: Colors.grey),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  price,
+                  style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
+                ),
+                Text(
+                  subtitle,
+                  style: const TextStyle(fontSize: 12, color: Colors.grey),
+                ),
+                if (yearPrice.isNotEmpty) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    yearPrice,
+                    style: TextStyle(fontSize: 12, color: highlightColor),
+                  ),
+                ] else
+                   const SizedBox(height: 18), 
+              ],
+            ),
+          ),
+          if (badgeText != null)
+            Positioned(
+              top: -10,
+              right: -5,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: highlightColor,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  badgeText,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  String _getButtonPrice() {
+    if (_isFamilyPlan) {
+      if (_selectedPlanIndex == 1) return '10,83/mês';
+      return '14,90/mês';
+    } else {
+      if (_selectedPlanIndex == 1) return '5,90/mês';
+      return '9,90/mês';
+    }
+  }
+
+  void _subscribe(BuildContext context, WidgetRef ref) {
+    final planType = _isFamilyPlan ? 'premium_family' : 'premium_individual';
     
-    // Updates local provider
     ref.read(premiumSinceProvider.notifier).setPremium(true);
     
-    // Sync with Firestore if logged in
     final user = ref.read(authServiceProvider).currentUser;
     if (user != null) {
       ref.read(firestoreServiceProvider).updateUserPremiumStatus(
@@ -259,8 +448,6 @@ class PaywallModal extends ConsumerWidget {
     }
     
     Navigator.pop(context);
-    
-    // Show Premium Success Modal
-    PremiumSuccessModal.show(context, isFamily: isFamily);
+    PremiumSuccessModal.show(context, isFamily: _isFamilyPlan);
   }
 }

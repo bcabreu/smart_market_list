@@ -967,4 +967,89 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get shareListMessageBody => 'Join my shared shopping list!';
+
+  @override
+  String get featureNoAds => 'No Ads';
+
+  @override
+  String get featureUnlimitedLists => 'Unlimited Notes & Lists';
+
+  @override
+  String get featureComparePrices => 'Compare prices between stores';
+
+  @override
+  String get featureCharts => 'Expense Charts';
+
+  @override
+  String get featureReports => 'Export Reports';
+
+  @override
+  String get featureFamilyShare => 'Share List';
+
+  @override
+  String get featureAutoSync => 'Family synchronization';
+
+  @override
+  String get featurePremiumGuest => 'Premium access for guest';
+
+  @override
+  String get featureCloudBackup => 'Cloud Backup';
+
+  @override
+  String get featureCloudBackupSubtitle => 'Never lose your data';
+
+  @override
+  String get planAnnual => 'Annual';
+
+  @override
+  String get planMonthly => 'Monthly';
+
+  @override
+  String get planAnnualPrice => '\$ 19.99/year';
+
+  @override
+  String get planMonthlyPrice => '\$ 2.99';
+
+  @override
+  String get planFamilyAnnualPrice => '\$ 29.99/year';
+
+  @override
+  String get planFamilyMonthlyPrice => '\$ 4.99/month';
+
+  @override
+  String pricePerMonth(Object price) {
+    return '\$ $price/mo';
+  }
+
+  @override
+  String get savePercent => 'Save 25%';
+
+  @override
+  String get cancelAnytime => 'Cancel anytime';
+
+  @override
+  String get sevenDaysFree => '7 days free';
+
+  @override
+  String get continueFree => 'Continue with free plan';
+
+  @override
+  String get bePremium => 'Be Premium!';
+
+  @override
+  String get unlockResources => 'Unlock exclusive features to save more';
+
+  @override
+  String get exclusiveResources => 'Exclusive Features';
+
+  @override
+  String get chooseYourPlan => 'Choose your plan';
+
+  @override
+  String get saveYiarlyAmount => 'Save \$ 16.00 per year!';
+
+  @override
+  String subscribeButton(Object price) {
+    return 'Subscribe for $price';
+  }
 }

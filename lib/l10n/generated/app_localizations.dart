@@ -1891,6 +1891,168 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Join my shared shopping list!'**
   String get shareListMessageBody;
+
+  /// No description provided for @featureNoAds.
+  ///
+  /// In en, this message translates to:
+  /// **'No Ads'**
+  String get featureNoAds;
+
+  /// No description provided for @featureUnlimitedLists.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlimited Notes & Lists'**
+  String get featureUnlimitedLists;
+
+  /// No description provided for @featureComparePrices.
+  ///
+  /// In en, this message translates to:
+  /// **'Compare prices between stores'**
+  String get featureComparePrices;
+
+  /// No description provided for @featureCharts.
+  ///
+  /// In en, this message translates to:
+  /// **'Expense Charts'**
+  String get featureCharts;
+
+  /// No description provided for @featureReports.
+  ///
+  /// In en, this message translates to:
+  /// **'Export Reports'**
+  String get featureReports;
+
+  /// No description provided for @featureFamilyShare.
+  ///
+  /// In en, this message translates to:
+  /// **'Share List'**
+  String get featureFamilyShare;
+
+  /// No description provided for @featureAutoSync.
+  ///
+  /// In en, this message translates to:
+  /// **'Family synchronization'**
+  String get featureAutoSync;
+
+  /// No description provided for @featurePremiumGuest.
+  ///
+  /// In en, this message translates to:
+  /// **'Premium access for guest'**
+  String get featurePremiumGuest;
+
+  /// No description provided for @featureCloudBackup.
+  ///
+  /// In en, this message translates to:
+  /// **'Cloud Backup'**
+  String get featureCloudBackup;
+
+  /// No description provided for @featureCloudBackupSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Never lose your data'**
+  String get featureCloudBackupSubtitle;
+
+  /// No description provided for @planAnnual.
+  ///
+  /// In en, this message translates to:
+  /// **'Annual'**
+  String get planAnnual;
+
+  /// No description provided for @planMonthly.
+  ///
+  /// In en, this message translates to:
+  /// **'Monthly'**
+  String get planMonthly;
+
+  /// No description provided for @planAnnualPrice.
+  ///
+  /// In en, this message translates to:
+  /// **'\$ 19.99/year'**
+  String get planAnnualPrice;
+
+  /// No description provided for @planMonthlyPrice.
+  ///
+  /// In en, this message translates to:
+  /// **'\$ 2.99'**
+  String get planMonthlyPrice;
+
+  /// No description provided for @planFamilyAnnualPrice.
+  ///
+  /// In en, this message translates to:
+  /// **'\$ 29.99/year'**
+  String get planFamilyAnnualPrice;
+
+  /// No description provided for @planFamilyMonthlyPrice.
+  ///
+  /// In en, this message translates to:
+  /// **'\$ 4.99/month'**
+  String get planFamilyMonthlyPrice;
+
+  /// No description provided for @pricePerMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'\$ {price}/mo'**
+  String pricePerMonth(Object price);
+
+  /// No description provided for @savePercent.
+  ///
+  /// In en, this message translates to:
+  /// **'Save 25%'**
+  String get savePercent;
+
+  /// No description provided for @cancelAnytime.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel anytime'**
+  String get cancelAnytime;
+
+  /// No description provided for @sevenDaysFree.
+  ///
+  /// In en, this message translates to:
+  /// **'7 days free'**
+  String get sevenDaysFree;
+
+  /// No description provided for @continueFree.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue with free plan'**
+  String get continueFree;
+
+  /// No description provided for @bePremium.
+  ///
+  /// In en, this message translates to:
+  /// **'Be Premium!'**
+  String get bePremium;
+
+  /// No description provided for @unlockResources.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock exclusive features to save more'**
+  String get unlockResources;
+
+  /// No description provided for @exclusiveResources.
+  ///
+  /// In en, this message translates to:
+  /// **'Exclusive Features'**
+  String get exclusiveResources;
+
+  /// No description provided for @chooseYourPlan.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose your plan'**
+  String get chooseYourPlan;
+
+  /// No description provided for @saveYiarlyAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Save \$ 16.00 per year!'**
+  String get saveYiarlyAmount;
+
+  /// No description provided for @subscribeButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Subscribe for {price}'**
+  String subscribeButton(Object price);
 }
 
 class _AppLocalizationsDelegate

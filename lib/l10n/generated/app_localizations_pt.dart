@@ -969,4 +969,90 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get shareListMessageBody =>
       'Entre na minha lista de compras compartilhada!';
+
+  @override
+  String get featureNoAds => 'Sem anúncios';
+
+  @override
+  String get featureUnlimitedLists => 'Notas e Listas ilimitados';
+
+  @override
+  String get featureComparePrices => 'Comparar preços entre mercados';
+
+  @override
+  String get featureCharts => 'Gráficos de Gastos';
+
+  @override
+  String get featureReports => 'Exportar Relatórios';
+
+  @override
+  String get featureFamilyShare => 'Compartilhar Lista';
+
+  @override
+  String get featureAutoSync => 'Sincronização com família';
+
+  @override
+  String get featurePremiumGuest => 'Acesso Premium para o convidado';
+
+  @override
+  String get featureCloudBackup => 'Backup em Nuvem';
+
+  @override
+  String get featureCloudBackupSubtitle => 'Nunca perca seus dados';
+
+  @override
+  String get planAnnual => 'Anual';
+
+  @override
+  String get planMonthly => 'Mensal';
+
+  @override
+  String get planAnnualPrice => 'R\$ 70,80/ano';
+
+  @override
+  String get planMonthlyPrice => 'R\$ 9,90';
+
+  @override
+  String get planFamilyAnnualPrice => 'R\$ 129,90/ano';
+
+  @override
+  String get planFamilyMonthlyPrice => 'R\$ 14,90/mês';
+
+  @override
+  String pricePerMonth(Object price) {
+    return 'R\$ $price/mês';
+  }
+
+  @override
+  String get savePercent => 'Economize 25%';
+
+  @override
+  String get cancelAnytime => 'Cancele quando quiser';
+
+  @override
+  String get sevenDaysFree => '7 dias grátis';
+
+  @override
+  String get continueFree => 'Continuar com plano gratuito';
+
+  @override
+  String get bePremium => 'Seja Premium!';
+
+  @override
+  String get unlockResources =>
+      'Desbloqueie recursos exclusivos para economizar mais';
+
+  @override
+  String get exclusiveResources => 'Recursos Exclusivos';
+
+  @override
+  String get chooseYourPlan => 'Escolha seu plano';
+
+  @override
+  String get saveYiarlyAmount => 'Economize R\$ 48,00 por ano!';
+
+  @override
+  String subscribeButton(Object price) {
+    return 'Assinar por $price';
+  }
 }
