@@ -959,4 +959,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get iosLabel => '🍎 *iOS:*';
+
+  @override
+  String shareListMessageTitle(Object listName) {
+    return '🛒 *$listName*';
+  }
+
+  @override
+  String get shareListMessageBody => 'Join my shared shopping list!';
 }

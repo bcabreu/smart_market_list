@@ -310,11 +310,21 @@ class _SmartListHeaderState extends ConsumerState<SmartListHeader> {
                            final familyIdToUse = widget.list.familyId ?? profile?.familyId;
                            
                            if (familyIdToUse != null) {
-                              sharingService.shareList(widget.list, familyIdToUse);
+                               final l10n = AppLocalizations.of(context)!;
+                               sharingService.shareList(
+                                 list: widget.list,
+                                 familyId: familyIdToUse,
+                                 title: l10n.shareListMessageTitle(widget.list.name),
+                                 messageBody: l10n.shareListMessageBody,
+                                 accessLinkLabel: l10n.accessLinkLabel,
+                                 installAppAdvice: l10n.installAppAdvice,
+                                 androidLabel: l10n.androidLabel,
+                                 iosLabel: l10n.iosLabel,
+                               );
                            } else {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Erro: Lista não sincronizada ou família não encontrada.')),
-                              );
+                               ScaffoldMessenger.of(context).showSnackBar(
+                                 const SnackBar(content: Text('Erro: Lista não sincronizada ou família não encontrada.')),
+                               );
                            }
                          }
                       },

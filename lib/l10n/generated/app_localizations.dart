@@ -1879,6 +1879,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'🍎 *iOS:*'**
   String get iosLabel;
+
+  /// No description provided for @shareListMessageTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'🛒 *{listName}*'**
+  String shareListMessageTitle(Object listName);
+
+  /// No description provided for @shareListMessageBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Join my shared shopping list!'**
+  String get shareListMessageBody;
 }
 
 class _AppLocalizationsDelegate

@@ -960,4 +960,13 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get iosLabel => '🍎 *iOS:*';
+
+  @override
+  String shareListMessageTitle(Object listName) {
+    return '🛒 *$listName*';
+  }
+
+  @override
+  String get shareListMessageBody =>
+      'Entre na minha lista de compras compartilhada!';
 }

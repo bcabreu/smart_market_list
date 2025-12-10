@@ -296,5 +296,7 @@
   "accessLinkLabel": "🔗 *Link de Acesso:*",
   "installAppAdvice": "_(Se não funcionar, instale o app primeiro)_",
   "androidLabel": "🤖 *Android:*",
-  "iosLabel": "🍎 *iOS:*"
+  "iosLabel": "🍎 *iOS:*",
+  "shareListMessageTitle": "🛒 *{listName}*",
+  "shareListMessageBody": "Entre na minha lista de compras compartilhada!"
 }
