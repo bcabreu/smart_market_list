@@ -8,6 +8,8 @@ import 'package:smart_market_list/providers/shopping_list_provider.dart';
 import 'package:intl/intl.dart';
 import 'package:smart_market_list/l10n/generated/app_localizations.dart';
 
+import 'package:smart_market_list/providers/tax_provider.dart';
+
 class BudgetInfoCard extends ConsumerStatefulWidget {
   final ShoppingList list;
   
@@ -149,24 +151,56 @@ class _BudgetInfoCardState extends ConsumerState<BudgetInfoCard> {
                 ),
               ),
               const SizedBox(height: 2),
-              TweenAnimationBuilder<double>(
-                tween: Tween<double>(begin: 0, end: widget.list.totalSpent),
-                duration: const Duration(milliseconds: 800),
-                curve: Curves.easeOutCubic,
-                builder: (context, value, child) {
-                  final isOverBudget = widget.list.budget > 0 && value > widget.list.budget;
-                  final color = isOverBudget ? const Color(0xFFEF5350) : valueColor;
+              Consumer(
+                builder: (context, ref, child) {
+                  final taxRate = ref.watch(taxRateProvider);
+                  final taxAmount = widget.list.totalSpent * (taxRate / 100);
+                  final totalWithTax = widget.list.totalSpent + taxAmount;
+                  
+                  return TweenAnimationBuilder<double>(
+                    tween: Tween<double>(begin: 0, end: totalWithTax),
+                    duration: const Duration(milliseconds: 800),
+                    curve: Curves.easeOutCubic,
+                    builder: (context, value, child) {
+                      final isOverBudget = widget.list.budget > 0 && value > widget.list.budget;
+                      final color = isOverBudget ? const Color(0xFFEF5350) : valueColor;
 
-                  return Text(
-                    _currencyFormat.format(value),
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.w500,
-                      color: color,
-                      letterSpacing: -1,
-                    ),
+                      if (taxRate > 0) {
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              _currencyFormat.format(value),
+                              style: TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.w500,
+                                color: color,
+                                letterSpacing: -1,
+                              ),
+                            ),
+                            Text(
+                              '${_currencyFormat.format(widget.list.totalSpent)} + ${taxRate.toStringAsFixed(1)}% Tax',
+                              style: TextStyle(
+                                fontSize: 10,
+                                color: labelColor,
+                              ),
+                            ),
+                          ],
+                        );
+                      }
+
+                      return Text(
+                        _currencyFormat.format(value),
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.w500,
+                          color: color,
+                          letterSpacing: -1,
+                        ),
+                      );
+                    },
                   );
-                },
+                }
               ),
             ],
           ),

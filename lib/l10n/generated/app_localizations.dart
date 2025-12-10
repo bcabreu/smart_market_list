@@ -2066,6 +2066,30 @@ abstract class AppLocalizations {
   /// **'Family'**
   String get planToggleFamily;
 
+  /// No description provided for @taxRate.
+  ///
+  /// In en, this message translates to:
+  /// **'Tax Rate (%)'**
+  String get taxRate;
+
+  /// No description provided for @taxRateSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add percentage to total (e.g. Sales Tax)'**
+  String get taxRateSubtitle;
+
+  /// No description provided for @enterTaxRate.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter percentage'**
+  String get enterTaxRate;
+
+  /// No description provided for @taxIncluded.
+  ///
+  /// In en, this message translates to:
+  /// **'Tax included'**
+  String get taxIncluded;
+
   /// No description provided for @planAnnualSubtitle.
   ///
   /// In en, this message translates to:

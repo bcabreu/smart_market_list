@@ -1061,6 +1061,18 @@ class AppLocalizationsPt extends AppLocalizations {
   String get planToggleFamily => 'Família';
 
   @override
+  String get taxRate => 'Taxa de Imposto (%)';
+
+  @override
+  String get taxRateSubtitle => 'Adicionar porcentagem ao total (Ex: EUA)';
+
+  @override
+  String get enterTaxRate => 'Digite a porcentagem';
+
+  @override
+  String get taxIncluded => 'Taxa inclusa';
+
+  @override
   String get planAnnualSubtitle => 'R\$ 5,90/mês';
 
   @override

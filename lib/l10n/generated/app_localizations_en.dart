@@ -1058,6 +1058,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get planToggleFamily => 'Family';
 
   @override
+  String get taxRate => 'Tax Rate (%)';
+
+  @override
+  String get taxRateSubtitle => 'Add percentage to total (e.g. Sales Tax)';
+
+  @override
+  String get enterTaxRate => 'Enter percentage';
+
+  @override
+  String get taxIncluded => 'Tax included';
+
+  @override
   String get planAnnualSubtitle => '\$ 1.66/mo';
 
   @override

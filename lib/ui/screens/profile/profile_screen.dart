@@ -30,6 +30,7 @@ import 'package:smart_market_list/providers/auth_provider.dart';
 
 import 'package:smart_market_list/providers/profile_provider.dart';
 import 'package:smart_market_list/providers/user_profile_provider.dart';
+import 'package:smart_market_list/providers/tax_provider.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -95,6 +96,49 @@ class ProfileScreen extends ConsumerWidget {
           ),
         );
       },
+    );
+  }
+
+  void _showTaxRateInput(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
+    final currentRate = ref.read(taxRateProvider);
+    final controller = TextEditingController(text: currentRate == 0 ? '' : currentRate.toString());
+    
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l10n.taxRate),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(l10n.enterTaxRate),
+            const SizedBox(height: 16),
+            TextField(
+              controller: controller,
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              decoration: const InputDecoration(
+                suffixText: '%',
+                border: OutlineInputBorder(),
+              ),
+              autofocus: true,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(l10n.cancel),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              final val = double.tryParse(controller.text.replaceAll(',', '.')) ?? 0.0;
+              ref.read(taxRateProvider.notifier).setTaxRate(val);
+              Navigator.pop(context);
+            },
+            child: Text(l10n.saveChanges),
+          ),
+        ],
+      ),
     );
   }
 
@@ -258,6 +302,29 @@ class ProfileScreen extends ConsumerWidget {
                               ? l10n.darkModeSystem 
                               : (locale.languageCode == 'en' ? 'English' : 'Português (BR)'),
                           onTap: () => _showLanguagePicker(context, ref),
+                        ),
+                        SettingsTile(
+                          icon: Icons.percent,
+                          title: l10n.taxRate,
+                          subtitle: l10n.taxRateSubtitle,
+                          trailing: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).cardColor,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: Colors.grey.withOpacity(0.3)),
+                            ),
+                            child: Consumer(
+                              builder: (context, ref, _) {
+                                final rate = ref.watch(taxRateProvider);
+                                return Text(
+                                  '${rate.toStringAsFixed(1)}%',
+                                  style: const TextStyle(fontWeight: FontWeight.bold),
+                                );
+                              }
+                            ),
+                          ),
+                          onTap: () => _showTaxRateInput(context, ref),
                         ),
                       ],
                     ),
