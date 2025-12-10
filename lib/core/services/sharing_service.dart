@@ -95,12 +95,19 @@ class SharingService {
     await Share.share(fullMessage);
   }
 
-  // Legacy Share Message for Lists (Can be refactored later or kept simple)
-  // Re-implementing simplified _shareMessage or just ignoring it for family share
-  Future<void> _shareMessage(String message, String deepLink) async {
-      // ... kept for list sharing if needed, but shareFamilyAccess now builds its own message.
-      // Actually list sharing uses it. Let's keep it compatible or duplicate logic for simplicity.
-      await Share.share(message); 
+  // Legacy Share Message for Lists
+  Future<void> _shareMessage(String title, String deepLink) async {
+    const String androidUrl = 'https://play.google.com/store/apps/details?id=com.kepoweb.smart_market_list';
+    const String iosUrl = 'https://apps.apple.com/app/id6756240280';
+    
+    final String message = 
+        '$title\n\n'
+        '🔗 *Link de Acesso:*\n$deepLink\n'
+        '_(Se não funcionar, instale o app primeiro)_\n\n'
+        '🤖 *Android:* $androidUrl\n'
+        '🍎 *iOS:* $iosUrl';
+
+    await Share.share(message);
   }
 
   // Join List Logic
