@@ -12,6 +12,8 @@ import 'package:smart_market_list/ui/common/animations/staggered_entry.dart';
 
 import 'package:smart_market_list/ui/widgets/pulse_fab.dart';
 import 'package:smart_market_list/l10n/generated/app_localizations.dart';
+import 'package:smart_market_list/providers/user_profile_provider.dart';
+import 'package:smart_market_list/ui/common/modals/paywall_modal.dart';
 
 class ShoppingNotesScreen extends ConsumerWidget {
   const ShoppingNotesScreen({super.key});
@@ -415,12 +417,23 @@ class ShoppingNotesScreen extends ConsumerWidget {
       ),
       floatingActionButton: PulseFloatingActionButton(
         onPressed: () {
-          showModalBottomSheet(
-            context: context,
-            isScrollControlled: true,
-            backgroundColor: Colors.transparent,
-            builder: (context) => const AddNoteModal(),
-          );
+          final isPremium = ref.read(userProfileProvider).value?.isPremium ?? false;
+
+          if (!isPremium) {
+            showModalBottomSheet(
+              context: context,
+              isScrollControlled: true,
+              backgroundColor: Colors.transparent,
+              builder: (context) => const PaywallModal(),
+            );
+          } else {
+            showModalBottomSheet(
+              context: context,
+              isScrollControlled: true,
+              backgroundColor: Colors.transparent,
+              builder: (context) => const AddNoteModal(),
+            );
+          }
         },
         color: AppColors.secondary,
       ),
