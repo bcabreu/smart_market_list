@@ -880,4 +880,11 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get emailAlreadyInUse =>
       'Este email já está sendo usado por outra conta.';
+
+  @override
+  String get inviteInvalidOrExpired =>
+      'Este link expirou ou já foi usado. Peça para o dono da família gerar um NOVO link.';
+
+  @override
+  String get familyAlreadyHasMember => 'Esta família está cheia.';
 }

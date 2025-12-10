@@ -1741,6 +1741,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This email is already in use by another account.'**
   String get emailAlreadyInUse;
+
+  /// No description provided for @inviteInvalidOrExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'This invite link is invalid or has already been used.'**
+  String get inviteInvalidOrExpired;
+
+  /// No description provided for @familyAlreadyHasMember.
+  ///
+  /// In en, this message translates to:
+  /// **'This family is full.'**
+  String get familyAlreadyHasMember;
 }
 
 class _AppLocalizationsDelegate

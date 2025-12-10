@@ -273,5 +273,7 @@
   "genericError": "Error: {error}",
   "successTitle": "Success!",
   "requiresRecentLogin": "For your security, please log in again before deleting your account.",
-  "emailAlreadyInUse": "This email is already in use by another account."
+  "emailAlreadyInUse": "This email is already in use by another account.",
+  "inviteInvalidOrExpired": "This invite link is invalid or has already been used.",
+  "familyAlreadyHasMember": "This family is full."
 }

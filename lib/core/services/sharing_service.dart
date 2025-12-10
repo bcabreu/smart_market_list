@@ -13,13 +13,15 @@ class SharingService {
   // Store pending invite data for when user logs in
   static String? pendingListId;
   static String? pendingFamilyId;
+  static String? pendingInviteCode;
+
 
   SharingService(this._firestoreService);
 
   // Initialize Deep Link Listener
   void initDeepLinks({
     required Function(String listId, String familyId) onJoinList,
-    required Function(String familyId) onJoinFamily,
+    required Function(String familyId, String? inviteCode) onJoinFamily,
   }) {
     _linkSubscription = _appLinks.uriLinkStream.listen((uri) {
       print('🔗 Deep Link Received: $uri');
@@ -28,17 +30,18 @@ class SharingService {
         final listId = uri.queryParameters['listId'];
         final familyId = uri.queryParameters['familyId'];
         final action = uri.queryParameters['action'];
+        final inviteCode = uri.queryParameters['inviteCode'];
         
         // Case 1: Join Family
         if (action == 'join_family' && familyId != null) {
-          onJoinFamily(familyId);
+          onJoinFamily(familyId, inviteCode);
           return;
         }
 
         // Case 2: Join List (Legacy/Standard)
         if (listId != null && familyId != null) {
           if (listId == 'invite' || action == 'join_family') {
-             onJoinFamily(familyId);
+             onJoinFamily(familyId, inviteCode);
           } else {
              onJoinList(listId, familyId);
           }
@@ -63,10 +66,15 @@ class SharingService {
   }
 
   // Share Family Access
+  // Share Family Access
   Future<void> shareFamilyAccess(String familyId, String ownerName) async {
-    // We add listId=invite to mimic the structure of regular list sharing links
-    // This often helps with Android/iOS intent filters that might be caching specific patterns
-    final String deepLink = 'https://smart-market-list-82bf7.web.app/share?listId=invite&familyId=$familyId&action=join_family';
+    // We revert to 'ensureInviteCode' to keep the link STABLE.
+    // This prevents the "I clicked share twice and the first link died" problem.
+    // The code will only be rotated when someone successfully joins (in FirestoreService).
+    final inviteCode = await _firestoreService.ensureInviteCode(familyId);
+    
+    final String deepLink = 'https://smart-market-list-82bf7.web.app/share?listId=invite&familyId=$familyId&action=join_family&inviteCode=$inviteCode';
+    
     _shareMessage(
       '🏠 *Convite para Família Premium*\n$ownerName te convidou para fazer parte da família no Smart Market List!\n\nVocê terá acesso Premium e todas as listas serão compartilhadas.',
       deepLink,
@@ -74,6 +82,7 @@ class SharingService {
   }
 
   Future<void> _shareMessage(String title, String deepLink) async {
+    // ... existing ...
     const String androidUrl = 'https://play.google.com/store/apps/details?id=com.kepoweb.smart_market_list';
     const String iosUrl = 'https://apps.apple.com/app/id6756240280';
     
@@ -99,9 +108,9 @@ class SharingService {
   }
 
   // Join Family Logic
-  Future<void> joinFamily(String familyId, String userId) async {
+  Future<void> joinFamily(String familyId, String userId, {String? inviteCode}) async {
     try {
-      await _firestoreService.joinFamily(familyId, userId);
+      await _firestoreService.joinFamily(familyId, userId, inviteCode: inviteCode);
       print('✅ Joined Family $familyId via Deep Link');
     } catch (e) {
       print('❌ Error joining family: $e');

@@ -244,15 +244,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         // Pending Family Join (without list)
                        try {
                          final currentUser = ref.read(authServiceProvider).currentUser;
-                         if (currentUser != null) {
-                            await ref.read(sharingServiceProvider).joinFamily(
-                              SharingService.pendingFamilyId!, 
-                              currentUser.uid
-                            );
-                            
-                            // Clear pending
-                            SharingService.pendingFamilyId = null;
-                            SharingService.pendingListId = null; // Just in case
+                          if (currentUser != null) {
+                             await ref.read(sharingServiceProvider).joinFamily(
+                               SharingService.pendingFamilyId!, 
+                               currentUser.uid,
+                               inviteCode: SharingService.pendingInviteCode,
+                             );
+                             
+                             // Clear pending
+                             SharingService.pendingFamilyId = null;
+                             SharingService.pendingInviteCode = null;
+                             SharingService.pendingListId = null; // Just in case
                             
                             if (context.mounted) {
                                StatusFeedbackModal.show(

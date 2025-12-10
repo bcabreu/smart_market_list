@@ -879,4 +879,11 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get emailAlreadyInUse =>
       'This email is already in use by another account.';
+
+  @override
+  String get inviteInvalidOrExpired =>
+      'This invite link is invalid or has already been used.';
+
+  @override
+  String get familyAlreadyHasMember => 'This family is full.';
 }

@@ -273,5 +273,7 @@
   "genericError": "Erro: {error}",
   "successTitle": "Sucesso!",
   "requiresRecentLogin": "Para sua segurança, faça login novamente antes de excluir a conta.",
-  "emailAlreadyInUse": "Este email já está sendo usado por outra conta."
+  "emailAlreadyInUse": "Este email já está sendo usado por outra conta.",
+  "inviteInvalidOrExpired": "Este link expirou ou já foi usado. Peça para o dono da família gerar um NOVO link.",
+  "familyAlreadyHasMember": "Esta família está cheia."
 }

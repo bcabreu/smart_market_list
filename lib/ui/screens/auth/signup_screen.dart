@@ -101,11 +101,13 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
            if (currentUser != null) {
               await ref.read(sharingServiceProvider).joinFamily(
                 SharingService.pendingFamilyId!, 
-                currentUser.uid
+                currentUser.uid,
+                inviteCode: SharingService.pendingInviteCode,
               );
               
               // Clear pending
               SharingService.pendingFamilyId = null;
+              SharingService.pendingInviteCode = null;
               SharingService.pendingListId = null; // Just in case
               
               if (mounted) {

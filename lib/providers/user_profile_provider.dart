@@ -35,7 +35,6 @@ final userProfileProvider = StreamProvider<UserProfile?>((ref) {
            final ownerIsPremium = ownerData?['isPremium'] == true;
            
            // If owner is premium, guest is premium.
-           // We return a new UserProfile with overridden isPremium
            if (ownerIsPremium) {
              return UserProfile(
                uid: profile.uid,
@@ -44,9 +43,21 @@ final userProfileProvider = StreamProvider<UserProfile?>((ref) {
                familyId: profile.familyId,
                role: profile.role,
                isPremium: true, // Inherited
+               planType: profile.planType, // Keep plan type (e.g. premium_family_guest)
+             );
+           } else {
+             // If Owner lost premium, Guest MUST lose it too.
+             // Force override to false, regardless of what's in Firestore for the guest.
+             return UserProfile(
+               uid: profile.uid,
+               email: profile.email,
+               name: profile.name,
+               familyId: profile.familyId,
+               role: profile.role,
+               isPremium: false, // Enforce False
+               planType: 'free', // Enforce Free
              );
            }
-           return profile;
         });
       });
     },

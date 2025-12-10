@@ -61,22 +61,24 @@ class _MainScreenState extends ConsumerState<MainScreen> {
       onJoinList: (listId, familyId) {
         _handleJoinList(listId, familyId);
       },
-      onJoinFamily: (familyId) {
-        _handleJoinFamily(familyId);
+      onJoinFamily: (familyId, inviteCode) {
+        _handleJoinFamily(familyId, inviteCode);
       },
     );
   }
-  Future<void> _handleJoinFamily(String familyId) async {
+  
+  Future<void> _handleJoinFamily(String familyId, String? inviteCode) async {
     final user = await ref.read(userProfileProvider.future);
+    final l10n = AppLocalizations.of(context)!;
     
     if (user != null) {
       try {
-        await ref.read(sharingServiceProvider).joinFamily(familyId, user.uid);
+        await ref.read(sharingServiceProvider).joinFamily(familyId, user.uid, inviteCode: inviteCode);
         if (mounted) {
            StatusFeedbackModal.show(
              context,
-             title: AppLocalizations.of(context)!.welcomeToFamilyTitle,
-             message: AppLocalizations.of(context)!.welcomeToFamilyMessage,
+             title: l10n.welcomeToFamilyTitle,
+             message: l10n.welcomeToFamilyMessage,
              type: FeedbackType.success,
            );
            // Refresh profile
@@ -84,24 +86,43 @@ class _MainScreenState extends ConsumerState<MainScreen> {
         }
       } catch (e) {
         if (mounted) {
+           String errorMessage;
+           String errorTitle = l10n.errorTitle;
+           
+           final msg = e.toString();
+           if (msg.contains('familyAlreadyHasMember')) {
+             errorMessage = l10n.familyAlreadyHasMember;
+           } else if (msg.contains('inviteInvalidOrExpired')) {
+             errorMessage = l10n.inviteInvalidOrExpired;
+           } else if (msg.contains('familyNotFound')) {
+             errorMessage = l10n.genericError('Family not found');
+           } else {
+             // Fallback for unexpected errors, stripping "Exception: "
+             errorMessage = msg.replaceAll('Exception: ', '');
+           }
+           
            StatusFeedbackModal.show(
              context,
-             title: AppLocalizations.of(context)!.errorTitle,
-             message: AppLocalizations.of(context)!.joinFamilyError(e.toString()),
+             title: errorTitle,
+             message: errorMessage,
              type: FeedbackType.error,
            );
         }
       }
     } else {
-      print('⚠️ User not authenticated. Storing pending invite for family $familyId.');
-      SharingService.pendingFamilyId = familyId;
-      SharingService.pendingListId = null; 
-      
-      if (mounted) {
-        _showLoginSheet();
-      }
+       // ... existing pending logic ...
+       // Store pending invite code
+       SharingService.pendingFamilyId = familyId;
+       SharingService.pendingInviteCode = inviteCode; // Need to add this static field
+       SharingService.pendingListId = null;
+       
+       if (mounted) {
+         // ... existing warning logic ...
+       }
     }
   }
+  // Code removed
+
 
   void _showLoginSheet() {
       showModalBottomSheet(
@@ -326,11 +347,24 @@ class _MainScreenState extends ConsumerState<MainScreen> {
             _handleJoinList(SharingService.pendingListId!, SharingService.pendingFamilyId!);
             SharingService.pendingListId = null;
             SharingService.pendingFamilyId = null;
-          } else if (SharingService.pendingFamilyId != null && SharingService.pendingListId == null) {
              // Pending Family Join (without list)
-            _handleJoinFamily(SharingService.pendingFamilyId!);
+            _handleJoinFamily(SharingService.pendingFamilyId!, SharingService.pendingInviteCode);
             SharingService.pendingFamilyId = null;
+            SharingService.pendingInviteCode = null;
           }
+        }
+      });
+    });
+    
+    // Sync Local Name from Firestore Profile (Restores name after reinstall)
+    ref.listen(userProfileProvider, (previous, next) {
+      next.whenData((profile) {
+        if (profile != null && profile.name != null) {
+           final currentLocalName = ref.read(userNameProvider);
+           // Only update if local is empty (priority to local edits, but fill holes from cloud)
+           if (currentLocalName == null || currentLocalName.isEmpty) {
+              ref.read(userNameProvider.notifier).setName(profile.name!);
+           }
         }
       });
     });
