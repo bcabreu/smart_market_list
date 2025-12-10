@@ -17,6 +17,24 @@ class AuthService {
   // Current User
   User? get currentUser => _auth.currentUser;
 
+  // Validate Session (Check if user still exists on server)
+  Future<void> validateSession() async {
+    final user = _auth.currentUser;
+    if (user != null) {
+      try {
+        await user.reload();
+      } on FirebaseAuthException catch (e) {
+        if (e.code == 'user-not-found' || e.code == 'user-disabled') {
+           await signOut();
+        }
+        // Don't rethrow network errors, keep session if just offline
+        if (e.code == 'user-not-found' || e.code == 'user-disabled') {
+           rethrow;
+        }
+      }
+    }
+  }
+
   // Sign In with Email & Password
   Future<UserCredential> signIn({required String email, required String password}) async {
     final credential = await _auth.signInWithEmailAndPassword(
@@ -96,11 +114,21 @@ class AuthService {
   Future<void> deleteAccount() async {
     final user = _auth.currentUser;
     if (user != null) {
-      // Note: This requires recent login. If it fails, we should handle re-auth.
-      await _googleSignIn.signOut();
+      // 1. Delete User Data from Firestore
+      try {
+        await _firestoreService.deleteUser(user.uid);
+      } catch (e) {
+        print('Error deleting user Firestore data: $e');
+        // Continue to delete Auth
+      }
+
+      // 2. Delete Auth Account
+      // Note: This requires recent login. If it fails, it will throw, and ProfileScreen catches it.
       await user.delete();
-      // Note: We might want to remove the Firestore doc too, or mark deleted.
-      // FirestoreService logic for delete could be added here.
+
+      // 3. Sign Out (Clean up local state/tokens)
+      await _googleSignIn.signOut();
+      await _auth.signOut();
     }
   }
 

@@ -228,9 +228,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             SharingService.pendingListId = null;
                             SharingService.pendingFamilyId = null;
                             
-                            if (context.mounted) {
-                               ScaffoldMessenger.of(context).showSnackBar(
-                                 const SnackBar(content: Text('Lista compartilhada adicionada com sucesso!')),
+                             if (context.mounted) {
+                               StatusFeedbackModal.show(
+                                 context,
+                                 title: l10n.successTitle,
+                                 message: l10n.welcomeToList,
+                                 type: FeedbackType.success,
                                );
                             }
                          }
@@ -252,11 +255,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             SharingService.pendingListId = null; // Just in case
                             
                             if (context.mounted) {
-                               ScaffoldMessenger.of(context).showSnackBar(
-                                 const SnackBar(
-                                   content: Text('Parabéns! Agora você faz parte da Família Premium! 🏠✨'),
-                                   backgroundColor: Colors.green,
-                                 ),
+                               StatusFeedbackModal.show(
+                                 context,
+                                 title: l10n.welcomeToFamilyTitle,
+                                 message: l10n.welcomeToFamilyMessage,
+                                 type: FeedbackType.success,
                                );
                                // Refresh profile to update UI immediately
                                ref.refresh(userProfileProvider);
@@ -265,8 +268,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                        } catch (e) {
                          print('Error joining pending family: $e');
                          if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                               SnackBar(content: Text('Erro ao entrar na família: $e'), backgroundColor: Colors.red),
+                            StatusFeedbackModal.show(
+                              context,
+                              title: l10n.errorTitle,
+                              message: l10n.joinFamilyError(e.toString()),
+                              type: FeedbackType.error,
                             );
                          }
                        }

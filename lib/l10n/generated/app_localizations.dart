@@ -1663,6 +1663,84 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Upgrade to Family'**
   String get upgradeToFamily;
+
+  /// No description provided for @welcomeToList.
+  ///
+  /// In en, this message translates to:
+  /// **'Shared list added! 🛒'**
+  String get welcomeToList;
+
+  /// No description provided for @welcomeToFamilyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Congratulations! 🏠✨'**
+  String get welcomeToFamilyTitle;
+
+  /// No description provided for @welcomeToFamilyMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'You are now part of the Premium Family!'**
+  String get welcomeToFamilyMessage;
+
+  /// No description provided for @joinListError.
+  ///
+  /// In en, this message translates to:
+  /// **'Error joining list: {error}'**
+  String joinListError(Object error);
+
+  /// No description provided for @joinFamilyError.
+  ///
+  /// In en, this message translates to:
+  /// **'Error joining family: {error}'**
+  String joinFamilyError(Object error);
+
+  /// No description provided for @accountDeletedError.
+  ///
+  /// In en, this message translates to:
+  /// **'Error deleting account: {error}'**
+  String accountDeletedError(Object error);
+
+  /// No description provided for @reportGenerationError.
+  ///
+  /// In en, this message translates to:
+  /// **'Error generating report: {error}'**
+  String reportGenerationError(Object error);
+
+  /// No description provided for @passwordsDoNotMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Passwords do not match'**
+  String get passwordsDoNotMatch;
+
+  /// No description provided for @accountCreatedAndListAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'Account created and shared list added!'**
+  String get accountCreatedAndListAdded;
+
+  /// No description provided for @genericError.
+  ///
+  /// In en, this message translates to:
+  /// **'Error: {error}'**
+  String genericError(Object error);
+
+  /// No description provided for @successTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Success!'**
+  String get successTitle;
+
+  /// No description provided for @requiresRecentLogin.
+  ///
+  /// In en, this message translates to:
+  /// **'For your security, please log in again before deleting your account.'**
+  String get requiresRecentLogin;
+
+  /// No description provided for @emailAlreadyInUse.
+  ///
+  /// In en, this message translates to:
+  /// **'This email is already in use by another account.'**
+  String get emailAlreadyInUse;
 }
 
 class _AppLocalizationsDelegate

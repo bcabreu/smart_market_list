@@ -53,6 +53,56 @@ class FirestoreService {
     await _users.doc(uid).set(data, SetOptions(merge: true));
   }
 
+  Future<void> deleteUser(String uid) async {
+    try {
+      // 1. Remove from Shared Lists (where user is a member)
+      final sharedLists = await _firestore
+          .collectionGroup('shopping_lists')
+          .where('members', arrayContains: uid)
+          .get();
+          
+      final batch = _firestore.batch();
+      
+      for (var doc in sharedLists.docs) {
+        batch.update(doc.reference, {
+          'members': FieldValue.arrayRemove([uid])
+        });
+      }
+      
+      // 2. Remove from Families (where user is guest or owner)
+      // Check for families where user is a member
+      final families = await _families.where('members', arrayContains: uid).get();
+      
+      for (var doc in families.docs) {
+         final data = doc.data() as Map<String, dynamic>;
+         final ownerId = data['ownerId'];
+         
+         if (ownerId == uid) {
+            // User is Owner -> Delete Family
+            // Note: This leaves subcollections (lists) orphaned in standard Firestore, 
+            // but effectively "deletes" the family presence.
+            batch.delete(doc.reference); 
+         } else {
+            // User is Guest -> Remove from Family
+             batch.update(doc.reference, {
+               'members': FieldValue.arrayRemove([uid]),
+               'guestId': FieldValue.delete(), // Assuming 1 guest limit logic
+             });
+         }
+      }
+
+      // 3. Delete User Document
+      batch.delete(_users.doc(uid));
+
+      await batch.commit();
+
+    } catch (e) {
+      print('Error during deep user deletion: $e');
+      // Fallback: Ensure user doc is deleted even if cleanup fails partially
+      await _users.doc(uid).delete(); 
+    }
+  }
+
   // --- Family & Invitations ---
 
   Future<void> ensureUserHasFamily(String uid) async {

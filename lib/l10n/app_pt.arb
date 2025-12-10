@@ -260,5 +260,18 @@
   "logoutMessageWarning": "Você está usando a versão Gratuita. Ao sair, TODAS as suas listas e dados neste aparelho serão APAGADOS permanentemente. Deseja continuar?",
   "familyPlanExclusiveFeature": "Recurso exclusivo do Plano Família",
   "familyPlanUpgradeDescription": "Com o plano Individual você tem acesso Premium, mas para compartilhar com alguém você precisa do Plano Família.",
-  "upgradeToFamily": "Fazer Upgrade para Família"
+  "upgradeToFamily": "Fazer Upgrade para Família",
+  "welcomeToList": "Lista compartilhada adicionada! 🛒",
+  "welcomeToFamilyTitle": "Parabéns! 🏠✨",
+  "welcomeToFamilyMessage": "Agora você faz parte da Família Premium!",
+  "joinListError": "Erro ao entrar na lista: {error}",
+  "joinFamilyError": "Erro ao entrar na família: {error}",
+  "accountDeletedError": "Erro ao deletar conta: {error}",
+  "reportGenerationError": "Erro ao gerar relatório: {error}",
+  "passwordsDoNotMatch": "As senhas não coincidem",
+  "accountCreatedAndListAdded": "Conta criada e lista compartilhada adicionada!",
+  "genericError": "Erro: {error}",
+  "successTitle": "Sucesso!",
+  "requiresRecentLogin": "Para sua segurança, faça login novamente antes de excluir a conta.",
+  "emailAlreadyInUse": "Este email já está sendo usado por outra conta."
 }

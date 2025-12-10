@@ -12,6 +12,7 @@ import 'package:smart_market_list/providers/auth_provider.dart';
 import 'package:smart_market_list/core/services/sharing_service.dart';
 import 'package:smart_market_list/providers/sharing_provider.dart';
 import 'package:smart_market_list/ui/common/modals/loading_dialog.dart';
+import 'package:smart_market_list/ui/common/modals/status_feedback_modal.dart';
 
 class SignUpScreen extends ConsumerStatefulWidget {
   const SignUpScreen({super.key});
@@ -40,18 +41,22 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
     final email = _emailController.text.trim();
     final password = _passwordController.text;
     final confirm = _confirmPasswordController.text;
+    final l10n = AppLocalizations.of(context)!;
 
     if (name.isEmpty || email.isEmpty || password.isEmpty) return;
 
     if (password != confirm) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('As senhas não coincidem'), backgroundColor: Colors.red),
+        StatusFeedbackModal.show(
+          context,
+          title: l10n.errorTitle,
+          message: l10n.passwordsDoNotMatch,
+          type: FeedbackType.error,
         );
         return;
     }
 
     FocusScope.of(context).unfocus();
-    LoadingDialog.show(context, AppLocalizations.of(context)!.processing);
+    LoadingDialog.show(context, l10n.processing);
 
     try {
       await ref.read(authServiceProvider).signUp(email: email, password: password);
@@ -78,8 +83,11 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
               SharingService.pendingFamilyId = null;
               
               if (mounted) {
-                 ScaffoldMessenger.of(context).showSnackBar(
-                   const SnackBar(content: Text('Conta criada e lista compartilhada adicionada!')),
+                 StatusFeedbackModal.show(
+                   context,
+                   title: l10n.successTitle,
+                   message: l10n.accountCreatedAndListAdded,
+                   type: FeedbackType.success,
                  );
               }
            }
@@ -101,11 +109,11 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
               SharingService.pendingListId = null; // Just in case
               
               if (mounted) {
-                 ScaffoldMessenger.of(context).showSnackBar(
-                   const SnackBar(
-                     content: Text('Parabéns! Agora você faz parte da Família Premium! 🏠✨'),
-                     backgroundColor: Colors.green,
-                   ),
+                 StatusFeedbackModal.show(
+                   context,
+                   title: l10n.welcomeToFamilyTitle,
+                   message: l10n.welcomeToFamilyMessage,
+                   type: FeedbackType.success,
                  );
                  // Refresh profile
                  ref.refresh(userProfileProvider);
@@ -114,8 +122,11 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
          } catch (e) {
            print('Error joining pending family: $e');
            if (mounted) {
-             ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Erro ao entrar na família: $e'), backgroundColor: Colors.red),
+             StatusFeedbackModal.show(
+               context,
+               title: l10n.errorTitle,
+               message: l10n.joinFamilyError(e.toString()),
+               type: FeedbackType.error,
              );
            }
          }
@@ -128,8 +139,21 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
     } catch (e) {
       if (mounted) {
         LoadingDialog.hide(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro: ${e.toString()}'), backgroundColor: Colors.red),
+        
+        String errorMessage = e.toString();
+        if (errorMessage.contains('email-already-in-use')) {
+           errorMessage = l10n.emailAlreadyInUse;
+        } else if (errorMessage.contains('invalid-email')) {
+           errorMessage = l10n.invalidEmailError;
+        } else if (errorMessage.contains('weak-password')) {
+           errorMessage = 'A senha é muito fraca.'; // TODO: Add to arb if needed, or rely on generic
+        }
+
+        StatusFeedbackModal.show(
+          context,
+          title: l10n.errorTitle,
+          message: errorMessage.replaceAll('Exception: ', ''),
+          type: FeedbackType.error,
         );
       }
     }

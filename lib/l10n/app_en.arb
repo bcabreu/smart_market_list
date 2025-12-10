@@ -260,5 +260,18 @@
   "logoutMessageWarning": "You are on the Free plan. Logging out will PERMANENTLY ERASE all your lists on this device. Do you want to continue?",
   "familyPlanExclusiveFeature": "Family Plan Exclusive Feature",
   "familyPlanUpgradeDescription": "With the Individual plan you have Premium access, but to share with someone you need the Family Plan.",
-  "upgradeToFamily": "Upgrade to Family"
+  "upgradeToFamily": "Upgrade to Family",
+  "welcomeToList": "Shared list added! 🛒",
+  "welcomeToFamilyTitle": "Congratulations! 🏠✨",
+  "welcomeToFamilyMessage": "You are now part of the Premium Family!",
+  "joinListError": "Error joining list: {error}",
+  "joinFamilyError": "Error joining family: {error}",
+  "accountDeletedError": "Error deleting account: {error}",
+  "reportGenerationError": "Error generating report: {error}",
+  "passwordsDoNotMatch": "Passwords do not match",
+  "accountCreatedAndListAdded": "Account created and shared list added!",
+  "genericError": "Error: {error}",
+  "successTitle": "Success!",
+  "requiresRecentLogin": "For your security, please log in again before deleting your account.",
+  "emailAlreadyInUse": "This email is already in use by another account."
 }

@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:animations/animations.dart';
+import 'package:smart_market_list/ui/common/modals/status_feedback_modal.dart';
 import 'package:flutter/services.dart';
 import 'package:smart_market_list/core/theme/app_colors.dart';
 import 'package:smart_market_list/ui/screens/smart_list/smart_list_screen.dart';
+import 'package:smart_market_list/l10n/generated/app_localizations.dart';
 import 'package:smart_market_list/ui/screens/shopping_notes/shopping_notes_screen.dart';
 import 'package:smart_market_list/ui/screens/recipes/recipes_screen.dart';
 import 'package:smart_market_list/ui/screens/profile/profile_screen.dart';
@@ -40,8 +42,18 @@ class _MainScreenState extends ConsumerState<MainScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      _validateSession();
       _initDeepLinks();
     });
+  }
+
+  Future<void> _validateSession() async {
+    try {
+      await ref.read(authServiceProvider).validateSession();
+    } catch (e) {
+      print('Session validation failed: $e');
+      // If user was signed out by validation, the stream will update the UI automatically.
+    }
   }
 
   void _initDeepLinks() {
@@ -61,19 +73,22 @@ class _MainScreenState extends ConsumerState<MainScreen> {
       try {
         await ref.read(sharingServiceProvider).joinFamily(familyId, user.uid);
         if (mounted) {
-           ScaffoldMessenger.of(context).showSnackBar(
-             const SnackBar(
-               content: Text('Parabéns! Agora você faz parte da Família Premium! 🏠✨'),
-               backgroundColor: Colors.green,
-             ),
+           StatusFeedbackModal.show(
+             context,
+             title: AppLocalizations.of(context)!.welcomeToFamilyTitle,
+             message: AppLocalizations.of(context)!.welcomeToFamilyMessage,
+             type: FeedbackType.success,
            );
            // Refresh profile
            ref.refresh(userProfileProvider);
         }
       } catch (e) {
         if (mounted) {
-           ScaffoldMessenger.of(context).showSnackBar(
-             SnackBar(content: Text('Erro ao entrar na família: $e'), backgroundColor: Colors.red),
+           StatusFeedbackModal.show(
+             context,
+             title: AppLocalizations.of(context)!.errorTitle,
+             message: AppLocalizations.of(context)!.joinFamilyError(e.toString()),
+             type: FeedbackType.error,
            );
         }
       }
@@ -169,8 +184,11 @@ class _MainScreenState extends ConsumerState<MainScreen> {
       try {
         await ref.read(sharingServiceProvider).joinList(listId, familyId, user.uid);
         if (mounted) {
-           ScaffoldMessenger.of(context).showSnackBar(
-             const SnackBar(content: Text('Lista compartilhada adicionada! 🛒')),
+           StatusFeedbackModal.show(
+             context,
+             title: AppLocalizations.of(context)!.successTitle,
+             message: AppLocalizations.of(context)!.welcomeToList,
+             type: FeedbackType.success,
            );
            // Switch to SmartListScreen and select the new list
            ref.read(bottomNavIndexProvider.notifier).state = 0;
@@ -178,8 +196,11 @@ class _MainScreenState extends ConsumerState<MainScreen> {
         }
       } catch (e) {
         if (mounted) {
-           ScaffoldMessenger.of(context).showSnackBar(
-             SnackBar(content: Text('Erro ao entrar na lista: $e'), backgroundColor: Colors.red),
+           StatusFeedbackModal.show(
+             context,
+             title: AppLocalizations.of(context)!.errorTitle,
+             message: AppLocalizations.of(context)!.joinListError(e.toString()),
+             type: FeedbackType.error,
            );
         }
       }

@@ -826,4 +826,57 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get upgradeToFamily => 'Upgrade to Family';
+
+  @override
+  String get welcomeToList => 'Shared list added! 🛒';
+
+  @override
+  String get welcomeToFamilyTitle => 'Congratulations! 🏠✨';
+
+  @override
+  String get welcomeToFamilyMessage =>
+      'You are now part of the Premium Family!';
+
+  @override
+  String joinListError(Object error) {
+    return 'Error joining list: $error';
+  }
+
+  @override
+  String joinFamilyError(Object error) {
+    return 'Error joining family: $error';
+  }
+
+  @override
+  String accountDeletedError(Object error) {
+    return 'Error deleting account: $error';
+  }
+
+  @override
+  String reportGenerationError(Object error) {
+    return 'Error generating report: $error';
+  }
+
+  @override
+  String get passwordsDoNotMatch => 'Passwords do not match';
+
+  @override
+  String get accountCreatedAndListAdded =>
+      'Account created and shared list added!';
+
+  @override
+  String genericError(Object error) {
+    return 'Error: $error';
+  }
+
+  @override
+  String get successTitle => 'Success!';
+
+  @override
+  String get requiresRecentLogin =>
+      'For your security, please log in again before deleting your account.';
+
+  @override
+  String get emailAlreadyInUse =>
+      'This email is already in use by another account.';
 }

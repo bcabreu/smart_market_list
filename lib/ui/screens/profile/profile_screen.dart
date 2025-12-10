@@ -403,11 +403,11 @@ class ProfileScreen extends ConsumerWidget {
     } catch (e) {
       if (context.mounted) {
         LoadingDialog.hide(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Erro ao gerar relatório: $e'),
-            backgroundColor: Colors.red,
-          ),
+        StatusFeedbackModal.show(
+          context,
+          title: AppLocalizations.of(context)!.errorTitle,
+          message: AppLocalizations.of(context)!.reportGenerationError(e.toString()),
+          type: FeedbackType.error,
         );
       }
     }
@@ -603,15 +603,27 @@ class ProfileScreen extends ConsumerWidget {
          await ref.read(profileImageProvider.notifier).clearImage();
          
          // 3. Clear Shopping Notes
-         final notesService = ref.read(shoppingNotesServiceProvider);
-         await notesService.deleteAllNotes();
+         try {
+            final notesService = ref.read(shoppingNotesServiceProvider);
+            await notesService.deleteAllNotes();
+         } catch (e) {
+            print('Error deleting notes: $e');
+         }
 
          // 4. Clear Favorite Recipes
-         final recipesService = ref.read(recipesServiceProvider);
-         await recipesService.clearRecipes();
+         try {
+            final recipesService = ref.read(recipesServiceProvider);
+            await recipesService.clearRecipes();
+         } catch (e) {
+            print('Error deleting recipes: $e');
+         }
          
          // 5. Clear Premium Status
-         await ref.read(premiumSinceProvider.notifier).setPremium(false);
+         try {
+            await ref.read(premiumSinceProvider.notifier).setPremium(false);
+         } catch (e) {
+            print('Error clearing premium: $e');
+         }
          
          // 6. Delete Account from Firebase
          try {
@@ -634,8 +646,18 @@ class ProfileScreen extends ConsumerWidget {
        } catch (e) {
          if (context.mounted) {
            LoadingDialog.hide(context);
-           ScaffoldMessenger.of(context).showSnackBar(
-             SnackBar(content: Text('Error deleting account: $e')),
+           
+           String errorMessage = AppLocalizations.of(context)!.accountDeletedError(e.toString());
+           
+           if (e.toString().contains('requires-recent-login')) {
+              errorMessage = AppLocalizations.of(context)!.requiresRecentLogin;
+           }
+
+           StatusFeedbackModal.show(
+             context,
+             title: AppLocalizations.of(context)!.errorTitle,
+             message: errorMessage,
+             type: FeedbackType.error,
            );
          }
        }
