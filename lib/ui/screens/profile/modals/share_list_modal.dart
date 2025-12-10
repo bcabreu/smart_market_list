@@ -150,9 +150,9 @@ class _ShareListModalState extends ConsumerState<ShareListModal> {
                   
                   // Check Plan Type
                   if (user.planType != 'premium_family') ...[
-                     // Logic: If user is NOT premium_family, but HAS a familyId, then they are a GUEST.
-                     // Guests cannot invite others.
-                     if (user.familyId != null) ...[
+                     // Logic: If user is premium_family_guest, they are a GUEST.
+                     // Free/Individual users also have familyId (personal), so we must rely on planType.
+                     if (user.planType == 'premium_family_guest') ...[
                         Container(
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
@@ -210,10 +210,10 @@ class _ShareListModalState extends ConsumerState<ShareListModal> {
                                     Navigator.pop(context);
                                     showModalBottomSheet(
                                       context: context,
-                                      isScrollControlled: true,
-                                      backgroundColor: Colors.transparent,
-                                      builder: (context) => const PaywallModal(), // User can select Family tab there
-                                    );
+                      isScrollControlled: true,
+                      backgroundColor: Colors.transparent,
+                      builder: (context) => const PaywallModal(initialTabIndex: 1), // Default to Family Tab
+                    );
                                   },
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: Colors.amber[700],

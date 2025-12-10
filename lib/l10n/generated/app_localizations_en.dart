@@ -931,4 +931,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get unknownMember => 'Unknown';
+
+  @override
+  String get premiumIndividualMessage =>
+      'You are now Individual Premium! Enjoy all features.';
+
+  @override
+  String get awesome => 'Awesome! 🚀';
 }

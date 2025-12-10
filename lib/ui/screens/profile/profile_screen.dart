@@ -275,12 +275,24 @@ class ProfileScreen extends ConsumerWidget {
                                   : 'Shared with $sharedCount person${sharedCount > 1 ? 's' : ''}')
                               : l10n.shareListSubtitle,
                           isLocked: !isFamilyPlan, 
-                          onTap: () => showModalBottomSheet(
+                          onTap: () {
+                            if (!isPremium) {
+                               // Open Paywall directly on Family Tab (Tab 1)
+                               showModalBottomSheet(
+                                  context: context,
+                                  isScrollControlled: true,
+                                  backgroundColor: Colors.transparent,
+                                  builder: (context) => const PaywallModal(initialTabIndex: 1),
+                                );
+                            } else {
+                               showModalBottomSheet(
                                   context: context,
                                   isScrollControlled: true,
                                   backgroundColor: Colors.transparent,
                                   builder: (context) => const ShareListModal(),
-                                ),
+                                );
+                            }
+                          },
                         ),
                         SettingsTile(
                           icon: Icons.bar_chart,

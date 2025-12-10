@@ -288,5 +288,7 @@
   "youNeedToCreateFamily": "You need to create a family first.",
   "errorLoadingProfile": "Error loading profile: {error}",
   "errorSharing": "Error sharing: {error}",
-  "unknownMember": "Unknown"
+  "unknownMember": "Unknown",
+  "premiumIndividualMessage": "You are now Individual Premium! Enjoy all features.",
+  "awesome": "Awesome! 🚀"
 }

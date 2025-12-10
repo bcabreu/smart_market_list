@@ -1831,6 +1831,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Unknown'**
   String get unknownMember;
+
+  /// No description provided for @premiumIndividualMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'You are now Individual Premium! Enjoy all features.'**
+  String get premiumIndividualMessage;
+
+  /// No description provided for @awesome.
+  ///
+  /// In en, this message translates to:
+  /// **'Awesome! 🚀'**
+  String get awesome;
 }
 
 class _AppLocalizationsDelegate

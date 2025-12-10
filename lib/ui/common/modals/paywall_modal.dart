@@ -5,14 +5,18 @@ import 'package:smart_market_list/data/models/user_profile.dart';
 import 'package:smart_market_list/providers/user_provider.dart';
 import 'package:smart_market_list/providers/auth_provider.dart';
 import 'package:smart_market_list/core/services/firestore_service.dart';
+import 'package:smart_market_list/ui/common/modals/premium_success_modal.dart';
 
 class PaywallModal extends ConsumerWidget {
-  const PaywallModal({super.key});
+  final int initialTabIndex;
+
+  const PaywallModal({super.key, this.initialTabIndex = 0});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return DefaultTabController(
       length: 2,
+      initialIndex: initialTabIndex,
       child: Container(
         padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
         decoration: BoxDecoration(
@@ -255,13 +259,8 @@ class PaywallModal extends ConsumerWidget {
     }
     
     Navigator.pop(context);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(isFamily 
-            ? 'Bem-vindo ao Plano Familiar! 🏠👑' 
-            : 'Parabéns! Você agora é Premium! 👑'),
-        backgroundColor: AppColors.secondary,
-      ),
-    );
+    
+    // Show Premium Success Modal
+    PremiumSuccessModal.show(context, isFamily: isFamily);
   }
 }

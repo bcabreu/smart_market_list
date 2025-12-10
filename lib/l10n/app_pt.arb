@@ -288,5 +288,7 @@
   "youNeedToCreateFamily": "Você precisa criar uma família primeiro.",
   "errorLoadingProfile": "Erro ao carregar perfil: {error}",
   "errorSharing": "Erro ao compartilhar: {error}",
-  "unknownMember": "Desconhecido"
+  "unknownMember": "Desconhecido",
+  "premiumIndividualMessage": "Você agora é Premium Individual! Aproveite todos os recursos.",
+  "awesome": "Incrível! 🚀"
 }
