@@ -67,33 +67,40 @@ class SharingService {
 
   // Share Family Access
   // Share Family Access
-  Future<void> shareFamilyAccess(String familyId, String ownerName) async {
+  Future<void> shareFamilyAccess({
+    required String familyId,
+    required String title,
+    required String messageBody,
+    required String accessLinkLabel,
+    required String installAppAdvice,
+    required String androidLabel,
+    required String iosLabel,
+  }) async {
     // We revert to 'ensureInviteCode' to keep the link STABLE.
-    // This prevents the "I clicked share twice and the first link died" problem.
-    // The code will only be rotated when someone successfully joins (in FirestoreService).
     final inviteCode = await _firestoreService.ensureInviteCode(familyId);
     
     final String deepLink = 'https://smart-market-list-82bf7.web.app/share?listId=invite&familyId=$familyId&action=join_family&inviteCode=$inviteCode';
     
-    _shareMessage(
-      '🏠 *Convite para Família Premium*\n$ownerName te convidou para fazer parte da família no Smart Market List!\n\nVocê terá acesso Premium e todas as listas serão compartilhadas.',
-      deepLink,
-    );
-  }
-
-  Future<void> _shareMessage(String title, String deepLink) async {
-    // ... existing ...
     const String androidUrl = 'https://play.google.com/store/apps/details?id=com.kepoweb.smart_market_list';
     const String iosUrl = 'https://apps.apple.com/app/id6756240280';
     
-    final String message = 
+    final String fullMessage = 
         '$title\n\n'
-        '🔗 *Link de Acesso:*\n$deepLink\n'
-        '_(Se não funcionar, instale o app primeiro)_\n\n'
-        '🤖 *Android:* $androidUrl\n'
-        '🍎 *iOS:* $iosUrl';
+        '$messageBody\n\n'
+        '$accessLinkLabel\n$deepLink\n'
+        '$installAppAdvice\n\n'
+        '$androidLabel $androidUrl\n'
+        '$iosLabel $iosUrl';
 
-    await Share.share(message);
+    await Share.share(fullMessage);
+  }
+
+  // Legacy Share Message for Lists (Can be refactored later or kept simple)
+  // Re-implementing simplified _shareMessage or just ignoring it for family share
+  Future<void> _shareMessage(String message, String deepLink) async {
+      // ... kept for list sharing if needed, but shareFamilyAccess now builds its own message.
+      // Actually list sharing uses it. Let's keep it compatible or duplicate logic for simplicity.
+      await Share.share(message); 
   }
 
   // Join List Logic

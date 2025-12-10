@@ -290,5 +290,11 @@
   "errorSharing": "Erro ao compartilhar: {error}",
   "unknownMember": "Desconhecido",
   "premiumIndividualMessage": "Você agora é Premium Individual! Aproveite todos os recursos.",
-  "awesome": "Incrível! 🚀"
+  "awesome": "Incrível! 🚀",
+  "inviteFamilyTitle": "🏠 *Convite para Família Premium*",
+  "inviteFamilyMessageBody": "{ownerName} te convidou para fazer parte da família no Smart Market List!\n\nVocê terá acesso Premium e todas as listas serão compartilhadas.",
+  "accessLinkLabel": "🔗 *Link de Acesso:*",
+  "installAppAdvice": "_(Se não funcionar, instale o app primeiro)_",
+  "androidLabel": "🤖 *Android:*",
+  "iosLabel": "🍎 *iOS:*"
 }

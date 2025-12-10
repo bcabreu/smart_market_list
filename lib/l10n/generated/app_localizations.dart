@@ -1843,6 +1843,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Awesome! 🚀'**
   String get awesome;
+
+  /// No description provided for @inviteFamilyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'🏠 *Premium Family Invite*'**
+  String get inviteFamilyTitle;
+
+  /// No description provided for @inviteFamilyMessageBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{ownerName} invited you to join the family on Smart Market List!\n\nYou will get Premium access and shared lists.'**
+  String inviteFamilyMessageBody(Object ownerName);
+
+  /// No description provided for @accessLinkLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'🔗 *Access Link:*'**
+  String get accessLinkLabel;
+
+  /// No description provided for @installAppAdvice.
+  ///
+  /// In en, this message translates to:
+  /// **'_(If it doesn\'t work, install the app first)_'**
+  String get installAppAdvice;
+
+  /// No description provided for @androidLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'🤖 *Android:*'**
+  String get androidLabel;
+
+  /// No description provided for @iosLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'🍎 *iOS:*'**
+  String get iosLabel;
 }
 
 class _AppLocalizationsDelegate

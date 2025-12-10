@@ -940,4 +940,24 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get awesome => 'Incrível! 🚀';
+
+  @override
+  String get inviteFamilyTitle => '🏠 *Convite para Família Premium*';
+
+  @override
+  String inviteFamilyMessageBody(Object ownerName) {
+    return '$ownerName te convidou para fazer parte da família no Smart Market List!\n\nVocê terá acesso Premium e todas as listas serão compartilhadas.';
+  }
+
+  @override
+  String get accessLinkLabel => '🔗 *Link de Acesso:*';
+
+  @override
+  String get installAppAdvice => '_(Se não funcionar, instale o app primeiro)_';
+
+  @override
+  String get androidLabel => '🤖 *Android:*';
+
+  @override
+  String get iosLabel => '🍎 *iOS:*';
 }

@@ -32,7 +32,15 @@ class _ShareListModalState extends ConsumerState<ShareListModal> {
 
     try {
       // Use SharingService to generate and share the link
-      await ref.read(sharingServiceProvider).shareFamilyAccess(familyId, ownerName);
+      await ref.read(sharingServiceProvider).shareFamilyAccess(
+        familyId: familyId,
+        title: l10n.inviteFamilyTitle,
+        messageBody: l10n.inviteFamilyMessageBody(ownerName),
+        accessLinkLabel: l10n.accessLinkLabel,
+        installAppAdvice: l10n.installAppAdvice,
+        androidLabel: l10n.androidLabel,
+        iosLabel: l10n.iosLabel,
+      );
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
