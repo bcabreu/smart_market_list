@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:smart_market_list/core/theme/app_colors.dart';
-import 'package:smart_market_list/core/services/iap_service.dart';
+import 'package:smart_market_list/providers/subscription_provider.dart';
+
+
 import 'package:smart_market_list/providers/theme_provider.dart';
 import 'package:smart_market_list/providers/user_provider.dart';
 import 'package:smart_market_list/ui/common/modals/paywall_modal.dart';
@@ -524,16 +526,12 @@ class ProfileScreen extends ConsumerWidget {
     try {
       LoadingDialog.show(context, l10n.restoringPurchases);
       
-      final service = ref.read(iapServiceProvider);
-      // Ensure service is initialized/listening
-      await service.initialize();
-      
-      final initiated = await service.restorePurchases();
+      final success = await ref.read(revenueCatServiceProvider).restorePurchases();
       
       if (context.mounted) {
         LoadingDialog.hide(context);
         
-        if (initiated) {
+        if (success) {
           StatusFeedbackModal.show(
             context,
             title: l10n.requestSentTitle,

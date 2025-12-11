@@ -13,6 +13,7 @@ import 'package:smart_market_list/ui/screens/profile/profile_screen.dart';
 import 'package:smart_market_list/ui/navigation/custom_bottom_navigation.dart';
 import 'package:smart_market_list/ui/screens/auth/login_screen.dart';
 import 'package:smart_market_list/ui/screens/auth/signup_screen.dart';
+import 'package:smart_market_list/data/models/recipe.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:smart_market_list/providers/navigation_provider.dart';
@@ -44,9 +45,13 @@ class _MainScreenState extends ConsumerState<MainScreen> {
   @override
   void initState() {
     super.initState();
+    // Initialize Deep Links with a slight delay to ensure Native Bridge is ready (iOS Fix)
+    Future.delayed(const Duration(milliseconds: 800), () {
+       _initDeepLinks();
+    });
+    
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _validateSession();
-      _initDeepLinks();
     });
   }
 
@@ -60,7 +65,8 @@ class _MainScreenState extends ConsumerState<MainScreen> {
   }
 
   void _initDeepLinks() {
-    ref.read(sharingServiceProvider).initDeepLinks(
+    // We use read here because it's a one-time subscription setup
+     ref.read(sharingServiceProvider).initDeepLinks(
       onJoinList: (listId, familyId) {
         _handleJoinList(listId, familyId);
       },
@@ -68,34 +74,58 @@ class _MainScreenState extends ConsumerState<MainScreen> {
         _handleJoinFamily(familyId, inviteCode);
       },
       onOpenRecipe: (recipeId) {
+        // Switch to Recipes Tab (Index 2)
+        ref.read(bottomNavIndexProvider.notifier).state = 2;
         _handleOpenRecipe(recipeId);
       },
     );
   }
 
   Future<void> _handleOpenRecipe(String recipeId) async {
-    // 1. Fetch Recipes from Provider (or Service if not loaded)
-    final recipes = await ref.read(recipesProvider.future);
+    // 1. Try to find in currently loaded list (Cache/Local)
+    final recipes = ref.read(recipesProvider).value ?? [];
+    Recipe? recipe;
     
     try {
-      // 2. Find Recipe
-      final recipe = recipes.firstWhere((r) => r.id == recipeId);
+      recipe = recipes.firstWhere((r) => r.id == recipeId);
+    } catch (e) {
+      // Not found locally
+      recipe = null;
+    }
+
+    // 2. If not found locally, try to fetch from API via Service
+    if (recipe == null) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Carregando receita...'), duration: Duration(seconds: 1)),
+        );
+      }
       
-      // 3. Open Modal
+      try {
+        final lang = Localizations.localeOf(context).languageCode;
+        recipe = await ref.read(recipesServiceProvider).getRecipeById(recipeId, languageCode: lang);
+      } catch (e) {
+        print('Error fetching recipe deep link: $e');
+      }
+    }
+
+    // 3. Open Modal if found
+    if (recipe != null) {
       if (mounted) {
         showModalBottomSheet(
           context: context,
           isScrollControlled: true,
           backgroundColor: Colors.transparent,
-          builder: (context) => RecipeDetailModal(recipe: recipe),
+          builder: (context) => RecipeDetailModal(recipe: recipe!),
         );
       }
-    } catch (e) {
+    } else {
+      // 4. Error if still null
       if (mounted) {
          StatusFeedbackModal.show(
            context,
            title: AppLocalizations.of(context)!.errorTitle,
-           message: "Recipe not found or invalid link.", // Localize later
+           message: "Recipe not found.",
            type: FeedbackType.error,
          );
       }

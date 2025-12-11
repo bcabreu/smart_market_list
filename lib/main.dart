@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
+import 'core/services/revenue_cat_service.dart';
 import 'core/services/ad_service.dart';
 import 'core/theme/app_theme.dart';
 import 'data/models/shopping_item.dart';
@@ -24,6 +25,8 @@ void main() async {
   WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
   FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
   await AdService.instance.initialize();
+  // Init RevenueCat (Anonymous for now, will identify on login)
+  await RevenueCatService().init(null);
   
   try {
     await Firebase.initializeApp(

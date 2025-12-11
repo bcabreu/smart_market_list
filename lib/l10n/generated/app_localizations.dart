@@ -2105,14 +2105,32 @@ abstract class AppLocalizations {
   /// No description provided for @pricePerMonth.
   ///
   /// In en, this message translates to:
-  /// **'\$ {price}/mo'**
+  /// **'{price} / mo'**
   String pricePerMonth(Object price);
 
   /// No description provided for @savePercent.
   ///
   /// In en, this message translates to:
-  /// **'Save 25%'**
-  String get savePercent;
+  /// **'Save {percent}%'**
+  String savePercent(Object percent);
+
+  /// No description provided for @billedMonthly.
+  ///
+  /// In en, this message translates to:
+  /// **'Billed monthly'**
+  String get billedMonthly;
+
+  /// No description provided for @billedAnnually.
+  ///
+  /// In en, this message translates to:
+  /// **'Billed annually'**
+  String get billedAnnually;
+
+  /// No description provided for @bestValue.
+  ///
+  /// In en, this message translates to:
+  /// **'Best Value'**
+  String get bestValue;
 
   /// No description provided for @cancelAnytime.
   ///

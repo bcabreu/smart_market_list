@@ -1080,11 +1080,22 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String pricePerMonth(Object price) {
-    return 'R\$ $price/mês';
+    return '$price / mês';
   }
 
   @override
-  String get savePercent => 'Economize 25%';
+  String savePercent(Object percent) {
+    return 'Economize $percent%';
+  }
+
+  @override
+  String get billedMonthly => 'Cobrado mensalmente';
+
+  @override
+  String get billedAnnually => 'Cobrado anualmente';
+
+  @override
+  String get bestValue => 'Melhor Valor';
 
   @override
   String get cancelAnytime => 'Cancele quando quiser';

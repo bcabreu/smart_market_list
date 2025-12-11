@@ -6,6 +6,9 @@ import 'package:smart_market_list/core/services/firestore_service.dart';
 import 'package:smart_market_list/ui/common/modals/premium_success_modal.dart';
 import 'package:smart_market_list/l10n/generated/app_localizations.dart';
 import 'package:smart_market_list/providers/user_provider.dart';
+import 'package:smart_market_list/providers/subscription_provider.dart';
+import 'package:smart_market_list/core/services/revenue_cat_service.dart';
+import 'package:purchases_flutter/purchases_flutter.dart';
 
 class PaywallModal extends ConsumerStatefulWidget {
   final int initialTabIndex; // Kept for compatibility
@@ -32,6 +35,7 @@ class _PaywallModalState extends ConsumerState<PaywallModal> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final offeringsAsync = ref.watch(subscriptionOfferingsProvider);
     
     // Gradient from Image (Orange -> Pink)
     final mainGradient = const LinearGradient(
@@ -46,262 +50,272 @@ class _PaywallModalState extends ConsumerState<PaywallModal> {
 
     return Scaffold(
       backgroundColor: backgroundColor,
-      body: Column(
-        children: [
-          // 1. Header with Gradient
-          Container(
-            width: double.infinity,
-            padding: EdgeInsets.only(
-              top: MediaQuery.of(context).padding.top + 60, // Increased to clear status bar
-              bottom: 32, 
-              left: 24, 
-              right: 24
-            ),
-            decoration: BoxDecoration(
-              gradient: mainGradient,
-              borderRadius: const BorderRadius.vertical(bottom: Radius.circular(32)),
-            ),
-            child: Column(
-              children: [
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: GestureDetector(
-                    onTap: () => Navigator.pop(context),
-                    child: Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.2),
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(Icons.close, color: Colors.white, size: 24),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                const Icon(
-                  Icons.emoji_events_outlined, 
-                  size: 64, 
-                  color: Colors.white
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  _isFamilyPlan ? l10n.premiumFamilyTitle : l10n.bePremium,
-                  style: const TextStyle(
-                    fontSize: 32,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                    letterSpacing: 0.5,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  _isFamilyPlan ? l10n.shareAccessSubtitle : l10n.unlockResources,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    color: Colors.white,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ],
-            ),
-          ),
+      body: offeringsAsync.when(
+        loading: () => const Center(child: CircularProgressIndicator(color: Color(0xFFFFA726))),
+        error: (err, stack) => Center(child: Text('Error loading offerings: $err', style: const TextStyle(color: Colors.white))),
+        data: (offerings) {
+          final currentOffering = offerings?.current;
+          
+          if (currentOffering == null) {
+             return Center(child: Text(l10n.genericError('No offerings found'), style: const TextStyle(color: Colors.white)));
+          }
 
-          // Scrollable Content
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Toggle Individual / Family
-                  Center(
-                    child: Container(
-                      padding: const EdgeInsets.all(4),
-                      decoration: BoxDecoration(
-                        color: cardColor,
-                        borderRadius: BorderRadius.circular(100),
-                        border: Border.all(color: Colors.white10),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          _buildToggleButton(l10n.planToggleIndividual, !_isFamilyPlan, () {
-                            setState(() => _isFamilyPlan = false);
-                          }),
-                          _buildToggleButton(l10n.planToggleFamily, _isFamilyPlan, () {
-                            setState(() => _isFamilyPlan = true);
-                          }),
-                        ],
-                      ),
-                    ),
-                  ),
+          // Helper to find package by ID
+          Package? getPackage(String id) {
+            return currentOffering.availablePackages.firstWhere(
+              (p) => p.identifier == id, 
+              orElse: () => currentOffering.availablePackages.first // Fallback safely? Or handled below
+            );
+          }
 
-                  const SizedBox(height: 24),
+          // Select packages based on Toggle
+          final monthlyId = _isFamilyPlan ? 'family_monthly' : 'individual_monthly';
+          final annualId = _isFamilyPlan ? 'family_yearly' : 'individual_yearly';
 
-                  Row(
-                    children: [
-                      Icon(Icons.auto_awesome, color: const Color(0xFF80CBC4), size: 20),
-                      const SizedBox(width: 8),
-                      Text(
-                        l10n.exclusiveResources,
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: textColor
+          // Try to find exact matches
+          Package? monthlyPackage; 
+          Package? annualPackage;
+          
+          try {
+            monthlyPackage = currentOffering.availablePackages.firstWhere((p) => p.identifier == monthlyId);
+            annualPackage = currentOffering.availablePackages.firstWhere((p) => p.identifier == annualId);
+          } catch (_) {
+            // If explicit IDs fail, fallback to standard .monthly / .annual for Individual at least
+            // But for Family we really need the correct ID.
+            if (!_isFamilyPlan) {
+               monthlyPackage = currentOffering.monthly;
+               annualPackage = currentOffering.annual;
+            }
+          }
+          
+          if (monthlyPackage == null || annualPackage == null) {
+             return Center(child: Text(l10n.genericError('Packages not found in Offering'), style: const TextStyle(color: Colors.white)));
+          }
+
+          // Calculate Discount & Monthly Equivalent
+          final monthlyPrice = monthlyPackage.storeProduct.price;
+          final annualPrice = annualPackage.storeProduct.price;
+          final currencyCode = annualPackage.storeProduct.currencyCode;
+          
+          int discountPercent = 0;
+          if (monthlyPrice > 0) {
+            final annualizedMonthly = monthlyPrice * 12;
+            discountPercent = (((annualizedMonthly - annualPrice) / annualizedMonthly) * 100).round();
+          }
+
+          final monthlyEquivalentValue = annualPrice / 12;
+          final monthlyEquivalentStr = "$currencyCode ${monthlyEquivalentValue.toStringAsFixed(2)}";
+
+          return Column(
+            children: [
+              // 1. Header with Gradient
+              Container(
+                width: double.infinity,
+                padding: EdgeInsets.only(
+                  top: MediaQuery.of(context).padding.top + 60,
+                  bottom: 32, 
+                  left: 24, 
+                  right: 24
+                ),
+                decoration: BoxDecoration(
+                  gradient: mainGradient,
+                  borderRadius: const BorderRadius.vertical(bottom: Radius.circular(32)),
+                ),
+                child: Column(
+                  children: [
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: GestureDetector(
+                        onTap: () => Navigator.pop(context),
+                        child: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withOpacity(0.2),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(Icons.close, color: Colors.white, size: 24),
                         ),
                       ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  
-                  // Features List
-                  if (_isFamilyPlan) ...[
-                     _buildFeatureCard(l10n.featureAllBenefits, l10n.featureAllBenefitsSubtitle, icon: Icons.star, color: Colors.purpleAccent, cardColor: cardColor),
-                     _buildFeatureCard(l10n.featureFamilyShare, l10n.shareAccessSubtitle, icon: Icons.group_add, color: const Color(0xFFFF4081), cardColor: cardColor),
-                     _buildFeatureCard(l10n.featureAutoSync, l10n.shareListSubtitle, icon: Icons.sync, color: Colors.blueAccent, cardColor: cardColor),
-                     _buildFeatureCard(l10n.featurePremiumGuest, l10n.featurePremiumGuestSubtitle, icon: Icons.person_add, color: Colors.greenAccent, cardColor: cardColor),
-                  ] else ...[
-                     _buildFeatureCard(l10n.featureReceiptScanning, l10n.featureReceiptScanningSubtitle, icon: Icons.receipt_long, color: Colors.orangeAccent, cardColor: cardColor),
-                     _buildFeatureCard(l10n.featureRealTimeShare, l10n.featureRealTimeShareSubtitle, icon: Icons.share, color: const Color(0xFF4DB6AC), cardColor: cardColor),
-                     _buildFeatureCard(l10n.featureNoAds, l10n.featureNoAds, icon: Icons.block, color: Colors.redAccent, cardColor: cardColor),
-                     _buildFeatureCard(l10n.featureCharts, l10n.expenseChartsSubtitle, icon: Icons.show_chart, color: const Color(0xFF4FC3F7), cardColor: cardColor),
-                     _buildFeatureCard(l10n.featureReports, l10n.exportReportsSubtitle, icon: Icons.description_outlined, color: const Color(0xFFFFF176), cardColor: cardColor),
-                     _buildFeatureCard(l10n.featureCloudBackup, l10n.featureCloudBackupSubtitle, icon: Icons.security, color: const Color(0xFFAED581), cardColor: cardColor),
-                  ],
-
-                  const SizedBox(height: 32),
-
-                  // "Escolha seu plano"
-                  Center(
-                    child: Text(
-                      l10n.chooseYourPlan,
-                      style: TextStyle(
-                        fontSize: 18,
+                    ),
+                    const SizedBox(height: 8),
+                    const Icon(
+                      Icons.emoji_events_outlined, 
+                      size: 64, 
+                      color: Colors.white
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      _isFamilyPlan ? l10n.premiumFamilyTitle : l10n.bePremium,
+                      style: const TextStyle(
+                        fontSize: 32,
                         fontWeight: FontWeight.bold,
-                        color: textColor
+                        color: Colors.white,
+                        letterSpacing: 0.5,
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 16),
+                    const SizedBox(height: 8),
+                    Text(
+                      _isFamilyPlan ? l10n.shareAccessSubtitle : l10n.unlockResources,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        color: Colors.white,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
 
-                  // Plans Row
-                  Row(
+              // Scrollable Content
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Expanded(
-                        child: _buildPlanOption(
-                          title: l10n.planMonthly,
-                          price: _isFamilyPlan ? l10n.planFamilyMonthlyPrice.split('/')[0] : l10n.planMonthlyPrice,
-                          subtitle: _isFamilyPlan ? l10n.planFamilyMonthlySubtitle : l10n.planMonthlySubtitle,
-                          yearPrice: '',
-                          isSelected: _selectedPlanIndex == 0,
-                          onTap: () => setState(() => _selectedPlanIndex = 0),
-                          cardColor: cardColor,
-                          highlightColor: const Color(0xFFFFA726),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: _buildPlanOption(
-                          title: l10n.planAnnual,
-                          price: _isFamilyPlan ? l10n.planFamilyAnnualBreakdown : l10n.planAnnualBreakdown,
-                          subtitle: _isFamilyPlan ? l10n.planFamilyAnnualSubtitle : l10n.planAnnualSubtitle,
-                          yearPrice: _isFamilyPlan ? l10n.planFamilyAnnualPrice : l10n.planAnnualPrice,
-                          isSelected: _selectedPlanIndex == 1,
-                          badgeText: '-40%',
-                          onTap: () => setState(() => _selectedPlanIndex = 1),
-                          cardColor: cardColor,
-                          highlightColor: const Color(0xFFFFA726),
-                        ),
-                      ),
-                    ],
-                  ),
-                  
-                  const SizedBox(height: 16),
+                      // Toggle Individual / Family (Disabled for now as RC example assumes simple packages)
+                      // If you have specific Family packages in RC, you'd switch offerings here.
+                      // For now, let's assume standard individual subscription via RC.
+                      // If you want Family, you'd need a separate Offering or Package in RC.
+                      
+                      const SizedBox(height: 24),
 
-                  // Savings Badge
-                  if (_selectedPlanIndex == 1)
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      decoration: BoxDecoration(
-                        color: cardColor,
-                        borderRadius: BorderRadius.circular(100),
-                        border: Border.all(color: const Color(0xFFFFA726)), // Orange border
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
+                      Row(
                         children: [
-                          const Text('💰 ', style: TextStyle(fontSize: 16)),
+                          Icon(Icons.auto_awesome, color: const Color(0xFF80CBC4), size: 20),
+                          const SizedBox(width: 8),
                           Text(
-                            _isFamilyPlan ? l10n.saveYiarlyAmountFamily : l10n.saveYiarlyAmount,
-                            style: const TextStyle(
-                              color: Color(0xFFFFA726),
+                            l10n.exclusiveResources,
+                            style: TextStyle(
+                              fontSize: 18,
                               fontWeight: FontWeight.bold,
-                              fontSize: 14,
+                              color: textColor
                             ),
                           ),
                         ],
                       ),
-                    ),
+                      const SizedBox(height: 16),
+                      
+                      // Features List (Standard)
+                       _buildFeatureCard(l10n.featureReceiptScanning, l10n.featureReceiptScanningSubtitle, icon: Icons.receipt_long, color: Colors.orangeAccent, cardColor: cardColor),
+                       _buildFeatureCard(l10n.featureRealTimeShare, l10n.featureRealTimeShareSubtitle, icon: Icons.share, color: const Color(0xFF4DB6AC), cardColor: cardColor),
+                       _buildFeatureCard(l10n.featureNoAds, l10n.featureNoAds, icon: Icons.block, color: Colors.redAccent, cardColor: cardColor),
+                       _buildFeatureCard(l10n.featureCharts, l10n.expenseChartsSubtitle, icon: Icons.show_chart, color: const Color(0xFF4FC3F7), cardColor: cardColor),
+                       _buildFeatureCard(l10n.featureReports, l10n.exportReportsSubtitle, icon: Icons.description_outlined, color: const Color(0xFFFFF176), cardColor: cardColor),
+                       _buildFeatureCard(l10n.featureCloudBackup, l10n.featureCloudBackupSubtitle, icon: Icons.security, color: const Color(0xFFAED581), cardColor: cardColor),
 
-                  const SizedBox(height: 24),
+                      const SizedBox(height: 32),
 
-                  // CTA Button
-                  SizedBox(
-                    width: double.infinity,
-                    height: 56,
-                    child: ElevatedButton(
-                      onPressed: () => _subscribe(context, ref),
-                      style: ElevatedButton.styleFrom(
-                        padding: EdgeInsets.zero,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        elevation: 0,
-                      ),
-                      child: Ink(
-                        decoration: BoxDecoration(
-                          gradient: mainGradient,
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Container(
-                          alignment: Alignment.center,
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              const Icon(Icons.emoji_events_outlined, color: Colors.white, size: 24),
-                              const SizedBox(width: 8),
-                              Text(
-                                l10n.subscribeButton(_getButtonPrice(l10n)),
-                                style: const TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ],
+                      // "Escolha seu plano"
+                      Center(
+                        child: Text(
+                          l10n.chooseYourPlan,
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: textColor
                           ),
                         ),
                       ),
-                    ),
-                  ),
+                      const SizedBox(height: 16),
 
-                  const SizedBox(height: 16),
 
-                  // Footer Text
-                  Center(
-                     child: Text(
-                       '${l10n.cancelAnytime} • ${l10n.sevenDaysFree}',
-                       style: TextStyle(color: Colors.grey[400], fontSize: 13),
-                     ),
+
+                      // Plans Row (Dynamic from RevenueCat)
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _buildPlanOption(
+                              title: l10n.planMonthly,
+                              price: monthlyPackage.storeProduct.priceString,
+                              subtitle: l10n.billedMonthly,
+                              yearPrice: '', 
+                              isSelected: _selectedPlanIndex == 0,
+                              onTap: () => setState(() => _selectedPlanIndex = 0),
+                              cardColor: cardColor,
+                              highlightColor: const Color(0xFFFFA726),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: _buildPlanOption(
+                              title: l10n.planAnnual,
+                              price: annualPackage.storeProduct.priceString,
+                              subtitle: l10n.pricePerMonth(monthlyEquivalentStr),
+                              yearPrice: l10n.billedAnnually, 
+                              isSelected: _selectedPlanIndex == 1,
+                              badgeText: l10n.savePercent(discountPercent.toString()),
+                              onTap: () => setState(() => _selectedPlanIndex = 1),
+                              cardColor: cardColor,
+                              highlightColor: const Color(0xFFFFA726),
+                            ),
+                          ),
+                        ],
+                      ),
+                      
+                      const SizedBox(height: 24),
+
+                      // CTA Button
+                      SizedBox(
+                        width: double.infinity,
+                        height: 56,
+                        child: ElevatedButton(
+                          onPressed: () => _subscribe(context, ref, (_selectedPlanIndex == 0 ? monthlyPackage : annualPackage)!),
+                          style: ElevatedButton.styleFrom(
+                            padding: EdgeInsets.zero,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            elevation: 0,
+                          ),
+                          child: Ink(
+                            decoration: BoxDecoration(
+                              gradient: mainGradient,
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Container(
+                              alignment: Alignment.center,
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  const Icon(Icons.emoji_events_outlined, color: Colors.white, size: 24),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    l10n.subscribeButton(_selectedPlanIndex == 0 ? monthlyPackage.storeProduct.priceString : annualPackage.storeProduct.priceString),
+                                    style: const TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 16),
+
+                      // Restore Button
+                      Center(
+                         child: TextButton(
+                           onPressed: () => _restorePurchases(context, ref),
+                           child: Text(
+                             'Restore Purchases', // Localize
+                             style: TextStyle(color: Colors.grey[400], fontSize: 13, decoration: TextDecoration.underline),
+                           ),
+                         ),
+                      ),
+                      const SizedBox(height: 32),
+                    ],
                   ),
-                  const SizedBox(height: 32),
-                ],
+                ),
               ),
-            ),
-          ),
-        ],
+            ],
+          );
+        },
       ),
     );
   }
@@ -462,32 +476,53 @@ class _PaywallModalState extends ConsumerState<PaywallModal> {
     );
   }
 
-  // Helper updated to take l10n
-  String _getButtonPrice(AppLocalizations l10n) {
-    if (_isFamilyPlan) {
-      if (_selectedPlanIndex == 1) return l10n.planFamilyAnnualSubtitle;
-      return l10n.planFamilyMonthlySubtitle;
-    } else {
-      if (_selectedPlanIndex == 1) return l10n.planAnnualSubtitle;
-      return l10n.planMonthlySubtitle;
+  Future<void> _subscribe(BuildContext context, WidgetRef ref, Package package) async {
+    try {
+      final success = await ref.read(revenueCatServiceProvider).purchasePackage(package);
+      if (success) {
+        // Determine Plan Type for Firestore
+        String planType = 'premium_monthly';
+        final isAnnual = package.packageType == PackageType.annual;
+        
+        if (_isFamilyPlan) {
+           planType = isAnnual ? 'premium_family_annual' : 'premium_family_monthly';
+        } else {
+           planType = isAnnual ? 'premium_annual' : 'premium_monthly';
+        }
+
+        // Sync to Firestore
+        final user = ref.read(authProvider).asData?.value;
+        if (user != null) {
+          await ref.read(firestoreServiceProvider).updateUserPremiumStatus(
+            user.uid, 
+            true, 
+            planType: planType
+          );
+        }
+
+        if (context.mounted) {
+           Navigator.pop(context); // Close Paywall
+           PremiumSuccessModal.show(context, isFamily: _isFamilyPlan); 
+        }
+      }
+    } catch (e) {
+      if (context.mounted) {
+         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Purchase failed: $e')));
+      }
     }
   }
 
-  void _subscribe(BuildContext context, WidgetRef ref) {
-    final planType = _isFamilyPlan ? 'premium_family' : 'premium_individual';
-    
-    ref.read(premiumSinceProvider.notifier).setPremium(true);
-    
-    final user = ref.read(authServiceProvider).currentUser;
-    if (user != null) {
-      ref.read(firestoreServiceProvider).updateUserPremiumStatus(
-        user.uid, 
-        isPremium: true,
-        planType: planType
-      );
-    }
-    
-    Navigator.pop(context);
-    PremiumSuccessModal.show(context, isFamily: _isFamilyPlan);
+  Future<void> _restorePurchases(BuildContext context, WidgetRef ref) async {
+     final success = await ref.read(revenueCatServiceProvider).restorePurchases();
+     if (success) {
+        if (context.mounted) {
+            Navigator.pop(context);
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Purchases Restored!')));
+        }
+     } else {
+        if (context.mounted) {
+           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('No subscription found to restore.')));
+        }
+     }
   }
 }

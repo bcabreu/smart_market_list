@@ -250,6 +250,67 @@ class RecipesService {
       print('Erro na busca: $e');
     }
     return [];
-  } 
+  } // End searchRecipes
+  
+  /// Fetches a single recipe by ID.
+  Future<Recipe?> getRecipeById(String id, {String languageCode = 'pt'}) async {
+    print('🚀 Buscando receita ID $id (lang: $languageCode)...');
+    try {
+      // Assuming the API supports fetching by ID directly or we use search.
+      // Based on usual REST patterns: /recipes/:id
+      // If not, we can try searching by ID if the search endpoint supports it, but direct ID is standard.
+      // Since I don't have the API docs, I'll assume /recipes/:id works based on existing patterns.
+      
+      String urlString = '$_baseUrl/recipes/$id';
+      if (languageCode == 'pt') {
+        urlString += '?lang=pt';
+      }
+      final url = Uri.parse(urlString);
+      print('🌐 Requesting: $url');
+      
+      final response = await http.get(url, headers: {'Accept': 'application/json'});
+
+      if (response.statusCode == 200) {
+        final body = utf8.decode(response.bodyBytes);
+        final dynamic item = json.decode(body);
+        
+        // Handle if wrapped in 'data'
+        final data = (item is Map && item.containsKey('data')) ? item['data'] : item;
+
+        String imageUrl = data['imageUrl'] ?? '';
+        if (imageUrl.startsWith('/')) {
+          imageUrl = '$_baseUrl$imageUrl';
+        }
+
+        final recipe = Recipe(
+          id: data['id'],
+          name: data['name'] ?? 'Sem nome',
+          imageUrl: imageUrl,
+          ingredients: List<String>.from(data['ingredients'] ?? []),
+          instructions: List<String>.from(data['instructions'] ?? []),
+          prepTime: data['prepTime'] ?? 30,
+          difficulty: data['difficulty'] ?? 'Médio',
+          servings: data['servings'] ?? 2,
+          likes: data['likes'] ?? 0,
+        );
+
+        // Check local favorite status
+        final existing = _box.get(recipe.id);
+        if (existing != null && existing.isFavorite) {
+           recipe.isFavorite = true;
+        }
+
+        // Save/Update local cache
+        await _box.put(recipe.id, recipe);
+        return recipe;
+      } else {
+        print('❌ Erro API: ${response.statusCode}');
+        return null;
+      }
+    } catch (e) {
+      print('🔥 Erro ao buscar receita por ID: $e');
+      return null;
+    }
+  }
 }
 

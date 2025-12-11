@@ -23,41 +23,63 @@ class SharingService {
     required Function(String listId, String familyId) onJoinList,
     required Function(String familyId, String? inviteCode) onJoinFamily,
     required Function(String recipeId) onOpenRecipe, // New Callback
-  }) {
+  }) async {
+    // 1. Listen to Stream (Foreground/Background updates)
     _linkSubscription = _appLinks.uriLinkStream.listen((uri) {
-      print('🔗 Deep Link Received: $uri');
-      
-      if (uri.scheme == 'smartmarketlist' || uri.scheme == 'https') {
-        final listId = uri.queryParameters['listId'];
-        final familyId = uri.queryParameters['familyId'];
-        final action = uri.queryParameters['action'];
-        final inviteCode = uri.queryParameters['inviteCode'];
-        final recipeId = uri.queryParameters['recipeId']; // New Parameter
-        
-        // Case 0: Open Recipe (Viral Share)
-        if (recipeId != null) {
-          onOpenRecipe(recipeId);
-          return;
-        }
-
-        // Case 1: Join Family
-        if (action == 'join_family' && familyId != null) {
-          onJoinFamily(familyId, inviteCode);
-          return;
-        }
-
-        // Case 2: Join List (Legacy/Standard)
-        if (listId != null && familyId != null) {
-          if (listId == 'invite' || action == 'join_family') {
-             onJoinFamily(familyId, inviteCode);
-          } else {
-             onJoinList(listId, familyId);
-          }
-        }
-      }
+      _handleDeepLink(uri, onJoinList, onJoinFamily, onOpenRecipe);
     }, onError: (err) {
       print('❌ Deep Link Error: $err');
     });
+
+    // 2. Check Initial Link (Cold Start) explicitly
+    // This is sometimes needed if the stream misses the initial event on certain devices/OS versions.
+    try {
+      final initialUri = await _appLinks.getInitialLink();
+      if (initialUri != null) {
+        print('🔗 Initial Deep Link: $initialUri');
+        _handleDeepLink(initialUri, onJoinList, onJoinFamily, onOpenRecipe);
+      }
+    } catch (e) {
+      print('❌ Initial Link Error: $e');
+    }
+  }
+
+  void _handleDeepLink(
+    Uri uri,
+    Function(String, String) onJoinList,
+    Function(String, String?) onJoinFamily,
+    Function(String) onOpenRecipe,
+  ) {
+    print('🔗 Processing Deep Link: $uri');
+      
+    if (uri.scheme == 'smartmarketlist' || uri.scheme == 'https') {
+      final listId = uri.queryParameters['listId'];
+      final familyId = uri.queryParameters['familyId'];
+      final action = uri.queryParameters['action'];
+      final inviteCode = uri.queryParameters['inviteCode'];
+      final recipeId = uri.queryParameters['recipeId']; 
+        
+      // Case 0: Open Recipe (Viral Share)
+      if (recipeId != null) {
+        onOpenRecipe(recipeId);
+        return;
+      }
+
+      // Case 1: Join Family
+      if (action == 'join_family' && familyId != null) {
+        onJoinFamily(familyId, inviteCode);
+        return;
+      }
+
+      // Case 2: Join List (Legacy/Standard)
+      if (listId != null && familyId != null) {
+        if (listId == 'invite' || action == 'join_family') {
+           onJoinFamily(familyId, inviteCode);
+        } else {
+           onJoinList(listId, familyId);
+        }
+      }
+    }
   }
 
   void dispose() {
@@ -71,9 +93,9 @@ class SharingService {
     required String shareMessage, // New localized param
     required String viewRecipeLabel, // New localized param
   }) async {
-    // We add listId=recipe to ensure the link is matched by the OS/Web as a valid app link
-    // based on previous successful patterns (ID: 7927).
-    final String deepLink = 'https://smart-market-list-82bf7.web.app/share?listId=recipe&recipeId=$recipeId';
+    // We add listId=invite AND familyId=recipe to exactly mimic the structure of working family links.
+    // This helps the OS/Web recognize the link pattern if it depends on specific query params.
+    final String deepLink = 'https://smart-market-list-82bf7.web.app/share?listId=invite&familyId=recipe&recipeId=$recipeId';
     
     const String androidUrl = 'https://play.google.com/store/apps/details?id=com.kepoweb.smart_market_list';
     const String iosUrl = 'https://apps.apple.com/app/id6756240280';
