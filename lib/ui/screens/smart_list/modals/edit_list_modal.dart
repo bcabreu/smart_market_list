@@ -3,6 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:smart_market_list/core/theme/app_colors.dart';
 import 'package:smart_market_list/data/models/shopping_list.dart';
 import 'package:smart_market_list/providers/shopping_list_provider.dart';
+import 'package:smart_market_list/data/models/user_profile.dart';
+import 'package:smart_market_list/providers/user_provider.dart';
+import 'package:smart_market_list/providers/user_profile_provider.dart';
+import 'package:smart_market_list/core/services/ad_service.dart';
 import 'package:smart_market_list/l10n/generated/app_localizations.dart';
 import 'package:uuid/uuid.dart';
 
@@ -31,6 +35,16 @@ class _EditListModalState extends ConsumerState<EditListModal> {
       _nameController.text = widget.list!.name;
       _selectedEmoji = widget.list!.emoji;
     }
+    
+    // Pre-load interstitial ad if creating new list
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (widget.list == null) {
+        final userProfile = ref.read(userProfileProvider).value;
+        if (userProfile == null || (userProfile.planType != PlanType.premium_individual && userProfile.planType != PlanType.premium_family)) {
+           AdService.instance.loadInterstitial();
+        }
+      }
+    });
   }
 
   @override
@@ -58,18 +72,38 @@ class _EditListModalState extends ConsumerState<EditListModal> {
         service.updateList(updatedList);
       } else {
         // Create
-        final newList = ShoppingList(
-          id: const Uuid().v4(),
-          name: name,
-          emoji: _selectedEmoji,
-          budget: 0.0, // Default to 0
-          items: [],
-          createdAt: DateTime.now(),
-        );
-        await service.createList(newList);
+        final userProfile = ref.read(userProfileProvider).value;
+        final isPremium = userProfile != null && (userProfile.planType == PlanType.premium_individual || userProfile.planType == PlanType.premium_family);
         
-        // Auto-select the new list
-        ref.read(currentListIdProvider.notifier).state = newList.id;
+        // Function to execute save logic
+        Future<void> createListAction() async {
+          final newList = ShoppingList(
+            id: const Uuid().v4(),
+            name: name,
+            emoji: _selectedEmoji,
+            budget: 0.0, // Default to 0
+            items: [],
+            createdAt: DateTime.now(),
+          );
+          await service.createList(newList);
+          
+          // Auto-select the new list
+          ref.read(currentListIdProvider.notifier).state = newList.id;
+        }
+
+        if (!isPremium) {
+          // Show Ad for Free Users
+          AdService.instance.showInterstitialAd(
+            onAdDismissed: () async {
+              await createListAction();
+              if (mounted) Navigator.pop(context);
+            },
+          );
+          return; // Return early, navigation handles in callback
+        } else {
+           // Premium: Save immediately
+           await createListAction();
+        }
       }
       
       if (mounted) {

@@ -3,6 +3,10 @@ import 'dart:ui';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:io';
+import 'package:smart_market_list/core/services/ad_service.dart';
+import 'package:smart_market_list/providers/user_provider.dart';
+import 'package:smart_market_list/providers/user_profile_provider.dart';
+import 'package:smart_market_list/data/models/user_profile.dart'; // import ImagePicker
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter/services.dart';
 import 'package:smart_market_list/core/theme/app_colors.dart';
@@ -103,9 +107,25 @@ class _AddItemModalState extends ConsumerState<AddItemModal> {
       // Save to history for future suggestions
       await ref.read(historyProvider.notifier).addOrUpdate(item);
       
-      widget.onAdd(item);
-      if (mounted) {
-        Navigator.pop(context);
+      final userProfile = ref.read(userProfileProvider).value;
+      final isPremium = userProfile != null && (userProfile.planType == PlanType.premium_individual || userProfile.planType == PlanType.premium_family);
+      
+      void completeAdd() {
+        widget.onAdd(item);
+        if (mounted) {
+          Navigator.pop(context);
+        }
+      }
+
+      if (!isPremium) {
+         // Check if we need to show an ad (every 10 items)
+         final triggered = AdService.instance.checkItemAdTrigger(onContinue: completeAdd);
+         if (!triggered) {
+           // If false, it called completeAdd immediately, so we don't need to do anything.
+           // But actually checkItemAdTrigger calls onContinue inside.
+         }
+      } else {
+         completeAdd();
       }
     }
   }

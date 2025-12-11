@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:animations/animations.dart';
+import 'package:smart_market_list/ui/common/ads/banner_ad_widget.dart';
 import 'package:smart_market_list/ui/common/modals/status_feedback_modal.dart';
 import 'package:flutter/services.dart';
 import 'package:smart_market_list/core/theme/app_colors.dart';
@@ -388,12 +389,18 @@ class _MainScreenState extends ConsumerState<MainScreen> {
         },
         child: _screens[currentIndex],
       ),
-      bottomNavigationBar: Hero(
-        tag: 'bottom_nav_bar',
-        child: CustomBottomNavigation(
-          currentIndex: currentIndex,
-          onTap: _onTabTapped,
-        ),
+      bottomNavigationBar: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const BannerAdWidget(),
+          Hero(
+            tag: 'bottom_nav_bar',
+            child: CustomBottomNavigation(
+              currentIndex: currentIndex,
+              onTap: _onTabTapped,
+            ),
+          ),
+        ],
       ),
     );
   }
