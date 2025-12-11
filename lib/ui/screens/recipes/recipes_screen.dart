@@ -11,6 +11,10 @@ import 'package:smart_market_list/data/models/recipe.dart';
 import 'package:smart_market_list/ui/common/animations/staggered_entry.dart';
 import 'package:smart_market_list/providers/shopping_list_provider.dart';
 import 'package:smart_market_list/providers/locale_provider.dart';
+import 'package:smart_market_list/providers/user_provider.dart';
+import 'package:smart_market_list/providers/user_profile_provider.dart';
+import 'package:smart_market_list/data/models/user_profile.dart'; // Ensure PlanType is available
+import 'package:smart_market_list/core/services/ad_service.dart';
 import 'package:smart_market_list/l10n/generated/app_localizations.dart';
 
 class RecipesScreen extends ConsumerStatefulWidget {
@@ -655,12 +659,26 @@ class _RecipesScreenState extends ConsumerState<RecipesScreen> {
   }
 
   void _showRecipeDetail(BuildContext context, Recipe recipe) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => RecipeDetailModal(recipe: recipe),
-    );
+    // Function to navigate
+    void navigate() {
+      showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        builder: (context) => RecipeDetailModal(recipe: recipe),
+      );
+    }
+
+    final userProfile = ref.read(userProfileProvider).value;
+    final isPremium = userProfile != null && (userProfile.planType == PlanType.premium_individual || userProfile.planType == PlanType.premium_family);
+
+    if (!isPremium) {
+      // Check Ad Trigger
+      AdService.instance.checkRecipeAdTrigger(onContinue: navigate);
+    } else {
+      // Premium: Navigate directly
+      navigate();
+    }
   }
 
   String _getLocalizedDifficulty(String difficulty, AppLocalizations l10n) {

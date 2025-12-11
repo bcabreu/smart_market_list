@@ -18,8 +18,13 @@ class AdService {
   int _itemsAddedSessionCount = 0;
   static const int _adFrequency = 10;
 
+  // Counter for recipe views
+  int _recipesViewedSessionCount = 0;
+  static const int _recipeAdFrequency = 5;
+
   Future<void> initialize() async {
     await MobileAds.instance.initialize();
+    loadInterstitial(); // Pre-load immediately
   }
 
   String get bannerAdUnitId {
@@ -107,6 +112,23 @@ class AdService {
     
     if (_itemsAddedSessionCount >= _adFrequency) {
       _itemsAddedSessionCount = 0; // Reset
+      showInterstitialAd(onAdDismissed: onContinue);
+      return true;
+    }
+    
+    onContinue();
+    return false;
+  }
+
+  /// Checks if ad should be shown based on recipe view count.
+  /// Returns true if ad was triggered (and callback will be called).
+  /// Returns false if ad not triggered (callback called immediately).
+  bool checkRecipeAdTrigger({required VoidCallback onContinue}) {
+    _recipesViewedSessionCount++;
+    print('AdService: Recipes viewed: $_recipesViewedSessionCount');
+    
+    if (_recipesViewedSessionCount >= _recipeAdFrequency) {
+      _recipesViewedSessionCount = 0; // Reset
       showInterstitialAd(onAdDismissed: onContinue);
       return true;
     }
