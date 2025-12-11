@@ -8,6 +8,7 @@ import 'package:smart_market_list/providers/profile_provider.dart';
 import 'package:smart_market_list/providers/user_provider.dart';
 import 'package:smart_market_list/providers/auth_provider.dart';
 import 'package:intl/intl.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 
 import 'package:smart_market_list/l10n/generated/app_localizations.dart';
 import 'package:smart_market_list/ui/screens/auth/login_screen.dart';
@@ -46,11 +47,51 @@ class _ProfileSummaryState extends ConsumerState<ProfileSummary> {
         source: source,
         maxWidth: 600,
         maxHeight: 600,
-        imageQuality: 80,
+        imageQuality: 70, // Optimized
       );
 
       if (pickedFile != null) {
+        // 1. Update Local UI immediately
         ref.read(profileImageProvider.notifier).setImage(pickedFile.path);
+
+        // 2. If logged in, upload to Cloud
+        if (ref.read(isLoggedInProvider)) {
+           final user = ref.read(authStateProvider).asData?.value;
+           if (user == null) return;
+
+           // Show loading feedback (optional, but good)
+           if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                 SnackBar(content: Text(l10n.processing)),
+              );
+           }
+
+           try {
+             // Upload
+             final storageRef = FirebaseStorage.instance
+                 .ref()
+                 .child('users/${user.uid}/profile.jpg');
+             
+             final file = File(pickedFile.path);
+             await storageRef.putFile(file);
+             
+             final downloadUrl = await storageRef.getDownloadURL();
+
+             // Update Auth & Firestore
+             await ref.read(authServiceProvider).updatePhotoURL(downloadUrl);
+             
+             // Update Local Provider with URL (optional, keeps it in sync)
+             ref.read(profileImageProvider.notifier).setImage(downloadUrl);
+
+           } catch (e) {
+             print('Upload error: $e');
+             if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Upload failed: $e')),
+                );
+             }
+           }
+        }
       }
     } catch (e) {
       if (mounted) {

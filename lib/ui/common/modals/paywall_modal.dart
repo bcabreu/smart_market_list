@@ -197,13 +197,22 @@ class _PaywallModalState extends ConsumerState<PaywallModal> {
                       ),
                       const SizedBox(height: 16),
                       
-                      // Features List (Standard)
-                       _buildFeatureCard(l10n.featureReceiptScanning, l10n.featureReceiptScanningSubtitle, icon: Icons.receipt_long, color: Colors.orangeAccent, cardColor: cardColor),
-                       _buildFeatureCard(l10n.featureRealTimeShare, l10n.featureRealTimeShareSubtitle, icon: Icons.share, color: const Color(0xFF4DB6AC), cardColor: cardColor),
-                       _buildFeatureCard(l10n.featureNoAds, l10n.featureNoAds, icon: Icons.block, color: Colors.redAccent, cardColor: cardColor),
-                       _buildFeatureCard(l10n.featureCharts, l10n.expenseChartsSubtitle, icon: Icons.show_chart, color: const Color(0xFF4FC3F7), cardColor: cardColor),
-                       _buildFeatureCard(l10n.featureReports, l10n.exportReportsSubtitle, icon: Icons.description_outlined, color: const Color(0xFFFFF176), cardColor: cardColor),
-                       _buildFeatureCard(l10n.featureCloudBackup, l10n.featureCloudBackupSubtitle, icon: Icons.security, color: const Color(0xFFAED581), cardColor: cardColor),
+                      // Features List (Conditioned)
+                      if (_isFamilyPlan) ...[
+                         // FAMILY FEATURES
+                         _buildFeatureCard(l10n.featureFamilyShare, l10n.familyPlanSubtitle, icon: Icons.group_add, color: const Color(0xFFAB47BC), cardColor: cardColor),
+                         _buildFeatureCard(l10n.featurePremiumGuest, l10n.featurePremiumGuestSubtitle, icon: Icons.star, color: Colors.orangeAccent, cardColor: cardColor), 
+                         _buildFeatureCard(l10n.featureAutoSync, l10n.shareRealTimeInfo, icon: Icons.sync, color: const Color(0xFF4FC3F7), cardColor: cardColor),
+                         _buildFeatureCard(l10n.featureAllBenefits, l10n.featureAllBenefitsSubtitle, icon: Icons.check_circle_outline, color: const Color(0xFFAED581), cardColor: cardColor),
+                      ] else ...[
+                         // INDIVIDUAL FEATURES
+                         _buildFeatureCard(l10n.featureReceiptScanning, l10n.featureReceiptScanningSubtitle, icon: Icons.receipt_long, color: Colors.orangeAccent, cardColor: cardColor),
+                         _buildFeatureCard(l10n.featureRealTimeShare, l10n.featureRealTimeShareSubtitle, icon: Icons.share, color: const Color(0xFF4DB6AC), cardColor: cardColor),
+                         _buildFeatureCard(l10n.featureNoAds, l10n.featureNoAds, icon: Icons.block, color: Colors.redAccent, cardColor: cardColor),
+                         _buildFeatureCard(l10n.featureCharts, l10n.expenseChartsSubtitle, icon: Icons.show_chart, color: const Color(0xFF4FC3F7), cardColor: cardColor),
+                         _buildFeatureCard(l10n.featureReports, l10n.exportReportsSubtitle, icon: Icons.description_outlined, color: const Color(0xFFFFF176), cardColor: cardColor),
+                         _buildFeatureCard(l10n.featureCloudBackup, l10n.featureCloudBackupSubtitle, icon: Icons.security, color: const Color(0xFFAED581), cardColor: cardColor),
+                      ],
 
                       const SizedBox(height: 32),
 
@@ -491,11 +500,11 @@ class _PaywallModalState extends ConsumerState<PaywallModal> {
         }
 
         // Sync to Firestore
-        final user = ref.read(authProvider).asData?.value;
+        final user = ref.read(authStateProvider).asData?.value;
         if (user != null) {
           await ref.read(firestoreServiceProvider).updateUserPremiumStatus(
             user.uid, 
-            true, 
+            isPremium: true, 
             planType: planType
           );
         }

@@ -110,6 +110,16 @@ class AuthService {
     }
   }
 
+  // Update Photo URL
+  Future<void> updatePhotoURL(String photoUrl) async {
+    final user = _auth.currentUser;
+    if (user != null) {
+      await user.updatePhotoURL(photoUrl);
+      await user.reload();
+      await _syncUserData(user); // Will pick up new photoURL from user object
+    }
+  }
+
   // Delete Account
   Future<void> deleteAccount() async {
     final user = _auth.currentUser;
