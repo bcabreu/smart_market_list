@@ -1114,4 +1114,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String subscribeButton(Object price) {
     return 'Subscribe for $price';
   }
+
+  @override
+  String shareRecipeMessage(Object recipeName) {
+    return 'Check out this recipe for \"$recipeName\" on Smart Market List! 😋';
+  }
+
+  @override
+  String get viewRecipe => 'View Recipe';
 }

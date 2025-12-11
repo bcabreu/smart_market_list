@@ -8,6 +8,7 @@ import 'package:smart_market_list/ui/screens/smart_list/smart_list_screen.dart';
 import 'package:smart_market_list/l10n/generated/app_localizations.dart';
 import 'package:smart_market_list/ui/screens/shopping_notes/shopping_notes_screen.dart';
 import 'package:smart_market_list/ui/screens/recipes/recipes_screen.dart';
+import 'package:smart_market_list/ui/screens/recipes/modals/recipe_detail_modal.dart';
 import 'package:smart_market_list/ui/screens/profile/profile_screen.dart';
 import 'package:smart_market_list/ui/navigation/custom_bottom_navigation.dart';
 import 'package:smart_market_list/ui/screens/auth/login_screen.dart';
@@ -20,6 +21,7 @@ import 'package:smart_market_list/providers/user_provider.dart';
 import 'package:smart_market_list/providers/shopping_list_provider.dart';
 import 'package:smart_market_list/providers/user_profile_provider.dart';
 import 'package:smart_market_list/providers/sharing_provider.dart';
+import 'package:smart_market_list/providers/recipes_provider.dart';
 import 'package:smart_market_list/core/services/sharing_service.dart';
 
 class MainScreen extends ConsumerStatefulWidget {
@@ -65,7 +67,39 @@ class _MainScreenState extends ConsumerState<MainScreen> {
       onJoinFamily: (familyId, inviteCode) {
         _handleJoinFamily(familyId, inviteCode);
       },
+      onOpenRecipe: (recipeId) {
+        _handleOpenRecipe(recipeId);
+      },
     );
+  }
+
+  Future<void> _handleOpenRecipe(String recipeId) async {
+    // 1. Fetch Recipes from Provider (or Service if not loaded)
+    final recipes = await ref.read(recipesProvider.future);
+    
+    try {
+      // 2. Find Recipe
+      final recipe = recipes.firstWhere((r) => r.id == recipeId);
+      
+      // 3. Open Modal
+      if (mounted) {
+        showModalBottomSheet(
+          context: context,
+          isScrollControlled: true,
+          backgroundColor: Colors.transparent,
+          builder: (context) => RecipeDetailModal(recipe: recipe),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+         StatusFeedbackModal.show(
+           context,
+           title: AppLocalizations.of(context)!.errorTitle,
+           message: "Recipe not found or invalid link.", // Localize later
+           type: FeedbackType.error,
+         );
+      }
+    }
   }
   
   Future<void> _handleJoinFamily(String familyId, String? inviteCode) async {

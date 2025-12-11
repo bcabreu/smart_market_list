@@ -8,6 +8,9 @@ import 'package:smart_market_list/providers/shopping_list_provider.dart';
 import 'package:smart_market_list/providers/user_provider.dart';
 import 'package:smart_market_list/l10n/generated/app_localizations.dart';
 import 'package:smart_market_list/ui/common/modals/paywall_modal.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:smart_market_list/providers/recipes_provider.dart';
+import 'package:smart_market_list/providers/sharing_provider.dart';
 
 class RecipeDetailModal extends ConsumerWidget {
   final Recipe recipe;
@@ -18,6 +21,10 @@ class RecipeDetailModal extends ConsumerWidget {
     final shoppingListsAsync = ref.watch(shoppingListsProvider);
     final shoppingListService = ref.watch(shoppingListServiceProvider);
     final l10n = AppLocalizations.of(context)!;
+    
+    // Resolve current recipe state (for reactive favorites)
+    final recipes = ref.watch(recipesProvider).value ?? [];
+    final currentRecipe = recipes.firstWhere((r) => r.id == recipe.id, orElse: () => recipe);
 
     // Get target list (current or first)
     final targetList = ref.watch(currentListProvider) ?? shoppingListsAsync.value?.firstOrNull;
@@ -106,8 +113,45 @@ class RecipeDetailModal extends ConsumerWidget {
                   backgroundColor: Theme.of(context).scaffoldBackgroundColor,
                   automaticallyImplyLeading: false,
                   actions: [
+                    // Share Button
                     Padding(
-                      padding: const EdgeInsets.all(8.0),
+                      padding: const EdgeInsets.only(right: 8.0),
+                      child: CircleAvatar(
+                        backgroundColor: Colors.black54,
+                        child: IconButton(
+                          icon: const Icon(Icons.share, color: Colors.white, size: 20),
+                          onPressed: () async {
+                             await ref.read(sharingServiceProvider).shareRecipe(
+                               recipeId: currentRecipe.id, 
+                               recipeName: currentRecipe.name,
+                               shareMessage: l10n.shareRecipeMessage(currentRecipe.name),
+                               viewRecipeLabel: l10n.viewRecipe,
+                             );
+                          },
+                        ),
+                      ),
+                    ),
+                    // Favorite Button
+                    Padding(
+                      padding: const EdgeInsets.only(right: 8.0),
+                      child: CircleAvatar(
+                        backgroundColor: Colors.black54,
+                        child: IconButton(
+                          icon: Icon(
+                            currentRecipe.isFavorite ? Icons.favorite : Icons.favorite_border,
+                            color: currentRecipe.isFavorite ? Colors.red : Colors.white,
+                            size: 20,
+                          ),
+                          onPressed: () async {
+                            final service = ref.read(recipesServiceProvider);
+                            await service.toggleFavorite(currentRecipe.id);
+                          },
+                        ),
+                      ),
+                    ),
+                    // Close Button (Existing)
+                    Padding(
+                      padding: const EdgeInsets.only(right: 8.0),
                       child: CircleAvatar(
                         backgroundColor: Colors.black54,
                         child: IconButton(

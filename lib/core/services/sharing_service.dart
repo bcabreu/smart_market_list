@@ -22,6 +22,7 @@ class SharingService {
   void initDeepLinks({
     required Function(String listId, String familyId) onJoinList,
     required Function(String familyId, String? inviteCode) onJoinFamily,
+    required Function(String recipeId) onOpenRecipe, // New Callback
   }) {
     _linkSubscription = _appLinks.uriLinkStream.listen((uri) {
       print('🔗 Deep Link Received: $uri');
@@ -31,7 +32,14 @@ class SharingService {
         final familyId = uri.queryParameters['familyId'];
         final action = uri.queryParameters['action'];
         final inviteCode = uri.queryParameters['inviteCode'];
+        final recipeId = uri.queryParameters['recipeId']; // New Parameter
         
+        // Case 0: Open Recipe (Viral Share)
+        if (recipeId != null) {
+          onOpenRecipe(recipeId);
+          return;
+        }
+
         // Case 1: Join Family
         if (action == 'join_family' && familyId != null) {
           onJoinFamily(familyId, inviteCode);
@@ -54,6 +62,30 @@ class SharingService {
 
   void dispose() {
     _linkSubscription?.cancel();
+  }
+  
+  // Share Recipe (Viral)
+  Future<void> shareRecipe({
+    required String recipeId,
+    required String recipeName,
+    required String shareMessage, // New localized param
+    required String viewRecipeLabel, // New localized param
+  }) async {
+    // We add listId=recipe to ensure the link is matched by the OS/Web as a valid app link
+    // based on previous successful patterns (ID: 7927).
+    final String deepLink = 'https://smart-market-list-82bf7.web.app/share?listId=recipe&recipeId=$recipeId';
+    
+    const String androidUrl = 'https://play.google.com/store/apps/details?id=com.kepoweb.smart_market_list';
+    const String iosUrl = 'https://apps.apple.com/app/id6756240280';
+    
+    final String message = 
+        '$shareMessage\n\n'
+        '$viewRecipeLabel: $deepLink\n\n'
+        'Ou baixe o app / Or get the app:\n'
+        '🤖 Android: $androidUrl\n'
+        '🍎 iOS: $iosUrl';
+
+    await Share.share(message);
   }
 
   // Share List via WhatsApp/System Share

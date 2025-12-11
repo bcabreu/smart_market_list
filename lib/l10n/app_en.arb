@@ -346,5 +346,7 @@
   "chooseYourPlan": "Choose your plan",
   "saveYiarlyAmount": "Save $ 16.00 per year!",
   "saveYiarlyAmountFamily": "Save $ 30.00 per year!",
-  "subscribeButton": "Subscribe for {price}"
+  "subscribeButton": "Subscribe for {price}",
+  "shareRecipeMessage": "Check out this recipe for \"{recipeName}\" on Smart Market List! 😋",
+  "viewRecipe": "View Recipe"
 }

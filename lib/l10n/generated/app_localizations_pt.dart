@@ -1118,4 +1118,12 @@ class AppLocalizationsPt extends AppLocalizations {
   String subscribeButton(Object price) {
     return 'Assinar por $price';
   }
+
+  @override
+  String shareRecipeMessage(Object recipeName) {
+    return 'Veja essa receita de \"$recipeName\" no Smart Market List! 😋';
+  }
+
+  @override
+  String get viewRecipe => 'Ver Receita';
 }

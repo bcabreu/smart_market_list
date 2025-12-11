@@ -2173,6 +2173,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Subscribe for {price}'**
   String subscribeButton(Object price);
+
+  /// No description provided for @shareRecipeMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Check out this recipe for \"{recipeName}\" on Smart Market List! 😋'**
+  String shareRecipeMessage(Object recipeName);
+
+  /// No description provided for @viewRecipe.
+  ///
+  /// In en, this message translates to:
+  /// **'View Recipe'**
+  String get viewRecipe;
 }
 
 class _AppLocalizationsDelegate
