@@ -345,7 +345,9 @@ class ProfileScreen extends ConsumerWidget {
                               : l10n.shareListSubtitle,
                           isLocked: !isFamilyPlan, 
                           onTap: () {
-                            if (!isPremium) {
+                            // Fix: Gatekeeper Logic
+                            // If NOT Family Plan (Free OR Individual) -> Show Paywall (Upgrade)
+                            if (!isFamilyPlan) {
                                // Open Paywall directly on Family Tab (Tab 1)
                                showModalBottomSheet(
                                   context: context,
@@ -354,6 +356,7 @@ class ProfileScreen extends ConsumerWidget {
                                   builder: (context) => const PaywallModal(initialTabIndex: 1),
                                 );
                             } else {
+                               // Only Family Plan can open this
                                showModalBottomSheet(
                                   context: context,
                                   isScrollControlled: true,
@@ -523,6 +526,25 @@ class ProfileScreen extends ConsumerWidget {
 
   Future<void> _restorePurchases(BuildContext context, WidgetRef ref) async {
     final l10n = AppLocalizations.of(context)!;
+    
+    // Security Check: Prevent Guest Restore (Anti-Farming)
+    final isLoggedIn = ref.read(isLoggedInProvider);
+    if (!isLoggedIn) {
+      if (context.mounted) {
+        StatusFeedbackModal.show(
+          context,
+          title: l10n.loginRequiredTitle ?? "Login Necessário",
+          message: l10n.loginRequiredMessage ?? "Faça login para restaurar e sincronizar sua assinatura.", // Fallback if keys missing
+          type: FeedbackType.info,
+          onTap: () {
+             // Optional: Navigate to login logic if needed, 
+             // but usually modal dismissal is enough as user sees login buttons
+          } 
+        );
+      }
+      return;
+    }
+
     try {
       LoadingDialog.show(context, l10n.restoringPurchases);
       

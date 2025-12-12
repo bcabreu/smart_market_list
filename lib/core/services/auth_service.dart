@@ -178,6 +178,17 @@ class AuthService {
            isPremium: true,
            planType: subDetails['planType']
          );
+      } else {
+         // Auto-Downgrade (Anti-Farming Logic)
+         // If RevenueCat says "Not Premium" (expired, transferred, or never existed),
+         // we MUST update Firestore to reflect this.
+         // This ensures that if a user transfers their subscription to another account,
+         // the old account loses access immediately upon next sync.
+         print("📉 Syncing downgrade/removal for ${user.uid}");
+         await _firestoreService.updateUserPremiumStatus(
+           user.uid,
+           isPremium: false
+         );
       }
     } catch (e) {
       print("⚠️ Auto-sync subscription failed: $e");

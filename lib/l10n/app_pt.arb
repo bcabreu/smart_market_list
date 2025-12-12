@@ -26,6 +26,9 @@
   "recipesFound": "Receitas Encontradas",
   "youCanCookNow": "Você Pode Fazer Agora",
   "youCanCookNowSubtitle": "Receitas com ingredientes que você já tem na lista",
+  "tryFree7Days": "7 DIAS GRÁTIS",
+  "purchaseErrorTitle": "Erro na Compra",
+  "purchaseErrorMessage": "Não foi possível concluir a compra. Tente novamente ou contate o suporte.",
   "otherRecipes": "Outras Receitas",
   "otherRecipesSubtitle": "Descubra novas receitas e adicione os ingredientes à sua lista",
   "cookTime": "min",
@@ -353,5 +356,16 @@
   "saveYiarlyAmountFamily": "Economize R$ 48,90 por ano!",
   "subscribeButton": "Assinar por {price}",
   "shareRecipeMessage": "Veja essa receita de \"{recipeName}\" no Smart Market List! 😋",
-  "viewRecipe": "Ver Receita"
+  "viewRecipe": "Ver Receita",
+  "loginRequiredTitle": "Login Necessário",
+  "loginRequiredMessage": "Faça login para restaurar e sincronizar sua assinatura.",
+  "yourFamilyMember": "Seu familiar",
+  "inviteFamilyTitle": "Convite para Família",
+  "errorSharing": "Erro ao compartilhar: {error}",
+  "errorLoadingProfile": "Erro ao carregar perfil: {error}",
+  "youNeedToCreateFamily": "Você precisa criar uma família primeiro.",
+  "memberLimitReached": "Limite de membros atingido (você + 1).",
+  "familyMembersTitle": "Membros da Família",
+  "noMembersYet": "Nenhum membro ainda.",
+  "unknownMember": "Desconhecido"
 }

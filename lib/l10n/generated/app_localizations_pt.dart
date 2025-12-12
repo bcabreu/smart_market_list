@@ -847,6 +847,20 @@ class AppLocalizationsPt extends AppLocalizations {
       'Agora você faz parte da Família Premium!';
 
   @override
+  String get premiumIndividualMessage =>
+      'Você agora é Premium Individual! Aproveite todos os recursos.';
+
+  @override
+  String get awesome => 'Incrível! 🚀';
+
+  @override
+  String get purchaseErrorTitle => 'Erro na Compra';
+
+  @override
+  String get purchaseErrorMessage =>
+      'Não foi possível concluir a compra. Tente novamente ou contate o suporte.';
+
+  @override
   String joinListError(Object error) {
     return 'Erro ao entrar na lista: $error';
   }
@@ -911,46 +925,6 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get inviteViaLink => 'Convidar Familiar via Link';
-
-  @override
-  String get memberLimitReached =>
-      'Limite de membros atingido (você + 1). Remova alguém para convidar novo membro.';
-
-  @override
-  String get familyMembersTitle => 'Membros da Família';
-
-  @override
-  String get noMembersYet => 'Nenhum membro convidado ainda.';
-
-  @override
-  String get yourFamilyMember => 'Seu familiar';
-
-  @override
-  String get youNeedToCreateFamily =>
-      'Você precisa criar uma família primeiro.';
-
-  @override
-  String errorLoadingProfile(Object error) {
-    return 'Erro ao carregar perfil: $error';
-  }
-
-  @override
-  String errorSharing(Object error) {
-    return 'Erro ao compartilhar: $error';
-  }
-
-  @override
-  String get unknownMember => 'Desconhecido';
-
-  @override
-  String get premiumIndividualMessage =>
-      'Você agora é Premium Individual! Aproveite todos os recursos.';
-
-  @override
-  String get awesome => 'Incrível! 🚀';
-
-  @override
-  String get inviteFamilyTitle => '🏠 *Convite para Família Premium*';
 
   @override
   String inviteFamilyMessageBody(Object ownerName) {
@@ -1145,4 +1119,46 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get viewRecipe => 'Ver Receita';
+
+  @override
+  String get tryFree7Days => '7 DIAS GRÁTIS';
+
+  @override
+  String get loginRequiredTitle => 'Login Necessário';
+
+  @override
+  String get loginRequiredMessage =>
+      'Faça login para restaurar e sincronizar sua assinatura.';
+
+  @override
+  String get yourFamilyMember => 'Seu familiar';
+
+  @override
+  String get inviteFamilyTitle => 'Convite para Família';
+
+  @override
+  String errorSharing(Object error) {
+    return 'Erro ao compartilhar: $error';
+  }
+
+  @override
+  String errorLoadingProfile(Object error) {
+    return 'Erro ao carregar perfil: $error';
+  }
+
+  @override
+  String get youNeedToCreateFamily =>
+      'Você precisa criar uma família primeiro.';
+
+  @override
+  String get memberLimitReached => 'Limite de membros atingido (você + 1).';
+
+  @override
+  String get familyMembersTitle => 'Membros da Família';
+
+  @override
+  String get noMembersYet => 'Nenhum membro ainda.';
+
+  @override
+  String get unknownMember => 'Desconhecido';
 }

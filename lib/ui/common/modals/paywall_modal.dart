@@ -10,6 +10,7 @@ import 'package:smart_market_list/providers/subscription_provider.dart';
 import 'package:smart_market_list/core/services/revenue_cat_service.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:smart_market_list/ui/common/modals/status_feedback_modal.dart';
 
 class PaywallModal extends ConsumerStatefulWidget {
   final int initialTabIndex; // Kept for compatibility
@@ -255,7 +256,8 @@ class _PaywallModalState extends ConsumerState<PaywallModal> {
                               subtitle: l10n.pricePerMonth(monthlyEquivalentStr),
                               yearPrice: l10n.billedAnnually, 
                               isSelected: _selectedPlanIndex == 1,
-                              badgeText: l10n.savePercent(discountPercent.toString()),
+                              // badgeText: l10n.savePercent(discountPercent.toString()), // Old Discount Badge
+                              badgeText: l10n.tryFree7Days, // New Free Trial Badge (Conversion Booster)
                               onTap: () => setState(() => _selectedPlanIndex = 1),
                               cardColor: cardColor,
                               highlightColor: const Color(0xFFFFA726),
@@ -507,10 +509,8 @@ class _PaywallModalState extends ConsumerState<PaywallModal> {
         
         if (!context.mounted) return;
 
-        // Visual Feedback
-        ScaffoldMessenger.of(context).showSnackBar(
-           const SnackBar(content: Text('Pagamento confirmado! Ativando Premium...'), duration: Duration(seconds: 2)),
-        );
+        // Visual Feedback removed per user request (Redundant with Modal)
+        // ScaffoldMessenger.of(context).showSnackBar(...)
 
         // 2. Identify Plan Type
         String planType = 'premium_monthly';
@@ -571,19 +571,35 @@ class _PaywallModalState extends ConsumerState<PaywallModal> {
       
       print("🔴 Critical Purchase Error: $e");
       if (context.mounted) {
-         showDialog(
-            context: context,
-            builder: (context) => AlertDialog(
-              title: const Text('Erro na Compra'),
-              content: Text('Ocorreu um erro inesperado: $e'),
-              actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text('OK'))],
-            ),
+         final l10n = AppLocalizations.of(context)!;
+         // Replaces "White Ugly Modal" with consistent Custom Feedback
+         StatusFeedbackModal.show(
+            context,
+            title: l10n.purchaseErrorTitle ?? 'Erro na Compra',
+            message: l10n.purchaseErrorMessage ?? 'Ocorreu um erro: $e',
+            type: FeedbackType.error,
          );
       }
     }
   }
 
   Future<void> _restorePurchases(BuildContext context, WidgetRef ref) async {
+     final l10n = AppLocalizations.of(context)!;
+
+    // Security Check: Prevent Guest Restore (Anti-Farming)
+    final isLoggedIn = ref.read(isLoggedInProvider);
+    if (!isLoggedIn) {
+      if (context.mounted) {
+        StatusFeedbackModal.show(
+          context,
+          title: l10n.loginRequiredTitle ?? "Login Necessário",
+          message: l10n.loginRequiredMessage ?? "Faça login para restaurar e sincronizar sua assinatura.", 
+          type: FeedbackType.info,
+        );
+      }
+      return;
+    }
+
      final success = await ref.read(revenueCatServiceProvider).restorePurchases();
      if (success) {
         if (context.mounted) {

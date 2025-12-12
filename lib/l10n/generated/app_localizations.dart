@@ -1694,6 +1694,30 @@ abstract class AppLocalizations {
   /// **'You are now part of the Premium Family!'**
   String get welcomeToFamilyMessage;
 
+  /// No description provided for @premiumIndividualMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'You are now Individual Premium! Enjoy all features.'**
+  String get premiumIndividualMessage;
+
+  /// No description provided for @awesome.
+  ///
+  /// In en, this message translates to:
+  /// **'Awesome! 🚀'**
+  String get awesome;
+
+  /// No description provided for @purchaseErrorTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Purchase Error'**
+  String get purchaseErrorTitle;
+
+  /// No description provided for @purchaseErrorMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not complete purchase. Please try again or contact support.'**
+  String get purchaseErrorMessage;
+
   /// No description provided for @joinListError.
   ///
   /// In en, this message translates to:
@@ -1795,72 +1819,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Invite Family Member via Link'**
   String get inviteViaLink;
-
-  /// No description provided for @memberLimitReached.
-  ///
-  /// In en, this message translates to:
-  /// **'Member limit reached (you + 1). Remove someone to invite a new member.'**
-  String get memberLimitReached;
-
-  /// No description provided for @familyMembersTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Family Members'**
-  String get familyMembersTitle;
-
-  /// No description provided for @noMembersYet.
-  ///
-  /// In en, this message translates to:
-  /// **'No members invited yet.'**
-  String get noMembersYet;
-
-  /// No description provided for @yourFamilyMember.
-  ///
-  /// In en, this message translates to:
-  /// **'Your family member'**
-  String get yourFamilyMember;
-
-  /// No description provided for @youNeedToCreateFamily.
-  ///
-  /// In en, this message translates to:
-  /// **'You need to create a family first.'**
-  String get youNeedToCreateFamily;
-
-  /// No description provided for @errorLoadingProfile.
-  ///
-  /// In en, this message translates to:
-  /// **'Error loading profile: {error}'**
-  String errorLoadingProfile(Object error);
-
-  /// No description provided for @errorSharing.
-  ///
-  /// In en, this message translates to:
-  /// **'Error sharing: {error}'**
-  String errorSharing(Object error);
-
-  /// No description provided for @unknownMember.
-  ///
-  /// In en, this message translates to:
-  /// **'Unknown'**
-  String get unknownMember;
-
-  /// No description provided for @premiumIndividualMessage.
-  ///
-  /// In en, this message translates to:
-  /// **'You are now Individual Premium! Enjoy all features.'**
-  String get premiumIndividualMessage;
-
-  /// No description provided for @awesome.
-  ///
-  /// In en, this message translates to:
-  /// **'Awesome! 🚀'**
-  String get awesome;
-
-  /// No description provided for @inviteFamilyTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'🏠 *Premium Family Invite*'**
-  String get inviteFamilyTitle;
 
   /// No description provided for @inviteFamilyMessageBody.
   ///
@@ -2215,6 +2173,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'View Recipe'**
   String get viewRecipe;
+
+  /// No description provided for @tryFree7Days.
+  ///
+  /// In en, this message translates to:
+  /// **'7 DAYS FREE'**
+  String get tryFree7Days;
+
+  /// No description provided for @loginRequiredTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Login Required'**
+  String get loginRequiredTitle;
+
+  /// No description provided for @loginRequiredMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Please log in to restore and sync your subscription.'**
+  String get loginRequiredMessage;
+
+  /// No description provided for @yourFamilyMember.
+  ///
+  /// In en, this message translates to:
+  /// **'Your family member'**
+  String get yourFamilyMember;
+
+  /// No description provided for @inviteFamilyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Family Invite'**
+  String get inviteFamilyTitle;
+
+  /// No description provided for @errorSharing.
+  ///
+  /// In en, this message translates to:
+  /// **'Error sharing: {error}'**
+  String errorSharing(Object error);
+
+  /// No description provided for @errorLoadingProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Error loading profile: {error}'**
+  String errorLoadingProfile(Object error);
+
+  /// No description provided for @youNeedToCreateFamily.
+  ///
+  /// In en, this message translates to:
+  /// **'You need to create a family first.'**
+  String get youNeedToCreateFamily;
+
+  /// No description provided for @memberLimitReached.
+  ///
+  /// In en, this message translates to:
+  /// **'Member limit reached (you + 1).'**
+  String get memberLimitReached;
+
+  /// No description provided for @familyMembersTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Family Members'**
+  String get familyMembersTitle;
+
+  /// No description provided for @noMembersYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No members yet.'**
+  String get noMembersYet;
+
+  /// No description provided for @unknownMember.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown'**
+  String get unknownMember;
 }
 
 class _AppLocalizationsDelegate
