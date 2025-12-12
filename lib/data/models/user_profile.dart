@@ -23,10 +23,10 @@ class UserProfile {
     this.planType = 'free',
   });
 
-  bool get isFamilyPlan => planType == 'family';
+  bool get isFamilyPlan => planType.contains('family');
   
   int get maxFamilyMembers {
-    if (planType == 'family') return 1; // 1 guest
+    if (planType.contains('family')) return 1; // 1 guest
     return 0;
   }
 

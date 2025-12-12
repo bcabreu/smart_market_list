@@ -9,6 +9,7 @@ import 'package:smart_market_list/providers/user_provider.dart';
 import 'package:smart_market_list/providers/subscription_provider.dart';
 import 'package:smart_market_list/core/services/revenue_cat_service.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class PaywallModal extends ConsumerStatefulWidget {
   final int initialTabIndex; // Kept for compatibility
@@ -486,10 +487,32 @@ class _PaywallModalState extends ConsumerState<PaywallModal> {
   }
 
   Future<void> _subscribe(BuildContext context, WidgetRef ref, Package package) async {
+    // Show Loading
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const Center(child: CircularProgressIndicator()),
+    );
+
     try {
+      print("🔵 Starting purchase for ${package.identifier}");
+      // 1. Purchase via RevenueCat
       final success = await ref.read(revenueCatServiceProvider).purchasePackage(package);
+      
+      // Close Loading
+      if (context.mounted) Navigator.of(context, rootNavigator: true).pop();
+
       if (success) {
-        // Determine Plan Type for Firestore
+        print("🟢 Purchase Successful. Starting Firestore Sync...");
+        
+        if (!context.mounted) return;
+
+        // Visual Feedback
+        ScaffoldMessenger.of(context).showSnackBar(
+           const SnackBar(content: Text('Pagamento confirmado! Ativando Premium...'), duration: Duration(seconds: 2)),
+        );
+
+        // 2. Identify Plan Type
         String planType = 'premium_monthly';
         final isAnnual = package.packageType == PackageType.annual;
         
@@ -499,24 +522,63 @@ class _PaywallModalState extends ConsumerState<PaywallModal> {
            planType = isAnnual ? 'premium_annual' : 'premium_monthly';
         }
 
-        // Sync to Firestore
-        final user = ref.read(authStateProvider).asData?.value;
-        if (user != null) {
-          await ref.read(firestoreServiceProvider).updateUserPremiumStatus(
-            user.uid, 
-            isPremium: true, 
-            planType: planType
-          );
+        // 3. Sync to Firestore (Robust with Retry/Fallback)
+        try {
+          final user = FirebaseAuth.instance.currentUser;
+          
+          if (user != null) {
+            print("🔵 Updating Firestore for uid: ${user.uid}");
+            
+            await ref.read(firestoreServiceProvider).updateUserPremiumStatus(
+              user.uid, 
+              isPremium: true, 
+              planType: planType
+            );
+            
+            print("🟢 Firestore Updated.");
+
+          } else {
+             // CRITICAL FALLBACK: If user null (rare), try to find via provider or just log error
+             throw Exception('User appears to be logged out (UID null).');
+          }
+        } catch (dbError) {
+           print('🔴 Firestore Sync Error: $dbError');
+           // Even if DB fails, THE USER PAID. We must warn them but maybe unlock locally?
+           if (context.mounted) {
+              showDialog(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: const Text('Atenção'),
+                  content: Text('Pagamento recebido, mas houve um erro ao salvar no seu perfil: $dbError.\n\nPof favor, tire um print e contate o suporte, ou tente "Restaurar Compras".'),
+                  actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text('OK'))],
+                ),
+              );
+           }
         }
 
+        // 4. Force Close & Success (Regardless of DB error, we loop close)
         if (context.mounted) {
            Navigator.pop(context); // Close Paywall
            PremiumSuccessModal.show(context, isFamily: _isFamilyPlan); 
         }
+      } else {
+        // Purchase cancelled or failed logic in RevenueCatService
+        print("🟡 Purchase returned false (Cancelled or Failed)");
       }
     } catch (e) {
+      // Close Loading if active
+      if (context.mounted) Navigator.of(context, rootNavigator: true).pop();
+      
+      print("🔴 Critical Purchase Error: $e");
       if (context.mounted) {
-         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Purchase failed: $e')));
+         showDialog(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: const Text('Erro na Compra'),
+              content: Text('Ocorreu um erro inesperado: $e'),
+              actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text('OK'))],
+            ),
+         );
       }
     }
   }

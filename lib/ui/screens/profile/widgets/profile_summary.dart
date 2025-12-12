@@ -59,35 +59,41 @@ class _ProfileSummaryState extends ConsumerState<ProfileSummary> {
            final user = ref.read(authStateProvider).asData?.value;
            if (user == null) return;
 
-           // Show loading feedback (optional, but good)
+           // Show loading feedback
            if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
-                 SnackBar(content: Text(l10n.processing)),
+                 SnackBar(content: Text(l10n.processingUpload)),
               );
            }
 
            try {
-             // Upload
+             // Upload with Metadata
              final storageRef = FirebaseStorage.instance
                  .ref()
                  .child('users/${user.uid}/profile.jpg');
              
              final file = File(pickedFile.path);
-             await storageRef.putFile(file);
+             final metadata = SettableMetadata(contentType: 'image/jpeg');
              
-             final downloadUrl = await storageRef.getDownloadURL();
+             final snapshot = await storageRef.putFile(file, metadata);
+             
+             if (snapshot.state == TaskState.success) {
+               final downloadUrl = await storageRef.getDownloadURL();
 
-             // Update Auth & Firestore
-             await ref.read(authServiceProvider).updatePhotoURL(downloadUrl);
-             
-             // Update Local Provider with URL (optional, keeps it in sync)
-             ref.read(profileImageProvider.notifier).setImage(downloadUrl);
+               // Update Auth & Firestore
+               await ref.read(authServiceProvider).updatePhotoURL(downloadUrl);
+               
+               // Update Local Provider
+               ref.read(profileImageProvider.notifier).setImage(downloadUrl);
+             } else {
+               throw Exception('Upload state: ${snapshot.state}');
+             }
 
            } catch (e) {
              print('Upload error: $e');
              if (mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Upload failed: $e')),
+                  SnackBar(content: Text(l10n.uploadError(e.toString()))),
                 );
              }
            }

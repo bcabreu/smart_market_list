@@ -73,10 +73,14 @@ class _ShareListModalState extends ConsumerState<ShareListModal> {
         child: Text(l10n.errorLoadingProfile(e.toString()))
       ),
       data: (user) {
+        print("🔍 ShareListModal User: ${user?.uid}");
+        print("   - FamilyID: ${user?.familyId}");
+        print("   - PlanType: ${user?.planType}");
+
         if (user == null || user.familyId == null) {
           return Padding(
             padding: const EdgeInsets.all(24),
-            child: Text(l10n.youNeedToCreateFamily),
+            child: Text("${l10n.youNeedToCreateFamily} (Debug: ${user?.familyId})"),
           );
         }
         

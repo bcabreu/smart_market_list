@@ -742,6 +742,14 @@ class AppLocalizationsPt extends AppLocalizations {
   String get processing => 'Processando...';
 
   @override
+  String uploadError(Object error) {
+    return 'Falha no envio: $error';
+  }
+
+  @override
+  String get processingUpload => 'Enviando foto...';
+
+  @override
   String get appVersion => 'Versão do App';
 
   @override

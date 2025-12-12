@@ -32,8 +32,9 @@ class SubscriptionStatusNotifier extends StateNotifier<bool> {
   }
 
   void _updateStatus(CustomerInfo info) {
-    final isPremium = info.entitlements.all[RevenueCatService.entitlementId]?.isActive ?? false;
-    state = isPremium;
+    final individual = info.entitlements.all[RevenueCatService.entitlementIndividual]?.isActive ?? false;
+    final family = info.entitlements.all[RevenueCatService.entitlementFamily]?.isActive ?? false;
+    state = individual || family;
   }
 
   Future<bool> restorePurchases() async {

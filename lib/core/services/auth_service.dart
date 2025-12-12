@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:smart_market_list/core/services/firestore_service.dart';
+import 'package:smart_market_list/core/services/revenue_cat_service.dart';
 // Note: sign_in_with_apple package might be needed for advanced flows, 
 // but FirebaseAuth.instance.signInWithProvider(AppleAuthProvider()) is the modern native way.
 
@@ -139,6 +140,7 @@ class AuthService {
       // 3. Sign Out (Clean up local state/tokens)
       await _googleSignIn.signOut();
       await _auth.signOut();
+      await RevenueCatService().logOut();
     }
   }
 
@@ -146,11 +148,13 @@ class AuthService {
   Future<void> signOut() async {
     await _googleSignIn.signOut();
     await _auth.signOut();
+    await RevenueCatService().logOut();
   }
 
   // Helper to sync user data to Firestore
   Future<void> _syncUserData(User? user, {String? name}) async {
     if (user == null) return;
+    
     await _firestoreService.createOrUpdateUser(
       user.uid, 
       user.email ?? '',
@@ -158,5 +162,25 @@ class AuthService {
       photoUrl: user.photoURL
     );
     await _firestoreService.ensureUserHasFamily(user.uid);
+
+    // 1. Identify User in RevenueCat (Strict Mode)
+    // This prevents "Anonymous" device entitlements from leaking to new users
+    // unless the device receipt literally explicitly belongs to them (which RC handles)
+    await RevenueCatService().logIn(user.uid);
+
+    // Check & Sync Subscription Status (Anonymous -> Authenticated)
+    try {
+      final subDetails = await RevenueCatService().getActiveSubscriptionDetails();
+      if (subDetails != null && subDetails['isPremium'] == true) {
+         print("🔄 Syncing existing subscription for ${user.uid}");
+         await _firestoreService.updateUserPremiumStatus(
+           user.uid,
+           isPremium: true,
+           planType: subDetails['planType']
+         );
+      }
+    } catch (e) {
+      print("⚠️ Auto-sync subscription failed: $e");
+    }
   }
 }

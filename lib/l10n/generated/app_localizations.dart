@@ -1502,6 +1502,18 @@ abstract class AppLocalizations {
   /// **'Processing...'**
   String get processing;
 
+  /// No description provided for @uploadError.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload failed: {error}'**
+  String uploadError(Object error);
+
+  /// No description provided for @processingUpload.
+  ///
+  /// In en, this message translates to:
+  /// **'Uploading photo...'**
+  String get processingUpload;
+
   /// No description provided for @appVersion.
   ///
   /// In en, this message translates to:
