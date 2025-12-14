@@ -369,5 +369,6 @@
   "noMembersYet": "Nenhum membro ainda.",
   "unknownMember": "Desconhecido",
   "shareListTitle": "Lista de Compras",
-  "shareListMessage": "Confira a lista {listName} no Smart Market List!"
+  "shareListMessage": "Confira a lista {listName} no Smart Market List!",
+  "loginToShareMessage": "Para compartilhar sua lista, faça login ou crie uma conta."
 }

@@ -1165,4 +1165,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String shareListMessage(Object listName) {
     return 'Check out the list $listName on Smart Market List!';
   }
+
+  @override
+  String get loginToShareMessage =>
+      'To share your list, please log in or create an account.';
 }

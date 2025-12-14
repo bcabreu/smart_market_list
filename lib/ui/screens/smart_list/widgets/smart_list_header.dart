@@ -331,7 +331,7 @@ class _SmartListHeaderState extends ConsumerState<SmartListHeader> {
                               StatusFeedbackModal.show(
                                 context, 
                                 title: AppLocalizations.of(context)!.loginRequiredTitle ?? 'Login Necessário', 
-                                message: AppLocalizations.of(context)!.loginRequiredMessage ?? 'Para compartilhar em tempo real, você precisa criar uma conta ou sincronizar sua lista.',
+                                message: AppLocalizations.of(context)!.loginToShareMessage ?? 'Para compartilhar sua lista, faça login ou crie uma conta.',
                                 type: FeedbackType.info
                               );
                            }

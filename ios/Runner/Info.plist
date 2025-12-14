@@ -53,7 +53,7 @@
 	<key>UIMainStoryboardFile</key>
 	<string>Main</string>
 	<key>UIStatusBarHidden</key>
-	<true/>
+	<false/>
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
@@ -62,7 +62,7 @@
 	</array>
 
 	<key>UIViewControllerBasedStatusBarAppearance</key>
-	<false/>
+	<true/>
 	<key>GADApplicationIdentifier</key>
 	<string>ca-app-pub-8735023541465246~3609009228</string>
 </dict>

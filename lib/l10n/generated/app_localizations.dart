@@ -2257,6 +2257,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Check out the list {listName} on Smart Market List!'**
   String shareListMessage(Object listName);
+
+  /// No description provided for @loginToShareMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'To share your list, please log in or create an account.'**
+  String get loginToShareMessage;
 }
 
 class _AppLocalizationsDelegate

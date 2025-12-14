@@ -534,7 +534,7 @@ class _PaywallModalState extends ConsumerState<PaywallModal> {
 
       if (success) {
         if (!context.mounted) return;
-        await _handleSync(context, ref, autoClose: true);
+        await _handleSync(context, ref, autoClose: true, isFamilyOverride: _isFamilyPlan);
       } else {
         print("🟡 Purchase returned false (Cancelled or Failed)");
       }
@@ -555,8 +555,7 @@ class _PaywallModalState extends ConsumerState<PaywallModal> {
     }
   }
 
-  /// Centralized Logic to Sync RC -> Firestore
-  Future<void> _handleSync(BuildContext context, WidgetRef ref, {bool autoClose = false}) async {
+  Future<void> _handleSync(BuildContext context, WidgetRef ref, {bool autoClose = false, bool? isFamilyOverride}) async {
       try {
           final user = FirebaseAuth.instance.currentUser;
           
@@ -567,11 +566,14 @@ class _PaywallModalState extends ConsumerState<PaywallModal> {
               if (context.mounted && autoClose) {
                 // Still close if we are auto-fixing based on local premium status
                  Navigator.pop(context);
-                 // Check if we need to show success for visitor? 
-                 // Usually yes, if RC says yes.
-                 final isPremium = await ref.read(revenueCatServiceProvider).checkPremiumStatus();
-                 if (isPremium) {
-                    PremiumSuccessModal.show(context, isFamily: false);
+                 
+                 // FIX: Verify Plan Type for Visitors to show correct Success Modal
+                 final details = await ref.read(revenueCatServiceProvider).getActiveSubscriptionDetails();
+                 if (details != null && details['isPremium'] == true) {
+                    bool isFamily = details['planType'].toString().contains('family');
+                    if (isFamilyOverride != null) isFamily = isFamilyOverride;
+                    
+                    PremiumSuccessModal.show(context, isFamily: isFamily);
                  }
               }
               return;
@@ -592,7 +594,11 @@ class _PaywallModalState extends ConsumerState<PaywallModal> {
              
              if (context.mounted) {
                 if (autoClose) Navigator.pop(context); // Close Paywall
-                PremiumSuccessModal.show(context, isFamily: details['planType'].toString().contains('family'));
+                
+                bool isFamily = details['planType'].toString().contains('family');
+                if (isFamilyOverride != null) isFamily = isFamilyOverride;
+
+                PremiumSuccessModal.show(context, isFamily: isFamily);
              }
           } else {
              print("⚠️ _handleSync called but no active subscription found in details.");
