@@ -193,6 +193,44 @@ class AuthService {
            planType: subDetails['planType']
          );
       } else {
+         // 🛡️ SECURITY: Check if user is a VALID GUEST (Family Plan)
+         // We must verify TWO things:
+         // 1. They are marked as a guest in Firestore.
+         // 2. The Family Owner is still ACTIVE and paying.
+         
+         final localUser = await _firestoreService.getUserData(user.uid);
+         if (localUser != null && localUser['planType'] == 'premium_family_guest') {
+            final familyId = localUser['familyId'];
+            bool isFamilyValid = false;
+
+            if (familyId != null) {
+              final familyDoc = await _firestoreService.getFamilyDoc(familyId);
+              if (familyDoc != null) {
+                final ownerId = familyDoc['ownerId'];
+                if (ownerId != null) {
+                  final ownerUser = await _firestoreService.getUserData(ownerId);
+                  
+                  // Validation: Owner must be Premium AND have Family Plan
+                  if (ownerUser != null && 
+                      ownerUser['isPremium'] == true && 
+                      ownerUser['planType'] == 'premium_family') {
+                    isFamilyValid = true;
+                  } else {
+                    print("⚠️ Family Owner ($ownerId) is no longer Premium/Family. Revoking Guest access.");
+                  }
+                }
+              }
+            }
+
+            if (isFamilyValid) {
+               print("🛡️ Family Guest verified (Owner is Active). Preserving status for ${user.uid}");
+               return; // SKIP downgrade
+            } else {
+               print("🚫 Family Guest validation failed (Owner issue or removed). Downgrading.");
+               // Proceed to downgrade below...
+            }
+         }
+
          // Auto-Downgrade (Anti-Farming Logic)
          print("📉 Syncing downgrade/removal for ${user.uid}");
          await _firestoreService.updateUserPremiumStatus(
