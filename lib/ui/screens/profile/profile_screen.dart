@@ -144,12 +144,12 @@ class ProfileScreen extends ConsumerWidget {
     );
   }
 
-  void _showPaywall(BuildContext context) {
+  void _showPaywall(BuildContext context, {int initialTabIndex = 0}) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => const PaywallModal(),
+      builder: (context) => PaywallModal(initialTabIndex: initialTabIndex),
     );
   }
 
@@ -240,7 +240,8 @@ class ProfileScreen extends ConsumerWidget {
     final sharedCount = sharedUsers.length;
 
     final userProfile = ref.watch(userProfileProvider).value;
-    final isFamilyPlan = userProfile?.planType == 'premium_family';
+    final rcPlanType = ref.watch(revenueCatPlanTypeProvider);
+    final isFamilyPlan = userProfile?.planType == 'premium_family' || rcPlanType == 'premium_family';
 
     return Scaffold(
       body: SafeArea(
@@ -345,13 +346,17 @@ class ProfileScreen extends ConsumerWidget {
                               : l10n.shareListSubtitle,
                           isLocked: !isFamilyPlan, 
                           onTap: () {
-                            // Open ShareListModal (It handles both Invite and Upgrade logic internally)
-                            showModalBottomSheet(
-                              context: context,
-                              isScrollControlled: true,
-                              backgroundColor: Colors.transparent,
-                              builder: (context) => const ShareListModal(),
-                            );
+                            if (!isPremium) {
+                              _showPaywall(context, initialTabIndex: 1); // Direct to Family Paywall
+                            } else {
+                              // Open ShareListModal (It handles both Invite and Upgrade logic internally)
+                              showModalBottomSheet(
+                                context: context,
+                                isScrollControlled: true,
+                                backgroundColor: Colors.transparent,
+                                builder: (context) => const ShareListModal(),
+                              );
+                            }
                           },
                         ),
                         SettingsTile(

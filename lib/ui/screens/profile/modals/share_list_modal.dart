@@ -5,8 +5,10 @@ import 'package:smart_market_list/core/theme/app_colors.dart';
 import 'package:smart_market_list/providers/auth_provider.dart';
 import 'package:smart_market_list/l10n/generated/app_localizations.dart';
 import 'package:smart_market_list/providers/user_profile_provider.dart';
+import 'package:smart_market_list/providers/user_provider.dart';
 import 'package:smart_market_list/providers/sharing_provider.dart';
 import 'package:smart_market_list/core/services/firestore_service.dart';
+import 'package:smart_market_list/providers/subscription_provider.dart';
 import 'package:smart_market_list/ui/common/modals/paywall_modal.dart';
 
 class ShareListModal extends ConsumerStatefulWidget {
@@ -93,6 +95,11 @@ class _ShareListModalState extends ConsumerState<ShareListModal> {
           builder: (context, membersSnapshot) {
              final members = membersSnapshot.data ?? [];
              
+             // Check Plan Type & Login Status (Moved here to be valid Dart syntax)
+             final rcPlanType = ref.watch(revenueCatPlanTypeProvider);
+             final isFamily = user?.planType == 'premium_family' || rcPlanType == 'premium_family';
+             final isLoggedIn = ref.watch(isLoggedInProvider);
+             
              // Filter out current user
              final otherMembers = (user != null) 
                 ? members.where((m) => m['email'] != user.email).toList()
@@ -163,8 +170,9 @@ class _ShareListModalState extends ConsumerState<ShareListModal> {
 
                   const SizedBox(height: 32),
                   
-                  // Check Plan Type
-                  if (user?.planType != 'premium_family') ...[
+                  // Check Plan Type (Logic moved to builder scope)
+
+                  if (!isFamily) ...[
                      // Logic: If user is premium_family_guest, they are a GUEST.
                      // Free/Individual users also have familyId (personal), so we must rely on planType.
                      if (user?.planType == 'premium_family_guest') ...[
@@ -241,8 +249,54 @@ class _ShareListModalState extends ConsumerState<ShareListModal> {
                           ),
                          ),
                      ]
+                  ] else if (!isLoggedIn) ...[
+                     // FAMILY PLAN + VISITOR -> Prompt Login
+                     Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: AppColors.primary.withOpacity(0.3)),
+                          ),
+                          child: Column(
+                            children: [
+                              Icon(Icons.account_circle_outlined, size: 48, color: AppColors.primary),
+                              const SizedBox(height: 12),
+                              Text(
+                                l10n.loginRequiredTitle ?? "Login Necessário",
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                "Para compartilhar sua lista e convidar membros, você precisa criar uma conta para sincronizar os dados.",
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(fontSize: 14),
+                              ),
+                              const SizedBox(height: 16),
+                              SizedBox(
+                                width: double.infinity,
+                                child: ElevatedButton(
+                                  onPressed: () {
+                                    Navigator.pop(context);
+                                    // Trigger Login Flow (Usually navigate to Profile or show Login Modal)
+                                    // For now, since we are likely in Profile, we can just pop.
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(content: Text("Faça login na tela de perfil para continuar."))
+                                    );
+                                  },
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: AppColors.primary,
+                                    foregroundColor: Colors.white,
+                                  ),
+                                  child: Text(l10n.login ?? "Fazer Login"),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                   ] else ...[ 
-                    // Action Button (Share Link)
+                    // Action Button (Share Link) -> LOGGED IN FAMILY MEMBER
                     if (canAdd) 
                       SizedBox(
                         width: double.infinity,
