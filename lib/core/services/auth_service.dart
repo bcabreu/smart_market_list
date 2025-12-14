@@ -169,8 +169,22 @@ class AuthService {
     await RevenueCatService().logIn(user.uid);
 
     // Check & Sync Subscription Status (Anonymous -> Authenticated)
+    // Check & Sync Subscription Status (Anonymous -> Authenticated)
     try {
-      final subDetails = await RevenueCatService().getActiveSubscriptionDetails();
+      var subDetails = await RevenueCatService().getActiveSubscriptionDetails();
+      
+      // AUTO-RESTORE LOGIC:
+      // If login didn't automatically pull the subscription (common in fresh installs/sandbox),
+      // we attempt a silent restore.
+      if (subDetails == null || subDetails['isPremium'] != true) {
+         print("⚠️ Status checks failed. Attempting Auto-Restore for ${user.uid}...");
+         final restored = await RevenueCatService().restorePurchases();
+         if (restored) {
+            print("✅ Auto-Restore successful! Re-fetching details...");
+            subDetails = await RevenueCatService().getActiveSubscriptionDetails();
+         }
+      }
+
       if (subDetails != null && subDetails['isPremium'] == true) {
          print("🔄 Syncing existing subscription for ${user.uid}");
          await _firestoreService.updateUserPremiumStatus(
@@ -180,10 +194,6 @@ class AuthService {
          );
       } else {
          // Auto-Downgrade (Anti-Farming Logic)
-         // If RevenueCat says "Not Premium" (expired, transferred, or never existed),
-         // we MUST update Firestore to reflect this.
-         // This ensures that if a user transfers their subscription to another account,
-         // the old account loses access immediately upon next sync.
          print("📉 Syncing downgrade/removal for ${user.uid}");
          await _firestoreService.updateUserPremiumStatus(
            user.uid,

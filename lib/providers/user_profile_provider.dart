@@ -23,19 +23,25 @@ final userProfileProvider = StreamProvider<UserProfile?>((ref) {
           return Stream.value(profile);
         }
 
-        // If Guest, check Owner's status
+        // PRIORITY: If I am already premium (Individual purchase or otherwise), 
+        // I have access regardless of the owner.
+        if (profile.isPremium) {
+          return Stream.value(profile);
+        }
+
+        // If Guest AND not premium, check Owner's status (Family Inheritance)
         // We need the ownerId. It's stored in 'connectedTo' or we can fetch family doc.
         // Assuming 'connectedTo' is the owner UID as per accepting logic.
         final ownerId = userData['connectedTo'] as String?;
         
         if (ownerId == null) return Stream.value(profile);
 
-        // Stream Owner's data to check for premium
+        // Stream Owner's data to check for premium inheritance
         return firestoreService.getUserStream(ownerId).map((ownerData) {
            final ownerIsPremium = ownerData?['isPremium'] == true;
            
-           // If owner is premium, guest is premium.
            if (ownerIsPremium) {
+             // Inherit Premium from Owner
              return UserProfile(
                uid: profile.uid,
                email: profile.email,
@@ -43,20 +49,12 @@ final userProfileProvider = StreamProvider<UserProfile?>((ref) {
                familyId: profile.familyId,
                role: profile.role,
                isPremium: true, // Inherited
-               planType: profile.planType, // Keep plan type (e.g. premium_family_guest)
+               planType: profile.planType, // Keep original plan type
              );
            } else {
-             // If Owner lost premium, Guest MUST lose it too.
-             // Force override to false, regardless of what's in Firestore for the guest.
-             return UserProfile(
-               uid: profile.uid,
-               email: profile.email,
-               name: profile.name,
-               familyId: profile.familyId,
-               role: profile.role,
-               isPremium: false, // Enforce False
-               planType: 'free', // Enforce Free
-             );
+             // Owner is not premium, and I am not premium (checked above).
+             // So I am Free.
+             return profile;
            }
         });
       });

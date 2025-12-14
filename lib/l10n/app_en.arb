@@ -358,5 +358,7 @@
   "memberLimitReached": "Member limit reached (you + 1).",
   "familyMembersTitle": "Family Members",
   "noMembersYet": "No members yet.",
-  "unknownMember": "Unknown"
+  "unknownMember": "Unknown",
+  "shareListTitle": "Shopping List",
+  "shareListMessage": "Check out the list {listName} on Smart Market List!"
 }

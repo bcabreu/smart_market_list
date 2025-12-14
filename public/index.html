@@ -15,17 +15,26 @@
     .emoji { font-size: 48px; display: block; margin-bottom: 20px; }
   </style>
   <script>
-      // Simple logic: If we are here, the Universal Link failed to open the app (or app not installed).
-      // We can try to redirect to scheme or show buttons.
       window.onload = function() {
           const params = new URLSearchParams(window.location.search);
           const listId = params.get('listId');
           const familyId = params.get('familyId');
           
+          // 1. Try to open the APP immediately
           if(listId && familyId) {
-             // Try to force open app via scheme as backup
              window.location.href = `smartmarketlist://share?listId=${listId}&familyId=${familyId}`;
           }
+
+          // 2. Auto-redirect to STORE if app doesn't open (User Agent Detection)
+          const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+          
+          setTimeout(function() {
+             if (/android/i.test(userAgent)) {
+                 window.location.href = "https://play.google.com/store/apps/details?id=com.kepoweb.smart_market_list";
+             } else if (/iPad|iPhone|iPod/.test(userAgent) && !window.MSStream) {
+                 window.location.href = "https://apps.apple.com/app/id6756240280";
+             }
+          }, 1500); // Wait 1.5s to see if App opens
       }
   </script>
 </head>

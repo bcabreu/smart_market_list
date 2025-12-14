@@ -73,12 +73,20 @@ class _ProfileSummaryState extends ConsumerState<ProfileSummary> {
                  .child('users/${user.uid}/profile.jpg');
              
              final file = File(pickedFile.path);
+             // Detect mime type or default to jpeg
              final metadata = SettableMetadata(contentType: 'image/jpeg');
              
-             final snapshot = await storageRef.putFile(file, metadata);
+             print("🚀 Starting Upload to: users/${user.uid}/profile.jpg");
+             
+             final uploadTask = storageRef.putFile(file, metadata);
+             final snapshot = await uploadTask;
+             
+             print("✅ Upload State: ${snapshot.state}");
              
              if (snapshot.state == TaskState.success) {
-               final downloadUrl = await storageRef.getDownloadURL();
+               // Use snapshot.ref to be absolutely sure we get the URL of what was just uploaded
+               final downloadUrl = await snapshot.ref.getDownloadURL();
+               print("🔗 Got URL: $downloadUrl");
 
                // Update Auth & Firestore
                await ref.read(authServiceProvider).updatePhotoURL(downloadUrl);
@@ -86,14 +94,15 @@ class _ProfileSummaryState extends ConsumerState<ProfileSummary> {
                // Update Local Provider
                ref.read(profileImageProvider.notifier).setImage(downloadUrl);
              } else {
-               throw Exception('Upload state: ${snapshot.state}');
+               throw Exception('Upload Failed. State: ${snapshot.state}');
              }
 
            } catch (e) {
-             print('Upload error: $e');
+             print('❌ Upload error details: $e');
              if (mounted) {
+                // Show raw error for debugging if needed, or user friendly one
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(l10n.uploadError(e.toString()))),
+                  SnackBar(content: Text('Falha no upload: $e'), backgroundColor: Colors.red),
                 );
              }
            }

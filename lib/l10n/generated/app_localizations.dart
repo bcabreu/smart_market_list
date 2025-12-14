@@ -2245,6 +2245,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Unknown'**
   String get unknownMember;
+
+  /// No description provided for @shareListTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Shopping List'**
+  String get shareListTitle;
+
+  /// No description provided for @shareListMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Check out the list {listName} on Smart Market List!'**
+  String shareListMessage(Object listName);
 }
 
 class _AppLocalizationsDelegate

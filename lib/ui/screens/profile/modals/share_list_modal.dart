@@ -77,24 +77,27 @@ class _ShareListModalState extends ConsumerState<ShareListModal> {
         print("   - FamilyID: ${user?.familyId}");
         print("   - PlanType: ${user?.planType}");
 
-        if (user == null || user.familyId == null) {
-          return Padding(
-            padding: const EdgeInsets.all(24),
-            child: Text("${l10n.youNeedToCreateFamily} (Debug: ${user?.familyId})"),
-          );
-        }
+        // REMOVED BLOCKING CHECK: if (user == null || user.familyId == null) ...
+        // We want to allow users without familyId to see the Upgrade UI.
         
-        final familyId = user.familyId!;
+        final familyId = user?.familyId;
         final firestore = ref.watch(firestoreServiceProvider);
 
-        // Stream members
+        // Stream members (or empty stream if no familyId)
+        final membersStream = familyId != null 
+            ? firestore.getFamilyMembers(familyId)
+            : Stream.value(<Map<String, dynamic>>[]);
+
         return StreamBuilder<List<Map<String, dynamic>>>(
-          stream: firestore.getFamilyMembers(familyId),
+          stream: membersStream,
           builder: (context, membersSnapshot) {
              final members = membersSnapshot.data ?? [];
              
              // Filter out current user
-             final otherMembers = members.where((m) => m['email'] != user.email).toList();
+             final otherMembers = (user != null) 
+                ? members.where((m) => m['email'] != user.email).toList()
+                : [];
+                
              final canAdd = otherMembers.isEmpty; // Limit 1 guest
 
              return Container(
@@ -161,10 +164,10 @@ class _ShareListModalState extends ConsumerState<ShareListModal> {
                   const SizedBox(height: 32),
                   
                   // Check Plan Type
-                  if (user.planType != 'premium_family') ...[
+                  if (user?.planType != 'premium_family') ...[
                      // Logic: If user is premium_family_guest, they are a GUEST.
                      // Free/Individual users also have familyId (personal), so we must rely on planType.
-                     if (user.planType == 'premium_family_guest') ...[
+                     if (user?.planType == 'premium_family_guest') ...[
                         Container(
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
@@ -342,7 +345,7 @@ class _ShareListModalState extends ConsumerState<ShareListModal> {
                               ],
                             ),
                           ),
-                          if (uid != null)
+                          if (uid != null && familyId != null)
                             IconButton(
                               onPressed: () => _removeMember(familyId, uid), 
                               icon: const Icon(Icons.close, size: 18),

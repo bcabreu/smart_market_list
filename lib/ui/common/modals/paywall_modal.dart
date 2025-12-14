@@ -32,6 +32,34 @@ class _PaywallModalState extends ConsumerState<PaywallModal> {
     if (widget.initialTabIndex == 1) {
       _isFamilyPlan = true;
     }
+    // Auto-check: If user is already premium locally (RC) but here (means Firestore is free),
+    // we should auto-sync and close.
+    WidgetsBinding.instance.addPostFrameCallback((_) => _checkAndAutoFix());
+  }
+
+  Future<void> _checkAndAutoFix() async {
+    final details = await ref.read(revenueCatServiceProvider).getActiveSubscriptionDetails();
+    final isPremium = details != null && details['isPremium'] == true;
+    final planType = details?['planType'];
+
+    if (isPremium && mounted) {
+      // Logic: 
+      // 1. If we are in "Family Mode" (_isFamilyPlan), ONLY close if user HAS Family Plan.
+      // 2. If we are in "Any Mode" (default), close if user has ANY plan.
+      
+      if (_isFamilyPlan) {
+         if (planType == 'premium_family') {
+            print("🔵 [Paywall] Already Family Premium. Syncing...");
+            await _handleSync(context, ref, autoClose: true);
+         } else {
+            print("🟡 [Paywall] User is Invalid Premium, but wants Family. Staying open for upgrade.");
+         }
+      } else {
+         // Standard Paywall: If user has ANY premium, close it.
+         print("🔵 [Paywall] User is Premium. Syncing...");
+         await _handleSync(context, ref, autoClose: true);
+      }
+    }
   }
 
   @override
@@ -505,64 +533,9 @@ class _PaywallModalState extends ConsumerState<PaywallModal> {
       if (context.mounted) Navigator.of(context, rootNavigator: true).pop();
 
       if (success) {
-        print("🟢 Purchase Successful. Starting Firestore Sync...");
-        
         if (!context.mounted) return;
-
-        // Visual Feedback removed per user request (Redundant with Modal)
-        // ScaffoldMessenger.of(context).showSnackBar(...)
-
-        // 2. Identify Plan Type
-        String planType = 'premium_monthly';
-        final isAnnual = package.packageType == PackageType.annual;
-        
-        if (_isFamilyPlan) {
-           planType = isAnnual ? 'premium_family_annual' : 'premium_family_monthly';
-        } else {
-           planType = isAnnual ? 'premium_annual' : 'premium_monthly';
-        }
-
-        // 3. Sync to Firestore (Robust with Retry/Fallback)
-        try {
-          final user = FirebaseAuth.instance.currentUser;
-          
-          if (user != null) {
-            print("🔵 Updating Firestore for uid: ${user.uid}");
-            
-            await ref.read(firestoreServiceProvider).updateUserPremiumStatus(
-              user.uid, 
-              isPremium: true, 
-              planType: planType
-            );
-            
-            print("🟢 Firestore Updated.");
-
-          } else {
-             // CRITICAL FALLBACK: If user null (rare), try to find via provider or just log error
-             throw Exception('User appears to be logged out (UID null).');
-          }
-        } catch (dbError) {
-           print('🔴 Firestore Sync Error: $dbError');
-           // Even if DB fails, THE USER PAID. We must warn them but maybe unlock locally?
-           if (context.mounted) {
-              showDialog(
-                context: context,
-                builder: (context) => AlertDialog(
-                  title: const Text('Atenção'),
-                  content: Text('Pagamento recebido, mas houve um erro ao salvar no seu perfil: $dbError.\n\nPof favor, tire um print e contate o suporte, ou tente "Restaurar Compras".'),
-                  actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text('OK'))],
-                ),
-              );
-           }
-        }
-
-        // 4. Force Close & Success (Regardless of DB error, we loop close)
-        if (context.mounted) {
-           Navigator.pop(context); // Close Paywall
-           PremiumSuccessModal.show(context, isFamily: _isFamilyPlan); 
-        }
+        await _handleSync(context, ref, autoClose: true);
       } else {
-        // Purchase cancelled or failed logic in RevenueCatService
         print("🟡 Purchase returned false (Cancelled or Failed)");
       }
     } catch (e) {
@@ -572,7 +545,6 @@ class _PaywallModalState extends ConsumerState<PaywallModal> {
       print("🔴 Critical Purchase Error: $e");
       if (context.mounted) {
          final l10n = AppLocalizations.of(context)!;
-         // Replaces "White Ugly Modal" with consistent Custom Feedback
          StatusFeedbackModal.show(
             context,
             title: l10n.purchaseErrorTitle ?? 'Erro na Compra',
@@ -581,6 +553,56 @@ class _PaywallModalState extends ConsumerState<PaywallModal> {
          );
       }
     }
+  }
+
+  /// Centralized Logic to Sync RC -> Firestore
+  Future<void> _handleSync(BuildContext context, WidgetRef ref, {bool autoClose = false}) async {
+      try {
+          final user = FirebaseAuth.instance.currentUser;
+          
+          if (user == null) {
+              print("⚠️ User is null (Visitor). Skipping Firestore sync.");
+              // For visitors, we rely on RevenueCat caching, so skipping DB sync is fine.
+              
+              if (context.mounted && autoClose) {
+                // Still close if we are auto-fixing based on local premium status
+                 Navigator.pop(context);
+                 // Check if we need to show success for visitor? 
+                 // Usually yes, if RC says yes.
+                 final isPremium = await ref.read(revenueCatServiceProvider).checkPremiumStatus();
+                 if (isPremium) {
+                    PremiumSuccessModal.show(context, isFamily: false);
+                 }
+              }
+              return;
+          }
+
+          final details = await ref.read(revenueCatServiceProvider).getActiveSubscriptionDetails();
+          
+          if (details != null && details['isPremium'] == true) {
+             print("🔵 Updating Firestore for uid: ${user.uid} with ${details['planType']}");
+             
+             await ref.read(firestoreServiceProvider).updateUserPremiumStatus(
+                user.uid, 
+                isPremium: true,
+                planType: details['planType'] ?? 'premium_individual'
+             );
+             
+             print("🟢 Firestore Updated.");
+             
+             if (context.mounted) {
+                if (autoClose) Navigator.pop(context); // Close Paywall
+                PremiumSuccessModal.show(context, isFamily: details['planType'].toString().contains('family'));
+             }
+          } else {
+             print("⚠️ _handleSync called but no active subscription found in details.");
+          }
+      } catch (e) {
+          print('🔴 Sync Error: $e');
+          if (context.mounted && !autoClose) {
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Erro ao sincronizar: $e')));
+          }
+      }
   }
 
   Future<void> _restorePurchases(BuildContext context, WidgetRef ref) async {
@@ -603,8 +625,9 @@ class _PaywallModalState extends ConsumerState<PaywallModal> {
      final success = await ref.read(revenueCatServiceProvider).restorePurchases();
      if (success) {
         if (context.mounted) {
-            Navigator.pop(context);
-            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Purchases Restored!')));
+            // Updated to Sync with Firestore
+            await _handleSync(context, ref, autoClose: true);
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Purchases Restored & Synced!')));
         }
      } else {
         if (context.mounted) {

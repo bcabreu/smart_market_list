@@ -8,9 +8,12 @@ import 'package:smart_market_list/ui/screens/smart_list/modals/edit_list_modal.d
 import 'package:smart_market_list/l10n/generated/app_localizations.dart';
 import 'package:smart_market_list/ui/screens/smart_list/widgets/list_selector_dropdown.dart';
 import 'package:smart_market_list/providers/user_profile_provider.dart';
+import 'package:smart_market_list/providers/user_provider.dart'; // Added for isPremiumProvider
 import 'package:smart_market_list/ui/common/modals/paywall_modal.dart';
 import 'package:uuid/uuid.dart';
+import 'package:smart_market_list/ui/screens/profile/modals/share_list_modal.dart';
 import 'package:smart_market_list/providers/sharing_provider.dart';
+import 'package:smart_market_list/ui/common/modals/status_feedback_modal.dart';
 
 
 
@@ -156,6 +159,10 @@ class _SmartListHeaderState extends ConsumerState<SmartListHeader> {
   }
 
   Widget _buildHeaderVisual(BuildContext context, WidgetRef ref, {bool forceOpen = false}) {
+    // Use isPremiumProvider (RevenueCat Source of Truth) instead of Firestore profile
+    // This allows Visitors to access premium features locally.
+    final isPremium = ref.watch(isPremiumProvider);
+
     final uncheckedCount = widget.list.items.where((i) => !i.checked).length;
     final percentage = widget.list.percentage / 100;
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -294,8 +301,9 @@ class _SmartListHeaderState extends ConsumerState<SmartListHeader> {
                     const SizedBox(width: 8), // Gap
                     InkWell(
                       onTap: () {
-                         final isPremium = ref.read(userProfileProvider).value?.isPremium ?? false;
-                         
+                         // Use the watched value from build (we need to watch it first)
+                         // But since we can't easily change the build method structure without a larger refactor,
+                         // Uses the local 'isPremium' variable which is derived from ref.watch above
                          if (!isPremium) {
                            showModalBottomSheet(
                              context: context,
@@ -304,27 +312,28 @@ class _SmartListHeaderState extends ConsumerState<SmartListHeader> {
                              builder: (context) => const PaywallModal(),
                            );
                          } else {
-                           // Share logic (Premium Access)
-                           final sharingService = ref.read(sharingServiceProvider);
+                           // Share logic (Premium Access - Real Time Link)
                            final profile = ref.read(userProfileProvider).value;
                            final familyIdToUse = widget.list.familyId ?? profile?.familyId;
                            
                            if (familyIdToUse != null) {
-                               final l10n = AppLocalizations.of(context)!;
-                               sharingService.shareList(
-                                 list: widget.list,
-                                 familyId: familyIdToUse,
-                                 title: l10n.shareListMessageTitle(widget.list.name),
-                                 messageBody: l10n.shareListMessageBody,
-                                 accessLinkLabel: l10n.accessLinkLabel,
-                                 installAppAdvice: l10n.installAppAdvice,
-                                 androidLabel: l10n.androidLabel,
-                                 iosLabel: l10n.iosLabel,
-                               );
+                              final l10n = AppLocalizations.of(context)!;
+                              ref.read(sharingServiceProvider).shareList(
+                                list: widget.list, 
+                                familyId: familyIdToUse,
+                                title: l10n.shareListTitle,
+                                messageBody: l10n.shareListMessage(widget.list.name),
+                                accessLinkLabel: l10n.accessLinkLabel,
+                              );
                            } else {
-                               ScaffoldMessenger.of(context).showSnackBar(
-                                 const SnackBar(content: Text('Erro: Lista não sincronizada ou família não encontrada.')),
-                               );
+                              // Visitor / Offline / No Family ID
+                              // Must sync or login to generate a shareable link
+                              StatusFeedbackModal.show(
+                                context, 
+                                title: AppLocalizations.of(context)!.loginRequiredTitle ?? 'Login Necessário', 
+                                message: AppLocalizations.of(context)!.loginRequiredMessage ?? 'Para compartilhar em tempo real, você precisa criar uma conta ou sincronizar sua lista.',
+                                type: FeedbackType.info
+                              );
                            }
                          }
                       },

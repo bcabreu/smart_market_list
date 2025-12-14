@@ -345,25 +345,13 @@ class ProfileScreen extends ConsumerWidget {
                               : l10n.shareListSubtitle,
                           isLocked: !isFamilyPlan, 
                           onTap: () {
-                            // Fix: Gatekeeper Logic
-                            // If NOT Family Plan (Free OR Individual) -> Show Paywall (Upgrade)
-                            if (!isFamilyPlan) {
-                               // Open Paywall directly on Family Tab (Tab 1)
-                               showModalBottomSheet(
-                                  context: context,
-                                  isScrollControlled: true,
-                                  backgroundColor: Colors.transparent,
-                                  builder: (context) => const PaywallModal(initialTabIndex: 1),
-                                );
-                            } else {
-                               // Only Family Plan can open this
-                               showModalBottomSheet(
-                                  context: context,
-                                  isScrollControlled: true,
-                                  backgroundColor: Colors.transparent,
-                                  builder: (context) => const ShareListModal(),
-                                );
-                            }
+                            // Open ShareListModal (It handles both Invite and Upgrade logic internally)
+                            showModalBottomSheet(
+                              context: context,
+                              isScrollControlled: true,
+                              backgroundColor: Colors.transparent,
+                              builder: (context) => const ShareListModal(),
+                            );
                           },
                         ),
                         SettingsTile(

@@ -1161,4 +1161,12 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get unknownMember => 'Desconhecido';
+
+  @override
+  String get shareListTitle => 'Lista de Compras';
+
+  @override
+  String shareListMessage(Object listName) {
+    return 'Confira a lista $listName no Smart Market List!';
+  }
 }

@@ -367,5 +367,7 @@
   "memberLimitReached": "Limite de membros atingido (você + 1).",
   "familyMembersTitle": "Membros da Família",
   "noMembersYet": "Nenhum membro ainda.",
-  "unknownMember": "Desconhecido"
+  "unknownMember": "Desconhecido",
+  "shareListTitle": "Lista de Compras",
+  "shareListMessage": "Confira a lista {listName} no Smart Market List!"
 }

@@ -121,24 +121,23 @@ class RevenueCatService {
         if (id.contains('family')) hasFamily = true;
       }
       
-      // PRIORITY LOGIC:
-      // In Sandbox, a user might have BOTH active (Sandbox history accumulates).
-      // If the user effectively bought Individual, we should show Individual to avoid confusion.
-      // We return Individual if present, even if Family is also present (Sandbox overlap).
+      // PRIORITY LOGIC FIX:
+      // If a user has BOTH (e.g. Sandbox upgrade/overlap), Family takes precedence.
+      // We check Family FIRST.
       
+      if (hasFamily) {
+           print("✅ Identified Family Plan via Product ID (Priority)");
+           return {
+             'isPremium': true,
+             'planType': 'premium_family'
+           };
+      }
+
       if (hasIndividual) {
            print("✅ Identified Individual Plan via Product ID");
            return {
              'isPremium': true,
              'planType': 'premium_individual'
-           };
-      }
-
-      if (hasFamily) {
-           print("✅ Identified Family Plan via Product ID");
-           return {
-             'isPremium': true,
-             'planType': 'premium_family'
            };
       }
       
@@ -189,10 +188,24 @@ class RevenueCatService {
   }
 
   /// Helper to check if ANY premium entitlement is active
+  /// Helper to check if ANY premium entitlement is active
   bool _checkEntitlements(CustomerInfo info) {
     print("🔍 [RC Check] Entitlements payload: ${info.entitlements.active.toString()}");
+    print("🔍 [RC Check] Active Subscriptions: ${info.activeSubscriptions}");
+
+    // 1. Check Entitlements (Standard Way)
     final individual = info.entitlements.all[entitlementIndividual]?.isActive ?? false;
     final family = info.entitlements.all[entitlementFamily]?.isActive ?? false;
-    return individual || family;
+
+    if (individual || family) return true;
+
+    // 2. Fallback: Check Active Subscriptions (Product IDs) directly
+    // This catches cases where Entitlements are unconfigured/buggy but purchase exists.
+    if (info.activeSubscriptions.isNotEmpty) {
+      print("⚠️ No Entitlements found, but Active Subscriptions exist. Granting access.");
+      return true;
+    }
+
+    return false;
   }
 }

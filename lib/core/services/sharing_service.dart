@@ -117,26 +117,13 @@ class SharingService {
     required String title,
     required String messageBody,
     required String accessLinkLabel,
-    required String installAppAdvice,
-    required String androidLabel,
-    required String iosLabel,
   }) async {
     final String deepLink = 'https://smart-market-list-82bf7.web.app/share?listId=${list.id}&familyId=$familyId&name=${Uri.encodeComponent(list.name)}';
-    
-    // Construct full message using localized parts
-    // Note: We use the same structure as family share for consistency, or keep it custom.
-    // The previous structure was: Title \n Link Labels \n Link \n Advice \n Store Links
-    
-    const String androidUrl = 'https://play.google.com/store/apps/details?id=com.kepoweb.smart_market_list';
-    const String iosUrl = 'https://apps.apple.com/app/id6756240280';
     
     final String fullMessage = 
         '$title\n\n'
         '$messageBody\n\n'
-        '$accessLinkLabel\n$deepLink\n'
-        '$installAppAdvice\n\n'
-        '$androidLabel $androidUrl\n'
-        '$iosLabel $iosUrl';
+        '$accessLinkLabel\n$deepLink';
 
     await Share.share(fullMessage);
   }
