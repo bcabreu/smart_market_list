@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:smart_market_list/data/models/shopping_list.dart';
 import 'package:smart_market_list/data/models/shopping_item.dart';
@@ -60,6 +61,9 @@ class FirestoreService {
 
   Future<void> deleteUser(String uid) async {
     try {
+      // 0. Delete User Files from Storage (Profile Photos)
+      await _deleteUserStorage(uid);
+
       // 1. Remove from Shared Lists (where user is a member)
       final sharedLists = await _firestore
           .collectionGroup('shopping_lists')
@@ -105,6 +109,21 @@ class FirestoreService {
       print('Error during deep user deletion: $e');
       // Fallback: Ensure user doc is deleted even if cleanup fails partially
       await _users.doc(uid).delete(); 
+    }
+  }
+
+  Future<void> _deleteUserStorage(String uid) async {
+    try {
+      final storageRef = FirebaseStorage.instance.ref().child('users/$uid');
+      final listResult = await storageRef.listAll();
+      
+      for (var item in listResult.items) {
+        await item.delete();
+      }
+      print('✅ Deleted storage files for user $uid');
+    } catch (e) {
+      print('⚠️ Error deleting user storage: $e');
+      // Allow deletion flow to continue even if storage fails
     }
   }
 
