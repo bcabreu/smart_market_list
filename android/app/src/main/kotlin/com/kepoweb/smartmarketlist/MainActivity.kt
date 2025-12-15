@@ -1,4 +1,4 @@
-package com.brunoabreu.smart_market_list
+package com.kepoweb.smartmarketlist
 
 import io.flutter.embedding.android.FlutterActivity
 

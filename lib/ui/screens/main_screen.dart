@@ -453,18 +453,21 @@ class _MainScreenState extends ConsumerState<MainScreen> {
         },
         child: _screens[currentIndex],
       ),
-      bottomNavigationBar: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const BannerAdWidget(),
-          Hero(
-            tag: 'bottom_nav_bar',
-            child: CustomBottomNavigation(
-              currentIndex: currentIndex,
-              onTap: _onTabTapped,
+      bottomNavigationBar: SafeArea(
+        top: false,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const BannerAdWidget(),
+            Hero(
+              tag: 'bottom_nav_bar',
+              child: CustomBottomNavigation(
+                currentIndex: currentIndex,
+                onTap: _onTabTapped,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

@@ -11,6 +11,8 @@ import 'package:smart_market_list/ui/common/modals/paywall_modal.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:smart_market_list/providers/recipes_provider.dart';
 import 'package:smart_market_list/providers/sharing_provider.dart';
+import 'dart:io';
+import 'dart:math' as math;
 
 class RecipeDetailModal extends ConsumerWidget {
   final Recipe recipe;
@@ -310,7 +312,7 @@ class RecipeDetailModal extends ConsumerWidget {
               Positioned(
                 left: 24,
                 right: 24,
-                bottom: 32,
+                bottom: 32 + (Platform.isAndroid ? math.max(MediaQuery.of(context).viewPadding.bottom, 45.0) : 0),
                 child: SizedBox(
                   width: double.infinity,
                   height: 56,

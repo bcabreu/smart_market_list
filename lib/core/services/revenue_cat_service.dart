@@ -4,7 +4,7 @@ import 'package:purchases_flutter/purchases_flutter.dart';
 import 'package:smart_market_list/core/services/firestore_service.dart';
 
 class RevenueCatService {
-  static const _apiKeyAndroid = 'goog_YOUR_ANDROID_KEY_HERE'; // TODO: Replace
+  static const _apiKeyAndroid = 'goog_raLiqgpczFimejjubyQVJpQYIEE';
   static const _apiKeyIOS = 'appl_BFVuFnVxDsDhiZLLOwUGkjDPXwb';
   
   static const entitlementIndividual = 'premium_individual';

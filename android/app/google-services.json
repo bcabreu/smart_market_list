@@ -7,9 +7,9 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:1033855354360:android:5a3c9e18d822e46b19020d",
+        "mobilesdk_app_id": "1:1033855354360:android:c026faf09935a1ca19020d",
         "android_client_info": {
-          "package_name": "com.brunoabreu.smart_market_list"
+          "package_name": "com.kepoweb.smartmarketlist"
         }
       },
       "oauth_client": [
@@ -31,10 +31,10 @@
               "client_type": 3
             },
             {
-              "client_id": "1033855354360-pfp6stmktqu0n9m7opdi56mg666dgtle.apps.googleusercontent.com",
+              "client_id": "1033855354360-ck2d0r691lraob20tvq06n7hikqnombh.apps.googleusercontent.com",
               "client_type": 2,
               "ios_info": {
-                "bundle_id": "com.brunoabreu.smartMarketList"
+                "bundle_id": "com.kepoweb.smartMarketList"
               }
             }
           ]

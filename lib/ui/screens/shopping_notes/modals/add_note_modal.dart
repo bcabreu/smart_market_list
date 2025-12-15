@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:math' as math;
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -197,7 +198,10 @@ class _AddNoteModalState extends ConsumerState<AddNoteModal> {
         color: Theme.of(context).scaffoldBackgroundColor,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      child: SingleChildScrollView(
+      child: Column(
+        children: [
+          Expanded(
+            child: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -352,49 +356,56 @@ class _AddNoteModalState extends ConsumerState<AddNoteModal> {
               ),
             ),
 
-            // Save Button
-            Padding(
-              padding: const EdgeInsets.fromLTRB(24, 0, 24, 0),
-              child: SizedBox(
-                width: double.infinity,
-                height: 56,
-                child: ElevatedButton(
-                  onPressed: _saveNote,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.secondary,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    elevation: 0,
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(Icons.add, size: 24),
-                      const SizedBox(width: 8),
-                      Text(
-                        l10n.saveNoteButton,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-            // Add safe area padding and extra spacing for bottom
-            SizedBox(
-              height: MediaQuery.of(context).viewInsets.bottom + 
-                     MediaQuery.of(context).padding.bottom + 
-                     24,
-            ),
+            if (!Platform.isAndroid) ...[
+              _buildSaveButton(l10n),
+              const SizedBox(height: 24),
+            ],
           ],
         ),
+        ),
       ),
-    ));
+      if (Platform.isAndroid)
+        Padding(
+          padding: EdgeInsets.only(bottom: 24 + math.max(MediaQuery.of(context).viewPadding.bottom, 45.0), top: 16),
+          child: _buildSaveButton(l10n),
+        ),
+      ],
+    )));
+  }
+
+  Widget _buildSaveButton(AppLocalizations l10n) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 0, 24, 0),
+      child: SizedBox(
+        width: double.infinity,
+        height: 56,
+        child: ElevatedButton(
+          onPressed: _saveNote,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.secondary,
+            foregroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            elevation: 0,
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.add, size: 24),
+              const SizedBox(width: 8),
+              Text(
+                l10n.saveNoteButton,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   Widget _buildLabel(String text, IconData icon, bool isDark) {
