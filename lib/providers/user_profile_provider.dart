@@ -69,3 +69,5 @@ final isFamilyGuestProvider = Provider<bool>((ref) {
   final userProfile = ref.watch(userProfileProvider).asData?.value;
   return userProfile?.role == 'guest';
 });
+
+

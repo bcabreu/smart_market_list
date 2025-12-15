@@ -101,9 +101,13 @@ class ShoppingListService {
 
   Future<void> createList(ShoppingList list) async {
     // New lists default to current family
-    final listWithFamily = list.familyId == null && _currentFamilyId != null
-        ? list.copyWith(familyId: _currentFamilyId) 
-        : list;
+    final listWithFamily = list.copyWith(
+      familyId: list.familyId ?? _currentFamilyId,
+      ownerId: list.ownerId ?? _currentUid,
+      members: (list.members.isEmpty && _currentUid != null) 
+          ? [_currentUid!] 
+          : list.members,
+    );
         
     await _box.put(listWithFamily.id, listWithFamily);
     await _syncToCloud(listWithFamily);

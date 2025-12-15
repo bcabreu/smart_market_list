@@ -222,7 +222,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get savedNotesStats => 'Notas\nsalvas';
 
   @override
-  String get sharingListsStats => 'Compartilhando\nListas';
+  String get sharingListsStats => 'Listas\nCompartilhadas';
 
   @override
   String get editProfileSoon => 'Editar perfil (Em breve)';
@@ -1177,4 +1177,7 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get loginToShareMessage =>
       'Para compartilhar sua lista, faça login ou crie uma conta.';
+
+  @override
+  String get me => 'Eu';
 }

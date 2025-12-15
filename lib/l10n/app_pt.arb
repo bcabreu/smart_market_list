@@ -71,7 +71,7 @@
   "guest": "Visitante",
   "favoriteRecipesStats": "Receitas\nfavoritadas",
   "savedNotesStats": "Notas\nsalvas",
-  "sharingListsStats": "Compartilhando\nListas",
+  "sharingListsStats": "Listas\nCompartilhadas",
   "editProfileSoon": "Editar perfil (Em breve)",
   "changePhoto": "Alterar Foto de Perfil",
   "camera": "Câmera",
@@ -373,5 +373,6 @@
   "uploadingPhoto": "Enviando foto...",
   "uploadSuccess": "Foto atualizada com sucesso!",
   "uploadError": "Falha ao enviar foto. Tente novamente.",
-  "loginToShareMessage": "Para compartilhar sua lista, faça login ou crie uma conta."
+  "loginToShareMessage": "Para compartilhar sua lista, faça login ou crie uma conta.",
+  "me": "Eu"
 }

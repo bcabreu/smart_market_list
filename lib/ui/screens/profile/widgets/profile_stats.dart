@@ -4,9 +4,11 @@ import 'package:smart_market_list/core/theme/app_colors.dart';
 import 'package:smart_market_list/providers/recipes_provider.dart';
 import 'package:smart_market_list/providers/shopping_notes_provider.dart';
 import 'package:smart_market_list/ui/screens/profile/favorite_recipes_screen.dart';
+import 'package:smart_market_list/ui/screens/profile/shared_lists_screen.dart';
 import 'package:smart_market_list/providers/navigation_provider.dart';
 import 'package:smart_market_list/providers/shopping_list_provider.dart';
 import 'package:smart_market_list/providers/shared_users_provider.dart';
+import 'package:smart_market_list/providers/user_profile_provider.dart';
 
 import 'package:smart_market_list/l10n/generated/app_localizations.dart';
 
@@ -33,12 +35,23 @@ class ProfileStats extends ConsumerWidget {
       notesCount = notes.length;
     });
 
-    // Get shared count for active list
-    final currentList = ref.watch(currentListProvider);
-    final sharedUsers = currentList != null 
-        ? (ref.watch(sharedUsersProvider)[currentList.id] ?? []) 
-        : <String>[];
-    final sharedCount = sharedUsers.length;
+    // Calculate shared lists count
+    final userAsync = ref.watch(userProfileProvider);
+    final listsAsync = ref.watch(shoppingListsProvider);
+    
+    var sharedCount = 0;
+    
+    final user = userAsync.valueOrNull;
+
+    if (user != null) {
+      listsAsync.whenData((lists) {
+        sharedCount = lists.where((list) {
+          final hasGuests = list.members.any((m) => m != list.ownerId);
+          final amIGuest = list.ownerId != null && list.ownerId != user.uid;
+          return hasGuests || amIGuest;
+        }).length;
+      });
+    }
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -81,6 +94,14 @@ class ProfileStats extends ConsumerWidget {
             iconBgColor: const Color(0xFF26A69A), // Teal
             count: '$sharedCount',
             label: l10n.sharingListsStats,
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const SharedListsScreen(),
+                ),
+              );
+            },
           ),
         ],
       ),

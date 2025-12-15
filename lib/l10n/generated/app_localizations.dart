@@ -515,7 +515,7 @@ abstract class AppLocalizations {
   /// No description provided for @sharingListsStats.
   ///
   /// In en, this message translates to:
-  /// **'Sharing\nLists'**
+  /// **'Shared\nLists'**
   String get sharingListsStats;
 
   /// No description provided for @editProfileSoon.
@@ -2275,6 +2275,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'To share your list, please log in or create an account.'**
   String get loginToShareMessage;
+
+  /// No description provided for @me.
+  ///
+  /// In en, this message translates to:
+  /// **'Me'**
+  String get me;
 }
 
 class _AppLocalizationsDelegate
