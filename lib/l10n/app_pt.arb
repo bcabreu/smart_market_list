@@ -370,5 +370,8 @@
   "unknownMember": "Desconhecido",
   "shareListTitle": "Lista de Compras",
   "shareListMessage": "Confira a lista {listName} no Smart Market List!",
+  "uploadingPhoto": "Enviando foto...",
+  "uploadSuccess": "Foto atualizada com sucesso!",
+  "uploadError": "Falha ao enviar foto. Tente novamente.",
   "loginToShareMessage": "Para compartilhar sua lista, faça login ou crie uma conta."
 }

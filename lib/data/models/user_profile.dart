@@ -8,6 +8,7 @@ class UserProfile {
   final String uid;
   final String email;
   final String? name;
+  final String? photoUrl; // Added
   final String? familyId;
   final String? role; // 'owner' or 'guest'
   final bool isPremium;
@@ -17,6 +18,7 @@ class UserProfile {
     required this.uid,
     required this.email,
     this.name,
+    this.photoUrl,
     this.familyId,
     this.role,
     this.isPremium = false,
@@ -35,6 +37,7 @@ class UserProfile {
       uid: uid,
       email: data['email'] ?? '',
       name: data['name'],
+      photoUrl: data['photoUrl'],
       familyId: data['familyId'],
       role: data['role'],
       isPremium: data['isPremium'] ?? false,
@@ -46,6 +49,7 @@ class UserProfile {
     return {
       'email': email,
       'name': name,
+      'photoUrl': photoUrl,
       'familyId': familyId,
       'role': role,
       'isPremium': isPremium,
@@ -55,6 +59,7 @@ class UserProfile {
   
   UserProfile copyWith({
     String? name,
+    String? photoUrl,
     String? familyId,
     String? role,
     bool? isPremium,
@@ -64,6 +69,7 @@ class UserProfile {
       uid: uid,
       email: email,
       name: name ?? this.name,
+      photoUrl: photoUrl ?? this.photoUrl,
       familyId: familyId ?? this.familyId,
       role: role ?? this.role,
       isPremium: isPremium ?? this.isPremium,

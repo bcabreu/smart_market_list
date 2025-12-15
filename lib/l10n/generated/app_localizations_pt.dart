@@ -742,9 +742,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get processing => 'Processando...';
 
   @override
-  String uploadError(Object error) {
-    return 'Falha no envio: $error';
-  }
+  String get uploadError => 'Falha ao enviar foto. Tente novamente.';
 
   @override
   String get processingUpload => 'Enviando foto...';
@@ -1169,6 +1167,12 @@ class AppLocalizationsPt extends AppLocalizations {
   String shareListMessage(Object listName) {
     return 'Confira a lista $listName no Smart Market List!';
   }
+
+  @override
+  String get uploadingPhoto => 'Enviando foto...';
+
+  @override
+  String get uploadSuccess => 'Foto atualizada com sucesso!';
 
   @override
   String get loginToShareMessage =>

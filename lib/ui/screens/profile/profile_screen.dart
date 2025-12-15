@@ -33,6 +33,7 @@ import 'package:smart_market_list/providers/auth_provider.dart';
 import 'package:smart_market_list/providers/profile_provider.dart';
 import 'package:smart_market_list/providers/user_profile_provider.dart';
 import 'package:smart_market_list/providers/tax_provider.dart';
+import 'package:smart_market_list/data/models/user_profile.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -242,6 +243,25 @@ class ProfileScreen extends ConsumerWidget {
     final userProfile = ref.watch(userProfileProvider).value;
     final rcPlanType = ref.watch(revenueCatPlanTypeProvider);
     final isFamilyPlan = userProfile?.planType == 'premium_family' || rcPlanType == 'premium_family';
+
+    // Sync Profile Image from Cloud (Fix for Persistence)
+    ref.listen<AsyncValue<UserProfile?>>(userProfileProvider, (previous, next) {
+      final profile = next.asData?.value;
+      if (profile?.photoUrl != null && profile!.photoUrl!.isNotEmpty) {
+        final currentImage = ref.read(profileImageProvider);
+        // Only update if local is empty or different (and assume cloud is truth if local is just a file or mismatch)
+        // Actually, cloud should always win on load.
+        if (currentImage != profile.photoUrl) {
+           // We might want to check if local is a File (recently picked) vs Network. 
+           // But generally, if cloud updates, we should sync.
+           // Exception: If user JUST picked a photo, local is File path. 
+           // ProfileSummary uploads it, then Cloud updates. 
+           // If we just loaded the app, currentImage is null or from SharedPreferences.
+           
+           ref.read(profileImageProvider.notifier).setNetworkImage(profile.photoUrl!);
+        }
+      }
+    });
 
     return Scaffold(
       body: SafeArea(

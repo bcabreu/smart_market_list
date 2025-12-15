@@ -1505,8 +1505,8 @@ abstract class AppLocalizations {
   /// No description provided for @uploadError.
   ///
   /// In en, this message translates to:
-  /// **'Upload failed: {error}'**
-  String uploadError(Object error);
+  /// **'Failed to upload photo. Please try again.'**
+  String get uploadError;
 
   /// No description provided for @processingUpload.
   ///
@@ -2257,6 +2257,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Check out the list {listName} on Smart Market List!'**
   String shareListMessage(Object listName);
+
+  /// No description provided for @uploadingPhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Uploading photo...'**
+  String get uploadingPhoto;
+
+  /// No description provided for @uploadSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Photo updated successfully!'**
+  String get uploadSuccess;
 
   /// No description provided for @loginToShareMessage.
   ///

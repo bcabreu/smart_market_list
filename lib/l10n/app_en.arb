@@ -361,5 +361,8 @@
   "unknownMember": "Unknown",
   "shareListTitle": "Shopping List",
   "shareListMessage": "Check out the list {listName} on Smart Market List!",
+  "uploadingPhoto": "Uploading photo...",
+  "uploadSuccess": "Photo updated successfully!",
+  "uploadError": "Failed to upload photo. Please try again.",
   "loginToShareMessage": "To share your list, please log in or create an account."
 }

@@ -14,6 +14,8 @@ import 'package:smart_market_list/l10n/generated/app_localizations.dart';
 import 'package:smart_market_list/ui/screens/auth/login_screen.dart';
 import 'package:smart_market_list/ui/screens/auth/signup_screen.dart';
 import 'package:smart_market_list/ui/screens/auth/widgets/social_login_buttons.dart';
+import 'package:smart_market_list/ui/common/modals/loading_dialog.dart';
+import 'package:smart_market_list/ui/common/modals/status_feedback_modal.dart';
 
 class ProfileSummary extends ConsumerStatefulWidget {
   const ProfileSummary({super.key});
@@ -45,9 +47,9 @@ class _ProfileSummaryState extends ConsumerState<ProfileSummary> {
       final picker = ImagePicker();
       final pickedFile = await picker.pickImage(
         source: source,
-        maxWidth: 600,
-        maxHeight: 600,
-        imageQuality: 70, // Optimized
+        maxWidth: 800, // Increased slightly for better quality on large screens
+        maxHeight: 800,
+        imageQuality: 80,
       );
 
       if (pickedFile != null) {
@@ -61,38 +63,62 @@ class _ProfileSummaryState extends ConsumerState<ProfileSummary> {
 
            // Show loading feedback
            if (mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                 SnackBar(content: Text(l10n.processingUpload)),
-              );
+             LoadingDialog.show(context, l10n.uploadingPhoto);
            }
 
            try {
-             // Upload with Metadata
+             // FIX: Use unique filename to avoid overwriting/caching issues
+             final timestamp = DateTime.now().millisecondsSinceEpoch;
              final storageRef = FirebaseStorage.instance
                  .ref()
-                 .child('users/${user.uid}/profile.jpg');
+                 .child('users/${user.uid}/profile_$timestamp.jpg');
              
              final file = File(pickedFile.path);
-             // Detect mime type or default to jpeg
-             final metadata = SettableMetadata(contentType: 'image/jpeg');
              
-             print("🚀 Starting Upload to: users/${user.uid}/profile.jpg");
+             print("🚀 Starting Upload to: ${storageRef.fullPath}");
              
-             final uploadTask = storageRef.putFile(file, metadata);
+             // Simple upload without forcing metadata to see if it helps
+             final uploadTask = storageRef.putFile(file);
+             
+             // Wait for upload to complete
              final snapshot = await uploadTask;
              
              print("✅ Upload State: ${snapshot.state}");
              
              if (snapshot.state == TaskState.success) {
-               // Use snapshot.ref to be absolutely sure we get the URL of what was just uploaded
-               final downloadUrl = await snapshot.ref.getDownloadURL();
+               // RETRY LOGIC: Sometimes getDownloadURL fails immediately after upload due to eventual consistency
+               String? downloadUrl;
+               int retries = 5; 
+               while (retries > 0) {
+                 try {
+                   downloadUrl = await snapshot.ref.getDownloadURL();
+                   break;
+                 } catch (e) {
+                   print("⚠️ getDownloadURL failed, retrying... ($retries left) - $e");
+                   await Future.delayed(const Duration(milliseconds: 2000));
+                   retries--;
+                 }
+               }
+               
+               if (downloadUrl == null) throw Exception('Retries exhausted: Could not retrieve download URL.');
+
                print("🔗 Got URL: $downloadUrl");
 
                // Update Auth & Firestore
                await ref.read(authServiceProvider).updatePhotoURL(downloadUrl);
                
                // Update Local Provider
-               ref.read(profileImageProvider.notifier).setImage(downloadUrl);
+               await ref.read(profileImageProvider.notifier).setNetworkImage(downloadUrl);
+               
+               if (mounted) {
+                 LoadingDialog.hide(context);
+                 StatusFeedbackModal.show(
+                   context,
+                   title: l10n.awesome,
+                   message: l10n.uploadSuccess,
+                   type: FeedbackType.success,
+                 );
+               }
              } else {
                throw Exception('Upload Failed. State: ${snapshot.state}');
              }
@@ -100,9 +126,12 @@ class _ProfileSummaryState extends ConsumerState<ProfileSummary> {
            } catch (e) {
              print('❌ Upload error details: $e');
              if (mounted) {
-                // Show raw error for debugging if needed, or user friendly one
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Falha no upload: $e'), backgroundColor: Colors.red),
+                LoadingDialog.hide(context);
+                StatusFeedbackModal.show(
+                  context,
+                  title: l10n.errorTitle,
+                  message: l10n.uploadError,
+                  type: FeedbackType.error,
                 );
              }
            }
@@ -110,6 +139,9 @@ class _ProfileSummaryState extends ConsumerState<ProfileSummary> {
       }
     } catch (e) {
       if (mounted) {
+        // Only hide if it was showing
+        if (Navigator.canPop(context)) LoadingDialog.hide(context); 
+        
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(l10n.imageError(e.toString()))),
         );

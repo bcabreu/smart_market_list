@@ -40,17 +40,18 @@ final userProfileProvider = StreamProvider<UserProfile?>((ref) {
         return firestoreService.getUserStream(ownerId).map((ownerData) {
            final ownerIsPremium = ownerData?['isPremium'] == true;
            
-           if (ownerIsPremium) {
-             // Inherit Premium from Owner
-             return UserProfile(
-               uid: profile.uid,
-               email: profile.email,
-               name: profile.name,
-               familyId: profile.familyId,
-               role: profile.role,
-               isPremium: true, // Inherited
-               planType: profile.planType, // Keep original plan type
-             );
+             if (ownerIsPremium) {
+               // Inherit Premium from Owner
+               return UserProfile(
+                 uid: profile.uid,
+                 email: profile.email,
+                 name: profile.name,
+                 photoUrl: profile.photoUrl, // Keep original photo
+                 familyId: profile.familyId,
+                 role: profile.role,
+                 isPremium: true, // Inherited
+                 planType: profile.planType, // Keep original plan type
+               );
            } else {
              // Owner is not premium, and I am not premium (checked above).
              // So I am Free.
