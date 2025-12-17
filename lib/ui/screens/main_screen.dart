@@ -1,3 +1,4 @@
+import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
 import 'package:animations/animations.dart';
 import 'package:smart_market_list/ui/common/ads/banner_ad_widget.dart';
@@ -127,7 +128,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
            title: AppLocalizations.of(context)!.errorTitle,
            message: "Recipe not found.",
            type: FeedbackType.error,
-         );
+           );
       }
     }
   }
@@ -455,6 +456,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
       ),
       bottomNavigationBar: SafeArea(
         top: false,
+        bottom: !Platform.isIOS,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
