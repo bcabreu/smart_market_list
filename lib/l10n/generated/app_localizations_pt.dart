@@ -69,6 +69,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get privacy => 'Privacidade';
 
   @override
+  String get termsOfUse => 'Termos de Uso';
+
+  @override
   String get logout => 'Sair da Conta';
 
   @override

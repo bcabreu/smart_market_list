@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:smart_market_list/core/theme/app_colors.dart';
 import 'package:smart_market_list/providers/auth_provider.dart';
 import 'package:smart_market_list/core/services/firestore_service.dart';
@@ -348,6 +349,29 @@ class _PaywallModalState extends ConsumerState<PaywallModal> {
                            ),
                          ),
                       ),
+                      const SizedBox(height: 16),
+
+                      // Terms & Privacy
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          GestureDetector(
+                            onTap: () => _launchUrl('https://www.apple.com/legal/internet-services/itunes/dev/stdeula/'),
+                            child: Text(
+                              l10n.termsOfUse ?? 'Terms of Use',
+                              style: TextStyle(color: Colors.grey[600], fontSize: 12, decoration: TextDecoration.underline),
+                            ),
+                          ),
+                          Text('  •  ', style: TextStyle(color: Colors.grey[600], fontSize: 12)),
+                          GestureDetector(
+                            onTap: () => _launchUrl('https://privacidade-smart-market-list.kepoweb.com/'),
+                            child: Text(
+                              l10n.privacy,
+                              style: TextStyle(color: Colors.grey[600], fontSize: 12, decoration: TextDecoration.underline),
+                            ),
+                          ),
+                        ],
+                      ),
                       const SizedBox(height: 32),
                     ],
                   ),
@@ -640,5 +664,14 @@ class _PaywallModalState extends ConsumerState<PaywallModal> {
            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('No subscription found to restore.')));
         }
      }
+  }
+
+  Future<void> _launchUrl(String urlString) async {
+    final uri = Uri.parse(urlString);
+    if (!await launchUrl(uri)) {
+      if (mounted) {
+         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Could not open $urlString')));
+      }
+    }
   }
 }

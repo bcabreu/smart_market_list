@@ -218,6 +218,12 @@ abstract class AppLocalizations {
   /// **'Privacy'**
   String get privacy;
 
+  /// No description provided for @termsOfUse.
+  ///
+  /// In en, this message translates to:
+  /// **'Terms of Use'**
+  String get termsOfUse;
+
   /// No description provided for @logout.
   ///
   /// In en, this message translates to:
