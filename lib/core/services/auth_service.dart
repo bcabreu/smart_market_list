@@ -173,16 +173,14 @@ class AuthService {
     try {
       var subDetails = await RevenueCatService().getActiveSubscriptionDetails();
       
-      // AUTO-RESTORE LOGIC:
-      // If login didn't automatically pull the subscription (common in fresh installs/sandbox),
-      // we attempt a silent restore.
+      // AUTO-RESTORE LOGIC REMOVED:
+      // We should NOT auto-restore here. 
+      // If the user's Firestore says they are free, but the device has a receipt, 
+      // calling restorePurchases() would incorrectly grant Premium to this new account (Receipt Transfer).
+      // Restore must be an EXPLICIT user action in the Profile screen.
+      
       if (subDetails == null || subDetails['isPremium'] != true) {
-         print("⚠️ Status checks failed. Attempting Auto-Restore for ${user.uid}...");
-         final restored = await RevenueCatService().restorePurchases();
-         if (restored) {
-            print("✅ Auto-Restore successful! Re-fetching details...");
-            subDetails = await RevenueCatService().getActiveSubscriptionDetails();
-         }
+         print("ℹ️ User ${user.uid} does not have active RevenueCat entitlements. Checking Firestore fallback...");
       }
 
       if (subDetails != null && subDetails['isPremium'] == true) {
