@@ -44,62 +44,36 @@ class SmartListScreen extends ConsumerWidget {
              return userProfileAsync.when(
                data: (profile) {
                  final isPremium = profile?.isPremium ?? false;
-                 
-                  if (!isPremium) {
-                    // Confirmed Guest: Auto-create immediately
-                    Future.microtask(() async {
-                       final newList = ShoppingList(
-                          name: 'Compras do Mês',
-                          emoji: '🛒',
-                          budget: 500.0
-                       );
-                       await service.createList(newList);
-                       // Set as default list
-                       if (Hive.isBoxOpen('settings')) {
-                         await Hive.box('settings').put('default_list_id', newList.id);
-                       }
-                    });
-                    return const Scaffold(body: Center(child: CircularProgressIndicator()));
-                  } else {
-                    // Confirmed Premium: Wait for sync
-                    return Scaffold(
-                      body: Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const CircularProgressIndicator(),
-                            const SizedBox(height: 16),
-                            Text(
-                              l10n.processing, 
-                              style: TextStyle(color: Colors.grey),
-                            ),
-                             const SizedBox(height: 32),
-                             TextButton.icon(
-                               onPressed: () async {
-                                  final newList = ShoppingList(
-                                    name: 'Compras do Mês',
-                                    emoji: '🛒',
-                                    budget: 500.0,
-                                  );
-                                  await service.createList(newList);
-                                  // Set as default list
-                                  if (Hive.isBoxOpen('settings')) {
-                                    await Hive.box('settings').put('default_list_id', newList.id);
-                                  }
-                               },
-                               icon: const Icon(Icons.add),
-                               label: const Text('Iniciar "Compras do Mês"'),
-                             )
-                          ],
-                        ),
-                      ),
-                    );
+                               // LISTS EMPTY: Auto-create immediately... BUT WAIT FOR SYNC if applicable!
+                  // This prevents creating a duplicate if cloud lists are still loading.
+                  
+                  final isSynced = ref.watch(initialListSyncProvider).value ?? false;
+                  final userProfile = ref.read(userProfileProvider).value;
+                  final shouldWaitForSync = userProfile?.familyId != null && !isSynced;
+
+                  if (shouldWaitForSync) {
+                     return const Scaffold(body: Center(child: CircularProgressIndicator()));
                   }
-               },
-               loading: () => const Scaffold(body: Center(child: CircularProgressIndicator())),
-               error: (_, __) => const Scaffold(body: Center(child: CircularProgressIndicator())), 
-               // Treat error as loading or guest? Safer to wait or retry, but for UI smoothnes let's spin.
-             );
+
+                   Future.microtask(() async {
+                      final newList = ShoppingList(
+                         name: 'Compras do Mês',
+                         emoji: '🛒',
+                         budget: 500.0
+                      );
+                      await service.createList(newList);
+                      // Set as default list
+                      if (Hive.isBoxOpen('settings')) {
+                         await Hive.box('settings').put('default_list_id', newList.id);
+                      }
+                   });
+                   return const Scaffold(body: Center(child: CircularProgressIndicator()));
+                },
+                loading: () => const Scaffold(body: Center(child: CircularProgressIndicator())),
+                error: (_, __) => const Scaffold(body: Center(child: CircularProgressIndicator())), 
+              );
+
+
           }
           // Lists exist but current is null (loading specific list?)
           return const Scaffold(body: Center(child: CircularProgressIndicator()));

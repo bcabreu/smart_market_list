@@ -35,7 +35,9 @@ class SubscriptionStatusNotifier extends StateNotifier<bool> {
     // Also update plan type initial check
     final details = await _service.getActiveSubscriptionDetails();
     if (details != null) {
-      _ref.read(revenueCatPlanTypeProvider.notifier).setPlan(details['planType']);
+      Future.microtask(() {
+         _ref.read(revenueCatPlanTypeProvider.notifier).setPlan(details['planType']);
+      });
     }
   }
 
@@ -45,13 +47,16 @@ class SubscriptionStatusNotifier extends StateNotifier<bool> {
     
     state = individual || family;
 
-    if (family) {
-      _ref.read(revenueCatPlanTypeProvider.notifier).setPlan('premium_family');
-    } else if (individual) {
-      _ref.read(revenueCatPlanTypeProvider.notifier).setPlan('premium_individual');
-    } else {
-      _ref.read(revenueCatPlanTypeProvider.notifier).setPlan(null);
-    }
+    // FIX: Defer provider updates to avoid "modifying provider during build" error
+    Future.microtask(() {
+      if (family) {
+        _ref.read(revenueCatPlanTypeProvider.notifier).setPlan('premium_family');
+      } else if (individual) {
+        _ref.read(revenueCatPlanTypeProvider.notifier).setPlan('premium_individual');
+      } else {
+        _ref.read(revenueCatPlanTypeProvider.notifier).setPlan(null);
+      }
+    });
   }
 
   Future<bool> restorePurchases() async {

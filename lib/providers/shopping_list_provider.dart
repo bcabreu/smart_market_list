@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:hive_flutter/hive_flutter.dart';
@@ -40,6 +41,33 @@ final currentListProvider = Provider<ShoppingList?>((ref) {
     error: (_, __) => null,
   );
 });
+
+// Track initial sync status
+final initialListSyncProvider = StreamProvider<bool>((ref) {
+  final service = ref.watch(shoppingListServiceProvider);
+  
+  final controller = StreamController<bool>();
+  
+  // Emit initial value
+  controller.add(service.listsSyncedNotifier.value);
+  
+  void listener() {
+    if (!controller.isClosed) {
+      controller.add(service.listsSyncedNotifier.value);
+    }
+  }
+  
+  service.listsSyncedNotifier.addListener(listener);
+  
+  ref.onDispose(() {
+    service.listsSyncedNotifier.removeListener(listener);
+    controller.close();
+  });
+  
+  return controller.stream;
+});
+
+
 
 
 

@@ -109,7 +109,7 @@ class _AddItemModalState extends ConsumerState<AddItemModal> {
       await ref.read(historyProvider.notifier).addOrUpdate(item);
       
       final userProfile = ref.read(userProfileProvider).value;
-      final isPremium = userProfile != null && (userProfile.planType == PlanType.premium_individual || userProfile.planType == PlanType.premium_family);
+      final isPremium = userProfile != null && (userProfile.planType == 'premium_individual' || userProfile.planType == 'premium_family');
       
       void completeAdd() {
         widget.onAdd(item);

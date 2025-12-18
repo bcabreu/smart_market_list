@@ -40,7 +40,7 @@ class _EditListModalState extends ConsumerState<EditListModal> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (widget.list == null) {
         final userProfile = ref.read(userProfileProvider).value;
-        if (userProfile == null || (userProfile.planType != PlanType.premium_individual && userProfile.planType != PlanType.premium_family)) {
+        if (userProfile == null || (userProfile.planType != 'premium_individual' && userProfile.planType != 'premium_family')) {
            AdService.instance.loadInterstitial();
         }
       }
@@ -73,7 +73,7 @@ class _EditListModalState extends ConsumerState<EditListModal> {
         } else {
           // Create
           final userProfile = ref.read(userProfileProvider).value;
-          final isPremium = userProfile != null && (userProfile.planType == PlanType.premium_individual || userProfile.planType == PlanType.premium_family);
+          final isPremium = userProfile != null && (userProfile.planType == 'premium_individual' || userProfile.planType == 'premium_family');
           
           Future<void> createListAction() async {
             final newList = ShoppingList(

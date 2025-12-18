@@ -18,6 +18,9 @@ class ShoppingListService {
 
   ShoppingListService(this._box, [this._firestoreService]);
 
+  // Track if initial sync (first cloud snapshot) has arrived
+  final ValueNotifier<bool> listsSyncedNotifier = ValueNotifier(false);
+
   // Start syncing with a specific family and user
   Future<void> startSync(String familyId, String uid) async {
     if (_currentFamilyId == familyId && _currentUid == uid) return;
@@ -29,6 +32,8 @@ class ShoppingListService {
 
     // 1. Upload Local Lists to Cloud (Ensure existing data is saved)
     if (_firestoreService != null) {
+      listsSyncedNotifier.value = false; // Reset sync status
+
       final localLists = getAllLists();
       for (var list in localLists) {
         await _syncToCloud(list);
@@ -57,8 +62,15 @@ class ShoppingListService {
              await _box.delete(local.id);
           }
         }
+        
+        // Mark as Synced (at least family lists)
+        listsSyncedNotifier.value = true;
+        
       }, onError: (e) {
         debugPrint('❌ Error syncing family lists: $e');
+        // If error, we might still want to say "done" so we don't hang? 
+        // Or keep loading? Default to true so user sees local data at least.
+        listsSyncedNotifier.value = true; 
       });
       
       // 3. Listen for Cloud Updates (Shared Lists)
