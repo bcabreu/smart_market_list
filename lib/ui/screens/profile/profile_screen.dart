@@ -408,11 +408,20 @@ class ProfileScreen extends ConsumerWidget {
                     SettingsCard(
                       title: l10n.account,
                       children: [
-                        SettingsTile(
-                          icon: Icons.credit_card,
-                          title: l10n.manageSubscription,
-                          onTap: () => _manageSubscription(context),
-                        ),
+                        if (!isPremium)
+                          SettingsTile(
+                            icon: Icons.star_rounded,
+                            title: l10n.bePremium,
+                            subtitle: l10n.unlockResources,
+                            iconColor: Colors.amber, 
+                            onTap: () => _showPaywall(context),
+                          ),
+                        if (isPremium)
+                          SettingsTile(
+                            icon: Icons.credit_card,
+                            title: l10n.manageSubscription,
+                            onTap: () => _manageSubscription(context),
+                          ),
                         SettingsTile(
                           icon: Icons.restore,
                           title: l10n.restorePurchase,
