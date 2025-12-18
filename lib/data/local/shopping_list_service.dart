@@ -105,6 +105,7 @@ class ShoppingListService {
     _sharedSubscription?.cancel();
     _currentFamilyId = null;
     _currentUid = null;
+    listsSyncedNotifier.value = false;
   }
 
   List<ShoppingList> getAllLists() {
