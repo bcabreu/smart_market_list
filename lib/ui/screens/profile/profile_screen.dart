@@ -716,13 +716,6 @@ class ProfileScreen extends ConsumerWidget {
          final defaultList = ShoppingList(name: 'Compras do Mês', emoji: '🛒', budget: 500.0);
          await shoppingListService.createList(defaultList);
 
-         // 3. Clear Shared Preferences & User State
-         await ref.read(isLoggedInProvider.notifier).setLoggedIn(false);
-         await ref.read(userEmailProvider.notifier).clearEmail();
-         await ref.read(userEmailProvider.notifier).clearEmail();
-         await ref.read(userNameProvider.notifier).clearName();
-         await ref.read(profileImageProvider.notifier).clearImage();
-         
          // 3. Clear Shopping Notes
          try {
             final notesService = ref.read(shoppingNotesServiceProvider);
@@ -755,6 +748,12 @@ class ProfileScreen extends ConsumerWidget {
              rethrow;
            }
          }
+
+         // 7. Clear Shared Preferences & User State (LAST, to prevent Sync Race Conditions)
+         await ref.read(isLoggedInProvider.notifier).setLoggedIn(false);
+         await ref.read(userEmailProvider.notifier).clearEmail();
+         await ref.read(userNameProvider.notifier).clearName();
+         await ref.read(profileImageProvider.notifier).clearImage();
          
          // Wait a bit for UX
          await Future.delayed(const Duration(seconds: 1));
