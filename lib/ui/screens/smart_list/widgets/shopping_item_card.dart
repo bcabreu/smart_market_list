@@ -30,15 +30,12 @@ class ShoppingItemCard extends ConsumerStatefulWidget {
 }
 
 class _ShoppingItemCardState extends ConsumerState<ShoppingItemCard> with SingleTickerProviderStateMixin {
-  bool _isEditingPrice = false;
-  late TextEditingController _priceController;
   late AnimationController _animationController;
   late Animation<Offset> _offsetAnimation;
 
   @override
   void initState() {
     super.initState();
-    _priceController = TextEditingController(); // Content set in didChangeDependencies
     
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 400),
@@ -67,17 +64,7 @@ class _ShoppingItemCardState extends ConsumerState<ShoppingItemCard> with Single
   }
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (!_isEditingPrice) {
-      final locale = Localizations.localeOf(context).toString();
-      _priceController.text = NumberFormat.currency(locale: locale, symbol: '', decimalDigits: 2).format(widget.item.price).trim();
-    }
-  }
-
-  @override
   void dispose() {
-    _priceController.dispose();
     _animationController.dispose();
     super.dispose();
   }
@@ -93,33 +80,9 @@ class _ShoppingItemCardState extends ConsumerState<ShoppingItemCard> with Single
     widget.onCheckChanged(!widget.item.checked);
   }
 
-  @override
-  void didUpdateWidget(ShoppingItemCard oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.item.price != oldWidget.item.price && !_isEditingPrice) {
-      final locale = Localizations.localeOf(context).toString();
-      _priceController.text = NumberFormat.currency(locale: locale, symbol: '', decimalDigits: 2).format(widget.item.price).trim();
-    }
-  }
-
   List<Color> _getCategoryGradient(String category) {
     return AppColors.categoryGradients[category.toLowerCase()] ?? AppColors.categoryGradients['outros']!;
   }
-
-  void _submitPrice() {
-    final locale = Localizations.localeOf(context).toString();
-    // Parse using the current locale
-    final numberFormat = NumberFormat.decimalPattern(locale);
-    final newPrice = numberFormat.parse(_priceController.text).toDouble();
-    
-    if (newPrice != widget.item.price) {
-      widget.onPriceChanged(newPrice);
-    }
-    setState(() {
-      _isEditingPrice = false;
-    });
-  }
-  
 
 
   @override
@@ -241,13 +204,8 @@ class _ShoppingItemCardState extends ConsumerState<ShoppingItemCard> with Single
                                     // Price
                             InkWell(
                               onTap: () {
-                                if (!_isEditingPrice) {
-                                  setState(() {
-                                    _isEditingPrice = true;
-                                    final locale = Localizations.localeOf(context).toString();
-                                    _priceController.text = NumberFormat.currency(locale: locale, symbol: '', decimalDigits: 2).format(widget.item.price).trim();
-                                  });
-                                }
+                                // Open full edit modal instead of inline editing
+                                widget.onEdit();
                               },
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.end,
@@ -263,77 +221,16 @@ class _ShoppingItemCardState extends ConsumerState<ShoppingItemCard> with Single
                                   Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      if (_isEditingPrice)
-                                        Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            SizedBox(
-                                              width: 80,
-                                              child: TextField(
-                                                controller: _priceController,
-                                                keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                                                inputFormatters: [CurrencyInputFormatter(locale: Localizations.localeOf(context).toString())],
-                                                autofocus: true,
-                                                textAlign: TextAlign.end,
-                                                style: const TextStyle(
-                                                  fontSize: 16,
-                                                  fontWeight: FontWeight.bold,
-                                                  color: Color(0xFF4DB6AC),
-                                                ),
-                                                decoration: InputDecoration(
-                                                  isDense: true,
-                                                  contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
-                                                  border: OutlineInputBorder(
-                                                    borderRadius: const BorderRadius.all(Radius.circular(4)),
-                                                    borderSide: BorderSide(color: isDark ? Colors.grey[700]! : Colors.grey),
-                                                  ),
-                                                  enabledBorder: OutlineInputBorder(
-                                                    borderRadius: const BorderRadius.all(Radius.circular(4)),
-                                                    borderSide: BorderSide(color: isDark ? Colors.grey[700]! : Colors.grey),
-                                                  ),
-                                                  focusedBorder: const OutlineInputBorder(
-                                                    borderRadius: BorderRadius.all(Radius.circular(4)),
-                                                    borderSide: BorderSide(color: Color(0xFF4DB6AC)),
-                                                  ),
-                                                ),
-                                                onSubmitted: (_) => _submitPrice(),
-                                              ),
-                                            ),
-                                            const SizedBox(width: 8),
-                                            InkWell(
-                                              onTap: _submitPrice,
-                                              borderRadius: BorderRadius.circular(8),
-                                              child: Container(
-                                                padding: const EdgeInsets.all(8),
-                                                decoration: BoxDecoration(
-                                                  color: editBtnColor,
-                                                  borderRadius: BorderRadius.circular(8),
-                                                ),
-                                                child: Icon(
-                                                  Icons.check,
-                                                  size: 20,
-                                                  color: editIconColor,
-                                                ),
-                                              ),
-                                            ),
-                                          ],
-                                        )
-                                      else
-                                        Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            Text(
-                                              NumberFormat.currency(locale: Localizations.localeOf(context).toString(), symbol: '', decimalDigits: 2).format(widget.item.price).trim(),
-                                              style: const TextStyle(
-                                                fontSize: 18,
-                                                fontWeight: FontWeight.bold,
-                                                color: Color(0xFF4DB6AC), // Teal color
-                                              ),
-                                            ),
-                                            const SizedBox(width: 4),
-                                            Icon(Icons.edit, size: 12, color: isDark ? Colors.grey[600] : Colors.grey[400]),
-                                          ],
+                                      Text(
+                                        NumberFormat.currency(locale: Localizations.localeOf(context).toString(), symbol: '', decimalDigits: 2).format(widget.item.totalPrice).trim(),
+                                        style: const TextStyle(
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.bold,
+                                          color: Color(0xFF4DB6AC), // Teal color
                                         ),
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Icon(Icons.edit, size: 12, color: isDark ? Colors.grey[600] : Colors.grey[400]),
                                     ],
                                   ),
                                 ],
@@ -349,9 +246,6 @@ class _ShoppingItemCardState extends ConsumerState<ShoppingItemCard> with Single
                             // Edit Button
                             InkWell(
                               onTap: () {
-                                setState(() {
-                                  _isEditingPrice = false;
-                                });
                                 widget.onEdit();
                               },
                               borderRadius: BorderRadius.circular(8),

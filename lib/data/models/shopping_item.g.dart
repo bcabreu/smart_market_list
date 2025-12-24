@@ -26,13 +26,14 @@ class ShoppingItemAdapter extends TypeAdapter<ShoppingItem> {
       imageUrl: fields[6] as String,
       createdAt: fields[7] as DateTime?,
       statusChangedAt: fields[8] as DateTime?,
+      unitQuantity: (fields[9] as int?) ?? 1,
     );
   }
 
   @override
   void write(BinaryWriter writer, ShoppingItem obj) {
     writer
-      ..writeByte(9)
+      ..writeByte(10)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -50,7 +51,9 @@ class ShoppingItemAdapter extends TypeAdapter<ShoppingItem> {
       ..writeByte(7)
       ..write(obj.createdAt)
       ..writeByte(8)
-      ..write(obj.statusChangedAt);
+      ..write(obj.statusChangedAt)
+      ..writeByte(9)
+      ..write(obj.unitQuantity);
   }
 
   @override

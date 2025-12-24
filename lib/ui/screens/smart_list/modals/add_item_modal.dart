@@ -37,7 +37,6 @@ class AddItemModal extends ConsumerStatefulWidget {
 
 class _AddItemModalState extends ConsumerState<AddItemModal> {
   late TextEditingController _nameController;
-  late TextEditingController _qtyController;
   late TextEditingController _priceController;
   late TextEditingController _newCategoryController;
   
@@ -45,19 +44,20 @@ class _AddItemModalState extends ConsumerState<AddItemModal> {
   bool _isCreatingCategory = false;
   String? _imagePath;
   final ImagePicker _picker = ImagePicker();
+  int _unitQuantity = 1;
 
   @override
   void initState() {
     super.initState();
     final item = widget.itemToEdit;
     _nameController = TextEditingController(text: item?.name ?? '');
-    _qtyController = TextEditingController(text: item?.quantity ?? '');
     _priceController = TextEditingController(); // Filled in didChangeDependencies
     _newCategoryController = TextEditingController();
     
     if (item != null) {
       _selectedCategory = item.category;
       _imagePath = item.imageUrl.isNotEmpty ? item.imageUrl : null;
+      _unitQuantity = item.unitQuantity;
     }
   }
 
@@ -74,7 +74,6 @@ class _AddItemModalState extends ConsumerState<AddItemModal> {
   @override
   void dispose() {
     _nameController.dispose();
-    _qtyController.dispose();
     _priceController.dispose();
     _newCategoryController.dispose();
     super.dispose();
@@ -94,7 +93,8 @@ class _AddItemModalState extends ConsumerState<AddItemModal> {
       final item = ShoppingItem(
         id: widget.itemToEdit?.id, // Preserve ID if editing
         name: _nameController.text,
-        quantity: _qtyController.text.isEmpty ? '1 un' : _qtyController.text,
+        unitQuantity: _unitQuantity,
+        quantity: '$_unitQuantity un',
         price: _parsePrice(_priceController.text),
         category: _selectedCategory,
         imageUrl: _imagePath ?? '',
@@ -232,21 +232,32 @@ class _AddItemModalState extends ConsumerState<AddItemModal> {
                     displayStringForOption: (ProductSuggestion option) => option.name,
                     onSelected: (ProductSuggestion selection) {
                       _nameController.text = selection.name;
-                      _qtyController.text = selection.defaultQuantity;
                       setState(() {
                         _selectedCategory = selection.category;
                         if (selection.imageUrl.isNotEmpty) {
                           _imagePath = selection.imageUrl;
                         }
+                        // Parse default quantity if it's a number
+                        final match = RegExp(r'^(\d+)').firstMatch(selection.defaultQuantity);
+                        if (match != null) {
+                          _unitQuantity = int.tryParse(match.group(1)!) ?? 1;
+                        }
                       });
                     },
                     fieldViewBuilder: (context, controller, focusNode, onFieldSubmitted) {
-                      if (controller.text != _nameController.text && _nameController.text.isNotEmpty && controller.text.isEmpty) {
+                      // Sync controller with _nameController on first build
+                      if (controller.text.isEmpty && _nameController.text.isNotEmpty) {
                          controller.text = _nameController.text;
                       }
-                      controller.addListener(() {
-                        _nameController.text = controller.text;
-                      });
+                      // Only add listener if not already added (use selection to track)
+                      if (controller.selection.baseOffset == -1 || controller.text != _nameController.text) {
+                        // Keep controllers in sync
+                        WidgetsBinding.instance.addPostFrameCallback((_) {
+                          if (controller.text != _nameController.text && mounted) {
+                            _nameController.text = controller.text;
+                          }
+                        });
+                      }
 
                       return TextField(
                         controller: controller,
@@ -410,21 +421,85 @@ class _AddItemModalState extends ConsumerState<AddItemModal> {
                     },
                   ),
                   const SizedBox(height: 20),
-                  const SizedBox(height: 20),
 
-                  // Quantity Field
+                  // Quantity Field - Selector +/-
                   _buildLabel(l10n.quantity, Icons.local_offer_outlined, isDark),
                   const SizedBox(height: 8),
-                  TextField(
-                    controller: _qtyController,
-                    style: TextStyle(color: textColor),
-                    decoration: _inputDecoration(l10n.quantityHint, isDark),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: inputFillColor,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        // Botão -
+                        InkWell(
+                          onTap: () {
+                            if (_unitQuantity > 1) {
+                              setState(() => _unitQuantity--);
+                            }
+                          },
+                          borderRadius: BorderRadius.circular(12),
+                          child: Container(
+                            width: 48,
+                            height: 48,
+                            decoration: BoxDecoration(
+                              color: _unitQuantity > 1 
+                                  ? const Color(0xFFE0F2F1) 
+                                  : (isDark ? Colors.grey[800] : Colors.grey[200]),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Icon(
+                              Icons.remove,
+                              color: _unitQuantity > 1 
+                                  ? const Color(0xFF4DB6AC) 
+                                  : (isDark ? Colors.grey[600] : Colors.grey[400]),
+                              size: 24,
+                            ),
+                          ),
+                        ),
+                        // Display da quantidade
+                        Expanded(
+                          child: Text(
+                            '$_unitQuantity',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 28,
+                              fontWeight: FontWeight.bold,
+                              color: textColor,
+                            ),
+                          ),
+                        ),
+                        // Botão +
+                        InkWell(
+                          onTap: () {
+                            setState(() => _unitQuantity++);
+                          },
+                          borderRadius: BorderRadius.circular(12),
+                          child: Container(
+                            width: 48,
+                            height: 48,
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFE0F2F1),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Icon(
+                              Icons.add,
+                              color: Color(0xFF4DB6AC),
+                              size: 24,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
 
                   const SizedBox(height: 20),
 
-                  // Price Field
-                  _buildLabel(l10n.priceOptional, Icons.attach_money, isDark),
+                  // Price Field (Unit Price)
+                  _buildLabel('${l10n.priceOptional} (unitário)', Icons.attach_money, isDark),
                   const SizedBox(height: 8),
                   Row(
                     children: [
@@ -444,10 +519,55 @@ class _AddItemModalState extends ConsumerState<AddItemModal> {
                           inputFormatters: [CurrencyInputFormatter(locale: locale.toString())],
                           style: TextStyle(color: textColor),
                           decoration: _inputDecoration(locale.languageCode == 'pt' ? '0,00' : '0.00', isDark),
+                          onChanged: (value) => setState(() {}), // Trigger rebuild for total
                         ),
                       ),
                     ],
                   ),
+
+                  // Total Price Display
+                  if (_parsePrice(_priceController.text) > 0) ...[
+                    const SizedBox(height: 16),
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [const Color(0xFF4DB6AC).withOpacity(0.1), const Color(0xFF26A69A).withOpacity(0.1)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: const Color(0xFF4DB6AC).withOpacity(0.3)),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(
+                            children: [
+                              const Icon(Icons.calculate_outlined, color: Color(0xFF4DB6AC), size: 20),
+                              const SizedBox(width: 8),
+                              Text(
+                                'Total',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w500,
+                                  color: labelColor,
+                                ),
+                              ),
+                            ],
+                          ),
+                          Text(
+                            NumberFormat.simpleCurrency(locale: locale.toString()).format(_unitQuantity * _parsePrice(_priceController.text)),
+                            style: const TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF4DB6AC),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
 
                   const SizedBox(height: 20),
 

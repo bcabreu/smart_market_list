@@ -32,6 +32,12 @@ class ShoppingItem extends HiveObject {
   @HiveField(8)
   final DateTime? statusChangedAt;
 
+  @HiveField(9)
+  int unitQuantity;
+
+  /// Calcula o preço total: quantidade × preço unitário
+  double get totalPrice => unitQuantity * price;
+
   ShoppingItem({
     String? id,
     required this.name,
@@ -42,6 +48,7 @@ class ShoppingItem extends HiveObject {
     this.imageUrl = '',
     DateTime? createdAt,
     this.statusChangedAt,
+    this.unitQuantity = 1,
   }) : id = id ?? const Uuid().v4(),
        createdAt = createdAt ?? DateTime.now();
 
@@ -55,6 +62,7 @@ class ShoppingItem extends HiveObject {
     String? imageUrl,
     DateTime? createdAt,
     DateTime? statusChangedAt,
+    int? unitQuantity,
   }) {
     return ShoppingItem(
       id: id ?? this.id,
@@ -66,6 +74,7 @@ class ShoppingItem extends HiveObject {
       imageUrl: imageUrl ?? this.imageUrl,
       createdAt: createdAt ?? this.createdAt,
       statusChangedAt: statusChangedAt ?? this.statusChangedAt,
+      unitQuantity: unitQuantity ?? this.unitQuantity,
     );
   }
   Map<String, dynamic> toMap() {
@@ -79,6 +88,7 @@ class ShoppingItem extends HiveObject {
       'imageUrl': imageUrl,
       'createdAt': createdAt.millisecondsSinceEpoch,
       'statusChangedAt': statusChangedAt?.millisecondsSinceEpoch,
+      'unitQuantity': unitQuantity,
     };
   }
 
@@ -93,6 +103,7 @@ class ShoppingItem extends HiveObject {
       imageUrl: map['imageUrl'] ?? '',
       createdAt: DateTime.fromMillisecondsSinceEpoch(map['createdAt'] ?? DateTime.now().millisecondsSinceEpoch),
       statusChangedAt: map['statusChangedAt'] != null ? DateTime.fromMillisecondsSinceEpoch(map['statusChangedAt']) : null,
+      unitQuantity: map['unitQuantity'] ?? 1,
     );
   }
 }
