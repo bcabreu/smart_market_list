@@ -462,6 +462,13 @@ class SmartListScreen extends ConsumerWidget {
                                     final newItem = item.copyWith(price: val);
                                     service.updateItem(currentList.id, newItem);
                                   },
+                                  onQuantityChanged: (val) {
+                                    final newItem = item.copyWith(
+                                      unitQuantity: val,
+                                      quantity: '$val un',
+                                    );
+                                    service.updateItem(currentList.id, newItem);
+                                  },
                                   onDelete: () => service.removeItem(currentList.id, item.id),
                                   onEdit: () {
                                     showModalBottomSheet(
@@ -540,6 +547,13 @@ class SmartListScreen extends ConsumerWidget {
             },
             onPriceChanged: (val) {
               final newItem = item.copyWith(price: val);
+              service.updateItem(listId, newItem);
+            },
+            onQuantityChanged: (val) {
+              final newItem = item.copyWith(
+                unitQuantity: val,
+                quantity: '$val un',
+              );
               service.updateItem(listId, newItem);
             },
             onDelete: () => service.removeItem(listId, item.id),

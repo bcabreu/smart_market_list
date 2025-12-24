@@ -13,6 +13,7 @@ class ShoppingItemCard extends ConsumerStatefulWidget {
   final ShoppingItem item;
   final Function(bool) onCheckChanged;
   final Function(double) onPriceChanged;
+  final Function(int) onQuantityChanged;
   final VoidCallback onDelete;
   final VoidCallback onEdit;
 
@@ -21,6 +22,7 @@ class ShoppingItemCard extends ConsumerStatefulWidget {
     required this.item,
     required this.onCheckChanged,
     required this.onPriceChanged,
+    required this.onQuantityChanged,
     required this.onDelete,
     required this.onEdit,
   });
@@ -84,6 +86,177 @@ class _ShoppingItemCardState extends ConsumerState<ShoppingItemCard> with Single
     return AppColors.categoryGradients[category.toLowerCase()] ?? AppColors.categoryGradients['outros']!;
   }
 
+  void _showQuickPriceModal() {
+    final locale = Localizations.localeOf(context).toString();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final priceController = TextEditingController(
+      text: NumberFormat.currency(locale: locale, symbol: '', decimalDigits: 2).format(widget.item.price).trim(),
+    );
+    
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        backgroundColor: isDark ? const Color(0xFF2C2C2C) : Colors.white,
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Header
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFE0F2F1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(
+                      Icons.attach_money,
+                      color: Color(0xFF4DB6AC),
+                      size: 24,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Alterar Preço',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: isDark ? Colors.white : Colors.black87,
+                          ),
+                        ),
+                        Text(
+                          widget.item.name,
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: isDark ? Colors.grey[400] : Colors.grey[600],
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+              
+              // Price Input
+              Row(
+                children: [
+                  Text(
+                    NumberFormat.simpleCurrency(locale: locale).currencySymbol,
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: isDark ? Colors.white : Colors.black87,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: TextField(
+                      controller: priceController,
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      inputFormatters: [CurrencyInputFormatter(locale: locale)],
+                      autofocus: true,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        color: isDark ? Colors.white : Colors.black87,
+                      ),
+                      decoration: InputDecoration(
+                        contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+                        filled: true,
+                        fillColor: isDark ? Colors.grey[800] : Colors.grey[100],
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: Color(0xFF4DB6AC), width: 2),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              
+              const SizedBox(height: 24),
+              
+              // Buttons
+              Row(
+                children: [
+                  Expanded(
+                    child: TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: Text(
+                        'Cancelar',
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: isDark ? Colors.grey[400] : Colors.grey[600],
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () {
+                        // Parse the new price
+                        final text = priceController.text;
+                        double newPrice;
+                        if (locale.startsWith('pt')) {
+                          newPrice = double.tryParse(text.replaceAll('.', '').replaceAll(',', '.')) ?? 0.0;
+                        } else {
+                          newPrice = double.tryParse(text.replaceAll(',', '')) ?? 0.0;
+                        }
+                        
+                        if (newPrice != widget.item.price) {
+                          widget.onPriceChanged(newPrice);
+                        }
+                        Navigator.pop(context);
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF4DB6AC),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: const Text(
+                        'Salvar',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -183,12 +356,67 @@ class _ShoppingItemCardState extends ConsumerState<ShoppingItemCard> with Single
                                 ),
                                 ),
                               const SizedBox(height: 4),
-                              Text(
-                                widget.item.quantity,
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  color: isDark ? Colors.grey[400] : Colors.grey[600],
-                                ),
+                              // Quick Quantity Selector
+                              Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  // Decrement button
+                                  InkWell(
+                                    onTap: widget.item.unitQuantity > 1 ? () {
+                                      HapticFeedback.selectionClick();
+                                      widget.onQuantityChanged(widget.item.unitQuantity - 1);
+                                    } : null,
+                                    borderRadius: BorderRadius.circular(6),
+                                    child: Container(
+                                      padding: const EdgeInsets.all(4),
+                                      decoration: BoxDecoration(
+                                        color: widget.item.unitQuantity > 1 
+                                            ? (isDark ? const Color(0xFF2A4A4A) : const Color(0xFFE0F2F1))
+                                            : (isDark ? Colors.grey[800] : Colors.grey[200]),
+                                        borderRadius: BorderRadius.circular(6),
+                                      ),
+                                      child: Icon(
+                                        Icons.remove,
+                                        size: 16,
+                                        color: widget.item.unitQuantity > 1 
+                                            ? const Color(0xFF4DB6AC)
+                                            : (isDark ? Colors.grey[600] : Colors.grey[400]),
+                                      ),
+                                    ),
+                                  ),
+                                  // Quantity Display
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(horizontal: 10),
+                                    child: Text(
+                                      '${widget.item.unitQuantity}',
+                                      style: TextStyle(
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.bold,
+                                        color: isDark ? Colors.white : Colors.black87,
+                                      ),
+                                    ),
+                                  ),
+                                  // Increment button
+                                  InkWell(
+                                    onTap: () {
+                                      HapticFeedback.selectionClick();
+                                      widget.onQuantityChanged(widget.item.unitQuantity + 1);
+                                    },
+                                    borderRadius: BorderRadius.circular(6),
+                                    child: Container(
+                                      padding: const EdgeInsets.all(4),
+                                      decoration: BoxDecoration(
+                                        color: isDark ? const Color(0xFF2A4A4A) : const Color(0xFFE0F2F1),
+                                        borderRadius: BorderRadius.circular(6),
+                                      ),
+                                      child: const Icon(
+                                        Icons.add,
+                                        size: 16,
+                                        color: Color(0xFF4DB6AC),
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ],
                           ),
@@ -203,10 +431,7 @@ class _ShoppingItemCardState extends ConsumerState<ShoppingItemCard> with Single
                                     // Price
                                     // Price
                             InkWell(
-                              onTap: () {
-                                // Open full edit modal instead of inline editing
-                                widget.onEdit();
-                              },
+                              onTap: _showQuickPriceModal,
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.end,
                                 children: [
@@ -240,8 +465,9 @@ class _ShoppingItemCardState extends ConsumerState<ShoppingItemCard> with Single
                         ),
                         const SizedBox(width: 12),
                         
-                        // Action Buttons
-                        Row(
+                        // Action Buttons (Stacked vertically)
+                        Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             // Edit Button
                             InkWell(
@@ -259,7 +485,7 @@ class _ShoppingItemCardState extends ConsumerState<ShoppingItemCard> with Single
                                 child: Icon(Icons.edit_outlined, size: 18, color: editIconColor),
                               ),
                             ),
-                            const SizedBox(width: 8),
+                            const SizedBox(height: 8),
                             // Delete Button
                             InkWell(
                               onTap: _handleDelete,
