@@ -6,11 +6,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:smart_market_list/core/theme/app_colors.dart';
 import 'package:smart_market_list/core/utils/currency_input_formatter.dart';
 import 'package:smart_market_list/data/models/shopping_item.dart';
 import 'package:smart_market_list/data/models/shopping_note.dart';
 import 'package:smart_market_list/providers/shopping_notes_provider.dart';
+import 'package:smart_market_list/providers/user_profile_provider.dart';
 import 'package:smart_market_list/l10n/generated/app_localizations.dart';
 
 class AddNoteModal extends ConsumerStatefulWidget {
@@ -148,23 +150,35 @@ class _AddNoteModalState extends ConsumerState<AddNoteModal> {
       String? permanentImagePath;
       if (_imagePath != null) {
         try {
-          final directory = await getApplicationDocumentsDirectory();
-          // Ensure directory exists
-          if (!await directory.exists()) {
-             await directory.create(recursive: true);
+          // Get user's family ID for cloud storage path
+          final userProfile = ref.read(userProfileProvider).value;
+          final familyId = userProfile?.familyId;
+          
+          if (familyId != null) {
+            // Upload to Firebase Storage
+            final extension = p.extension(_imagePath!);
+            final fileName = 'note_${DateTime.now().millisecondsSinceEpoch}$extension';
+            final storageRef = FirebaseStorage.instance
+                .ref()
+                .child('families/$familyId/notes/$fileName');
+            
+            final uploadTask = await storageRef.putFile(File(_imagePath!));
+            permanentImagePath = await uploadTask.ref.getDownloadURL();
+            debugPrint('📸 Note photo uploaded to Firebase Storage: $permanentImagePath');
+          } else {
+            // Fallback: Save locally if no family (shouldn't happen for premium users)
+            final directory = await getApplicationDocumentsDirectory();
+            final extension = p.extension(_imagePath!);
+            final fileName = 'note_${DateTime.now().millisecondsSinceEpoch}$extension';
+            final savedImage = File('${directory.path}/$fileName');
+            await File(_imagePath!).copy(savedImage.path);
+            permanentImagePath = savedImage.path;
+            debugPrint('📸 Note photo saved locally (no familyId): $permanentImagePath');
           }
-          
-          final extension = p.extension(_imagePath!);
-          // Use timestamp for unique filename
-          final fileName = 'note_${DateTime.now().millisecondsSinceEpoch}$extension';
-          final savedImage = File('${directory.path}/$fileName');
-          
-          await File(_imagePath!).copy(savedImage.path);
-          permanentImagePath = fileName; // Store only filename
         } catch (e) {
-          debugPrint('Error saving image: $e');
-          // If copy fails, fallback to original path but log error
-          permanentImagePath = _imagePath;
+          debugPrint('Error uploading/saving image: $e');
+          // Keep null if upload fails
+          permanentImagePath = null;
         }
       }
 

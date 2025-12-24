@@ -237,19 +237,41 @@ class ShoppingNotesScreen extends ConsumerWidget {
                                     String? imagePath = note.photoUrl;
                                     
                                     if (!note.photoUrl!.startsWith('http')) {
-                                      final file = File(note.photoUrl!);
-                                      if (!await file.exists()) {
+                                      // Check if it's a full path or just a filename
+                                      final isFullPath = note.photoUrl!.contains('/');
+                                      
+                                      if (isFullPath) {
+                                        // It's a full path, check if file exists at that path
+                                        final file = File(note.photoUrl!);
+                                        if (!await file.exists()) {
+                                          // Try to find by filename in documents directory
+                                          try {
+                                            final docsDir = await getApplicationDocumentsDirectory();
+                                            final name = note.photoUrl!.split('/').last;
+                                            final newPath = '${docsDir.path}/$name';
+                                            if (await File(newPath).exists()) {
+                                              imagePath = newPath;
+                                            } else {
+                                              imagePath = null;
+                                            }
+                                          } catch (e) {
+                                            debugPrint('Error resolving image path: $e');
+                                            imagePath = null;
+                                          }
+                                        }
+                                      } else {
+                                        // It's just a filename, construct the full path
                                         try {
                                           final docsDir = await getApplicationDocumentsDirectory();
-                                          final name = note.photoUrl!.split('/').last;
-                                          final newPath = '${docsDir.path}/$name';
-                                          if (await File(newPath).exists()) {
-                                            imagePath = newPath;
+                                          final fullPath = '${docsDir.path}/${note.photoUrl}';
+                                          if (await File(fullPath).exists()) {
+                                            imagePath = fullPath;
                                           } else {
+                                            debugPrint('Image file not found: $fullPath');
                                             imagePath = null;
                                           }
                                         } catch (e) {
-                                          debugPrint('Error resolving image path: $e');
+                                          debugPrint('Error constructing image path: $e');
                                           imagePath = null;
                                         }
                                       }
