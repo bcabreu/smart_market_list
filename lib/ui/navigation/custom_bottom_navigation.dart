@@ -19,6 +19,9 @@ class CustomBottomNavigation extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final backgroundColor = isDark ? const Color(0xFF1E1E1E) : Colors.white;
     final l10n = AppLocalizations.of(context)!;
+    
+    // Get bottom safe area padding for system navigation bar
+    final bottomPadding = MediaQuery.of(context).padding.bottom;
 
     final items = [
       _NavItemData(
@@ -50,7 +53,9 @@ class CustomBottomNavigation extends StatelessWidget {
     return Material(
       type: MaterialType.transparency,
       child: Container(
-        height: 90, // Fixed height to accommodate sliding elements
+        // Fixed height of 90 for nav items + dynamic bottom padding for safe area
+        height: 90 + bottomPadding,
+        padding: EdgeInsets.only(bottom: bottomPadding),
         decoration: BoxDecoration(
           color: backgroundColor,
           boxShadow: [
