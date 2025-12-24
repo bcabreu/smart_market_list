@@ -248,6 +248,21 @@ class AuthService {
             }
          }
 
+         // 🎁 Check for Lifetime/Granted Premium (Manually set in Firebase)
+         // This allows you to grant premium to specific users without RevenueCat
+         if (localUser != null && localUser['lifetimePremium'] == true) {
+            print("🎁 Lifetime Premium detected for ${user.uid}. Skipping downgrade.");
+            // Ensure premium status is set correctly
+            if (localUser['isPremium'] != true) {
+               await _firestoreService.updateUserPremiumStatus(
+                 user.uid,
+                 isPremium: true,
+                 planType: 'lifetime'
+               );
+            }
+            return; // SKIP downgrade
+         }
+
          // Auto-Downgrade (Anti-Farming Logic)
          print("📉 Syncing downgrade/removal for ${user.uid}");
          await _firestoreService.updateUserPremiumStatus(
