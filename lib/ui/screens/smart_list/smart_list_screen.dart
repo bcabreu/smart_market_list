@@ -55,7 +55,25 @@ class SmartListScreen extends ConsumerWidget {
                      return const Scaffold(body: Center(child: CircularProgressIndicator()));
                   }
 
+                   // Check if we already have a default list ID saved
+                   // This prevents creating duplicates during hot restart when Hive data hasn't fully loaded yet
+                   final settingsBox = Hive.isBoxOpen('settings') ? Hive.box('settings') : null;
+                   final existingDefaultId = settingsBox?.get('default_list_id');
+                   
+                   if (existingDefaultId != null) {
+                      // A default list was previously created, wait for it to load from Hive
+                      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+                   }
+
                    Future.microtask(() async {
+                      // Double-check if settings box is open and no default exists
+                      if (Hive.isBoxOpen('settings')) {
+                        final settings = Hive.box('settings');
+                        if (settings.get('default_list_id') != null) {
+                          return; // Default already exists, don't create another
+                        }
+                      }
+                      
                       final newList = ShoppingList(
                          name: 'Compras do Mês',
                          emoji: '🛒',

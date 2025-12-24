@@ -89,9 +89,8 @@ class _ShoppingItemCardState extends ConsumerState<ShoppingItemCard> with Single
   void _showQuickPriceModal() {
     final locale = Localizations.localeOf(context).toString();
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final priceController = TextEditingController(
-      text: NumberFormat.currency(locale: locale, symbol: '', decimalDigits: 2).format(widget.item.price).trim(),
-    );
+    final priceController = TextEditingController();
+    final currentPriceText = NumberFormat.currency(locale: locale, symbol: '', decimalDigits: 2).format(widget.item.price).trim();
     
     showDialog(
       context: context,
@@ -172,6 +171,12 @@ class _ShoppingItemCardState extends ConsumerState<ShoppingItemCard> with Single
                         color: isDark ? Colors.white : Colors.black87,
                       ),
                       decoration: InputDecoration(
+                        hintText: currentPriceText,
+                        hintStyle: TextStyle(
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
+                          color: isDark ? Colors.grey[500] : Colors.grey[400],
+                        ),
                         contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
                         filled: true,
                         fillColor: isDark ? Colors.grey[800] : Colors.grey[100],
@@ -218,12 +223,19 @@ class _ShoppingItemCardState extends ConsumerState<ShoppingItemCard> with Single
                     child: ElevatedButton(
                       onPressed: () {
                         // Parse the new price
-                        final text = priceController.text;
+                        final text = priceController.text.trim();
+                        
+                        // If empty, just close without changing
+                        if (text.isEmpty) {
+                          Navigator.pop(context);
+                          return;
+                        }
+                        
                         double newPrice;
                         if (locale.startsWith('pt')) {
-                          newPrice = double.tryParse(text.replaceAll('.', '').replaceAll(',', '.')) ?? 0.0;
+                          newPrice = double.tryParse(text.replaceAll('.', '').replaceAll(',', '.')) ?? widget.item.price;
                         } else {
-                          newPrice = double.tryParse(text.replaceAll(',', '')) ?? 0.0;
+                          newPrice = double.tryParse(text.replaceAll(',', '')) ?? widget.item.price;
                         }
                         
                         if (newPrice != widget.item.price) {
