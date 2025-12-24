@@ -192,12 +192,18 @@ class AuthService {
          );
       } else {
          // 🛡️ SECURITY: Check if user is a VALID GUEST (Family Plan)
-         // We must verify TWO things:
-         // 1. They are marked as a guest in Firestore.
+         // We must verify:
+         // 1. They have a familyId and are a guest (by planType OR role)
          // 2. The Family Owner is still ACTIVE and paying.
          
          final localUser = await _firestoreService.getUserData(user.uid);
-         if (localUser != null && localUser['planType'] == 'premium_family_guest') {
+         
+         // Check if user is in a family as guest (by planType OR role OR being guestId in family)
+         final bool isPossibleFamilyGuest = localUser != null && 
+             localUser['familyId'] != null && 
+             (localUser['planType'] == 'premium_family_guest' || localUser['role'] == 'guest');
+         
+         if (isPossibleFamilyGuest) {
             final familyId = localUser['familyId'];
             bool isFamilyValid = false;
 
@@ -205,7 +211,12 @@ class AuthService {
               final familyDoc = await _firestoreService.getFamilyDoc(familyId);
               if (familyDoc != null) {
                 final ownerId = familyDoc['ownerId'];
-                if (ownerId != null) {
+                final guestId = familyDoc['guestId'];
+                
+                // Verify: User is actually the registered guest in this family
+                final bool isRegisteredGuest = guestId == user.uid;
+                
+                if (ownerId != null && isRegisteredGuest) {
                   final ownerUser = await _firestoreService.getUserData(ownerId);
                   
                   // Validation: Owner must be Premium AND have Family Plan
@@ -216,12 +227,20 @@ class AuthService {
                   } else {
                     print("⚠️ Family Owner ($ownerId) is no longer Premium/Family. Revoking Guest access.");
                   }
+                } else {
+                   print("⚠️ User ${user.uid} is not registered as guestId in family $familyId.");
                 }
               }
             }
 
             if (isFamilyValid) {
-               print("🛡️ Family Guest verified (Owner is Active). Preserving status for ${user.uid}");
+               print("🛡️ Family Guest verified (Owner is Active). Restoring/Preserving premium for ${user.uid}");
+               // Ensure the user has correct premium status (in case it was corrupted)
+               await _firestoreService.updateUserPremiumStatus(
+                 user.uid,
+                 isPremium: true,
+                 planType: 'premium_family_guest'
+               );
                return; // SKIP downgrade
             } else {
                print("🚫 Family Guest validation failed (Owner issue or removed). Downgrading.");
