@@ -73,7 +73,7 @@ class _EditListModalState extends ConsumerState<EditListModal> {
         } else {
           // Create
           final userProfile = ref.read(userProfileProvider).value;
-          final isPremium = userProfile != null && (userProfile.planType == 'premium_individual' || userProfile.planType == 'premium_family');
+          final isPremium = userProfile != null && userProfile.isPremium;
           
           Future<void> createListAction() async {
             final newList = ShoppingList(

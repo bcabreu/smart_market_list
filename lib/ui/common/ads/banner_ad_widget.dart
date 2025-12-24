@@ -24,10 +24,10 @@ class _BannerAdWidgetState extends ConsumerState<BannerAdWidget> {
   }
 
   void _loadAd() {
-    // Check if user is premium
+    // Check if user is premium (any premium type)
     final userProfile = ref.read(userProfileProvider).value;
-    if (userProfile != null && (userProfile.planType == 'premium_individual' || userProfile.planType == 'premium_family')) {
-      return; // Do not load ad for premium
+    if (userProfile != null && userProfile.isPremium) {
+      return; // Do not load ad for premium users
     }
 
     final bannerId = AdService.instance.bannerAdUnitId;
@@ -60,7 +60,7 @@ class _BannerAdWidgetState extends ConsumerState<BannerAdWidget> {
   Widget build(BuildContext context) {
     // Re-check premium status in build to react to changes (e.g. upgrade)
     final userProfile = ref.watch(userProfileProvider).value;
-    if (userProfile != null && (userProfile.planType == 'premium_individual' || userProfile.planType == 'premium_family')) {
+    if (userProfile != null && userProfile.isPremium) {
       return const SizedBox.shrink();
     }
 

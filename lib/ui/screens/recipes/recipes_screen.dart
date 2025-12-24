@@ -670,7 +670,7 @@ class _RecipesScreenState extends ConsumerState<RecipesScreen> {
     }
 
     final userProfile = ref.read(userProfileProvider).value;
-    final isPremium = userProfile != null && (userProfile.planType == 'premium_individual' || userProfile.planType == 'premium_family');
+    final isPremium = userProfile != null && userProfile.isPremium;
 
     if (!isPremium) {
       // Check Ad Trigger
