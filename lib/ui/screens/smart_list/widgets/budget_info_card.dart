@@ -21,7 +21,6 @@ class BudgetInfoCard extends ConsumerStatefulWidget {
 
 
 class _BudgetInfoCardState extends ConsumerState<BudgetInfoCard> {
-  bool _isEditing = false;
   late TextEditingController _controller;
   final FocusNode _focusNode = FocusNode();
   
@@ -36,19 +35,12 @@ class _BudgetInfoCardState extends ConsumerState<BudgetInfoCard> {
     final symbol = locale.languageCode == 'pt' ? 'R\$' : '\$';
     _currencyFormat = NumberFormat.currency(locale: locale.toString(), symbol: symbol);
     _numberFormat = NumberFormat.decimalPattern(locale.toString());
-    
-    // Update controller text if not editing, to reflect new locale format
-    if (!_isEditing) {
-        _controller = TextEditingController(text: _formatBudget(widget.list.budget));
-    }
   }
 
   @override
   void initState() {
     super.initState();
-    // Controller will be re-initialized in didChangeDependencies
-    _controller = TextEditingController(text: ''); 
-    _focusNode.addListener(_onFocusChange);
+    _controller = TextEditingController();
   }
 
   String _formatBudget(double value) {
@@ -58,9 +50,7 @@ class _BudgetInfoCardState extends ConsumerState<BudgetInfoCard> {
   @override
   void didUpdateWidget(BudgetInfoCard oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.list.budget != oldWidget.list.budget && !_isEditing) {
-      _controller.text = _formatBudget(widget.list.budget);
-    }
+    // No need to update controller - modal sets its own value
   }
 
   @override
@@ -72,17 +62,181 @@ class _BudgetInfoCardState extends ConsumerState<BudgetInfoCard> {
   }
 
   void _onFocusChange() {
-    if (!_focusNode.hasFocus && _isEditing) {
-      _save();
-    }
+    // Focus handling is now managed by modal
+  }
+
+  void _showBudgetModal() {
+    final locale = Localizations.localeOf(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final l10n = AppLocalizations.of(context)!;
+    final currencySymbol = locale.languageCode == 'pt' ? 'R\$' : '\$';
+    
+    // Clear controller so placeholder shows current value
+    _controller.clear();
+    
+    showDialog(
+      context: context,
+      builder: (dialogContext) => Dialog(
+        backgroundColor: isDark ? const Color(0xFF2C2C2C) : Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Header
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(
+                      Icons.account_balance_wallet_outlined,
+                      color: AppColors.primary,
+                      size: 24,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          l10n.budgetLimit,
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: isDark ? Colors.white : Colors.black87,
+                          ),
+                        ),
+                        Text(
+                          widget.list.name,
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: isDark ? Colors.grey[400] : Colors.grey[600],
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+              
+              // Budget Input
+              Row(
+                children: [
+                  Text(
+                    currencySymbol,
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: isDark ? Colors.white : Colors.black87,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: TextField(
+                      controller: _controller,
+                      focusNode: _focusNode,
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      inputFormatters: [CurrencyInputFormatter(locale: locale.toString())],
+                      autofocus: true,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        color: isDark ? Colors.white : Colors.black87,
+                      ),
+                      decoration: InputDecoration(
+                        hintText: _formatBudget(widget.list.budget),
+                        hintStyle: TextStyle(
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
+                          color: isDark ? Colors.grey[500] : Colors.grey[400],
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+                        filled: true,
+                        fillColor: isDark ? Colors.grey[800] : Colors.grey[100],
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: AppColors.primary, width: 2),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              
+              const SizedBox(height: 24),
+              
+              // Buttons
+              Row(
+                children: [
+                  Expanded(
+                    child: TextButton(
+                      onPressed: () => Navigator.pop(dialogContext),
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: Text(
+                        l10n.cancel,
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: isDark ? Colors.grey[400] : Colors.grey[600],
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () {
+                        _save();
+                        Navigator.pop(dialogContext);
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: const Text(
+                        'Salvar',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   void _startEditing() {
-    setState(() {
-      _isEditing = true;
-      _controller.text = _formatBudget(widget.list.budget);
-    });
-    _focusNode.requestFocus();
+    _showBudgetModal();
   }
 
   void _save() {
@@ -103,10 +257,6 @@ class _BudgetInfoCardState extends ConsumerState<BudgetInfoCard> {
       final updatedList = widget.list.copyWith(budget: newBudget);
       service.updateList(updatedList);
     }
-
-    setState(() {
-      _isEditing = false;
-    });
   }
 
   @override
@@ -218,85 +368,29 @@ class _BudgetInfoCardState extends ConsumerState<BudgetInfoCard> {
                 ),
               ),
               const SizedBox(height: 2),
-              _isEditing
-                  ? Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        SizedBox(
-                          width: 150,
-                          child: TextField(
-                            controller: _controller,
-                            focusNode: _focusNode,
-                            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                            inputFormatters: [CurrencyInputFormatter(locale: locale.toString())],
-                            textAlign: TextAlign.end,
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w500,
-                              color: limitColor,
-                            ),
-                            decoration: InputDecoration(
-                              prefixText: locale.languageCode == 'pt' ? 'R\$ ' : '\$ ',
-                              contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                              isDense: true,
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.zero,
-                                borderSide: BorderSide(color: Colors.grey, width: 1),
-                              ),
-                              enabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.zero,
-                                borderSide: BorderSide(color: Colors.grey, width: 1),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.zero,
-                                borderSide: BorderSide(color: AppColors.primary, width: 1.5),
-                              ),
-                            ),
-                            onSubmitted: (_) => _save(),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        InkWell(
-                          onTap: _save,
-                          borderRadius: BorderRadius.circular(4),
-                          child: Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: AppColors.primary.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                            child: const Icon(
-                              Icons.check,
-                              size: 24,
-                              color: AppColors.primary,
-                            ),
-                          ),
-                        ),
-                      ],
-                    )
-                  : InkWell(
-                      onTap: _startEditing,
-                      borderRadius: BorderRadius.circular(8),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            _currencyFormat.format(widget.list.budget),
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w500,
-                              color: limitColor,
-                            ),
-                          ),
-                          const SizedBox(width: 4),
-                          Icon(
-                            Icons.edit_outlined,
-                            size: 14,
-                            color: labelColor,
-                          ),
-                        ],
+              InkWell(
+                onTap: _startEditing,
+                borderRadius: BorderRadius.circular(8),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      _currencyFormat.format(widget.list.budget),
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                        color: limitColor,
                       ),
                     ),
+                    const SizedBox(width: 4),
+                    Icon(
+                      Icons.edit_outlined,
+                      size: 14,
+                      color: labelColor,
+                    ),
+                  ],
+                ),
+              ),
             ],
           ),
         ],
