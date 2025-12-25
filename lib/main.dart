@@ -6,6 +6,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'core/services/revenue_cat_service.dart';
 import 'core/services/ad_service.dart';
+import 'core/services/review_service.dart';
 import 'core/theme/app_theme.dart';
 import 'data/models/shopping_item.dart';
 import 'data/models/shopping_list.dart';
@@ -62,6 +63,9 @@ void main() async {
     await Hive.openBox<double>('expense_goals');
     await Hive.openBox<List<String>>('list_shared_users');
     await Hive.openBox('settings'); // Open settings box
+    
+    // Initialize review service after Hive is ready
+    await ReviewService().init();
     
     // Migration: Ensure all lists use ID as key
     final keys = box.keys.toList();

@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:smart_market_list/core/theme/app_colors.dart';
+import 'package:smart_market_list/core/services/review_service.dart';
 import 'package:smart_market_list/data/local/shopping_list_service.dart';
 import 'package:smart_market_list/data/models/shopping_item.dart';
 import 'package:smart_market_list/data/models/shopping_list.dart';
@@ -562,6 +563,20 @@ class SmartListScreen extends ConsumerWidget {
                 statusChangedAt: DateTime.now(),
               );
               service.updateItem(listId, newItem);
+              
+              // Check if all items are now marked (list completed)
+              if (val == true) {
+                // Count how many will be checked after this update
+                final allItemsWillBeChecked = items.every((i) => 
+                    i.id == item.id ? true : i.checked
+                );
+                
+                if (allItemsWillBeChecked && items.isNotEmpty) {
+                  // Track completion and check for review
+                  ReviewService().incrementListsCompleted();
+                  ReviewService().checkAndPromptReview();
+                }
+              }
             },
             onPriceChanged: (val) {
               final newItem = item.copyWith(price: val);
