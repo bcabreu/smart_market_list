@@ -30,21 +30,21 @@ class ShoppingListService {
     _familySubscription?.cancel();
     _sharedSubscription?.cancel();
 
-    // 1. Clear local guest lists before syncing (lists without familyId are guest lists)
-    // This prevents duplicate lists when user logs in
+    // Reset sync status and clean up guest lists
+    // IMPORTANT: Do NOT sync local→cloud here! Cloud is the source of truth.
+    // Syncing local data before receiving cloud updates would overwrite
+    // items added by other family members while this app was closed.
     if (_firestoreService != null) {
       listsSyncedNotifier.value = false; // Reset sync status
       
+      // Only delete local guest lists (familyId == null)
       final localLists = getAllLists();
       for (var list in localLists) {
-        // Only keep and sync lists that already belong to this family
-        if (list.familyId == familyId) {
-          await _syncToCloud(list);
-        } else if (list.familyId == null) {
+        if (list.familyId == null) {
           // Guest list - remove it locally (don't upload to cloud)
           await _box.delete(list.id);
         }
-        // Lists from other families (shared) will be handled by their own sync
+        // Family lists will be updated when cloud data arrives
       }
     }
 
