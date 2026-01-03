@@ -114,14 +114,18 @@ class SharedListsScreen extends ConsumerWidget {
                             ),
                           ),
                           const SizedBox(height: 8),
-                          // List members 
                           Wrap(
                             spacing: 8,
                             runSpacing: 8,
                             children: displayMembers.map((memberId) {
+                               final isOwner = list.ownerId == user.uid;
+                               final canRemove = isOwner && memberId != user.uid;
                                return _MemberChip(
                                  memberId: memberId,
                                  isMe: memberId == user.uid,
+                                 canRemove: canRemove,
+                                 listFamilyId: list.familyId,
+                                 listId: list.id,
                                );
                             }).toList(),
                           ),
@@ -162,11 +166,23 @@ class SharedListsScreen extends ConsumerWidget {
 class _MemberChip extends ConsumerWidget {
   final String memberId;
   final bool isMe;
+  final bool canRemove;
+  final String? listFamilyId;
+  final String listId;
 
-  const _MemberChip({required this.memberId, required this.isMe});
+  const _MemberChip({
+    required this.memberId, 
+    required this.isMe,
+    this.canRemove = false,
+    this.listFamilyId,
+    required this.listId,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
     if (isMe) {
       return Chip(
          avatar: const CircleAvatar(
@@ -174,10 +190,10 @@ class _MemberChip extends ConsumerWidget {
            child: Icon(Icons.person, size: 14, color: AppColors.mutedForeground),
          ),
          label: Text(
-           AppLocalizations.of(context)!.me, 
+           l10n.me, 
            style: const TextStyle(fontSize: 12),
          ),
-         backgroundColor: Theme.of(context).brightness == Brightness.dark ? AppColors.darkInputBackground : AppColors.inputBackground,
+         backgroundColor: isDark ? AppColors.darkInputBackground : AppColors.inputBackground,
          side: BorderSide.none,
        );
     }
@@ -205,10 +221,44 @@ class _MemberChip extends ConsumerWidget {
              style: const TextStyle(fontSize: 12),
              overflow: TextOverflow.ellipsis,
            ),
-           backgroundColor: Theme.of(context).brightness == Brightness.dark ? AppColors.darkInputBackground : AppColors.inputBackground,
+           deleteIcon: canRemove ? const Icon(Icons.close, size: 16) : null,
+           onDeleted: canRemove ? () => _confirmRemoveMember(context, ref, label) : null,
+           backgroundColor: isDark ? AppColors.darkInputBackground : AppColors.inputBackground,
            side: BorderSide.none,
          );
       },
     );
+  }
+
+  Future<void> _confirmRemoveMember(BuildContext context, WidgetRef ref, String memberName) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Remover Acesso'),
+        content: Text('Deseja remover o acesso de $memberName a esta lista?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Remover'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && listFamilyId != null) {
+      final firestore = ref.read(firestoreServiceProvider);
+      await firestore.removeMemberFromList(listFamilyId!, listId, memberId);
+      
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('$memberName removido da lista')),
+        );
+      }
+    }
   }
 }

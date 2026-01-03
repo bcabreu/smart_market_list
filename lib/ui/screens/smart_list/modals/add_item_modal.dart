@@ -237,11 +237,9 @@ class _AddItemModalState extends ConsumerState<AddItemModal> {
                         if (selection.imageUrl.isNotEmpty) {
                           _imagePath = selection.imageUrl;
                         }
-                        // Parse default quantity if it's a number
-                        final match = RegExp(r'^(\d+)').firstMatch(selection.defaultQuantity);
-                        if (match != null) {
-                          _unitQuantity = int.tryParse(match.group(1)!) ?? 1;
-                        }
+                        // Always set quantity to 1, ignore weight/unit in defaultQuantity
+                        // (e.g., "500g" should not set quantity to 500)
+                        _unitQuantity = 1;
                       });
                     },
                     fieldViewBuilder: (context, controller, focusNode, onFieldSubmitted) {

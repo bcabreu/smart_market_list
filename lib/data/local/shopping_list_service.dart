@@ -139,8 +139,9 @@ class ShoppingListService {
     await _box.delete(id);
     
     if (targetFamilyId != null && _firestoreService != null) {
-      // Check ownership to decide: Delete vs Leave
-      final isOwner = targetFamilyId == _currentFamilyId;
+      // Check ownership: current user is owner if their UID matches the list's ownerId
+      // OR if the list has no ownerId (legacy/personal lists)
+      final isOwner = list?.ownerId == null || list?.ownerId == _currentUid;
       
       if (isOwner) {
         // Owner: Hard delete

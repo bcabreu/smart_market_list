@@ -285,8 +285,7 @@ class _PaywallModalState extends ConsumerState<PaywallModal> {
                               subtitle: l10n.pricePerMonth(monthlyEquivalentStr),
                               yearPrice: l10n.billedAnnually, 
                               isSelected: _selectedPlanIndex == 1,
-                              // badgeText: l10n.savePercent(discountPercent.toString()), // Old Discount Badge
-                              badgeText: l10n.tryFree7Days, // New Free Trial Badge (Conversion Booster)
+                              badgeText: 'Desconto de $discountPercent%', // Discount Badge
                               onTap: () => setState(() => _selectedPlanIndex = 1),
                               cardColor: cardColor,
                               highlightColor: const Color(0xFFFFA726),
@@ -356,7 +355,7 @@ class _PaywallModalState extends ConsumerState<PaywallModal> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           GestureDetector(
-                            onTap: () => _launchUrl('https://www.apple.com/legal/internet-services/itunes/dev/stdeula/'),
+                            onTap: () => _launchUrl('https://termos-de-uso-smart-market-list.kepoweb.com/'),
                             child: Text(
                               l10n.termsOfUse ?? 'Terms of Use',
                               style: TextStyle(color: Colors.grey[600], fontSize: 12, decoration: TextDecoration.underline),
