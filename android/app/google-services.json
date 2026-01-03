@@ -14,6 +14,22 @@
       },
       "oauth_client": [
         {
+          "client_id": "1033855354360-8rlt9p009uqllhpq4e16s869nloe4uae.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.kepoweb.smartmarketlist",
+            "certificate_hash": "022d42c717680f72594000729d412063b68e1edb"
+          }
+        },
+        {
+          "client_id": "1033855354360-pgehtnpcttnk465sqt4tp0q9q3m7a381.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.kepoweb.smartmarketlist",
+            "certificate_hash": "76b6410a87caf2d4452afb0b4cb15f8a07be9778"
+          }
+        },
+        {
           "client_id": "1033855354360-83m1vvn8q9uj4pa2fgegtdk62ucv1fl2.apps.googleusercontent.com",
           "client_type": 3
         }

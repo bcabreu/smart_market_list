@@ -50,7 +50,8 @@ class SmartListScreen extends ConsumerWidget {
                   
                   final isSynced = ref.watch(initialListSyncProvider).value ?? false;
                   final userProfile = ref.read(userProfileProvider).value;
-                  final shouldWaitForSync = userProfile?.familyId != null && !isSynced;
+                  // Only wait for sync if user is logged in (uid exists) AND has familyId
+                  final shouldWaitForSync = userProfile?.uid != null && userProfile?.familyId != null && !isSynced;
 
                   if (shouldWaitForSync) {
                      return const Scaffold(body: Center(child: CircularProgressIndicator()));

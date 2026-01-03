@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:smart_market_list/core/theme/app_colors.dart';
@@ -905,6 +906,10 @@ class ProfileScreen extends ConsumerWidget {
           // Stop sync first to prevent conflicts
           shoppingListService.stopSync();
           await shoppingListService.deleteAllData();
+          // Clear default_list_id to prevent loading loop
+          if (Hive.isBoxOpen('settings')) {
+            await Hive.box('settings').delete('default_list_id');
+          }
           print('LOGOUT DEBUG: Lists cleared.');
           
           final notesService = ref.read(shoppingNotesServiceProvider);
@@ -933,8 +938,7 @@ class ProfileScreen extends ConsumerWidget {
              LoadingDialog.hide(context);
              print('LOGOUT DEBUG: Navigating to MainScreen...');
              
-             // Removed explicit creation of default list to prevent duplicates on sync.
-             // SmartListScreen handles empty state.
+             // SmartListScreen will auto-create default list when empty
           
              Navigator.of(context).pushAndRemoveUntil(
                MaterialPageRoute(builder: (context) => const MainScreen()),
