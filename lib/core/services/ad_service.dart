@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:app_tracking_transparency/app_tracking_transparency.dart';
 
 class AdService {
   static final AdService instance = AdService._internal();
@@ -22,7 +23,34 @@ class AdService {
   int _recipesViewedSessionCount = 0;
   static const int _recipeAdFrequency = 5;
 
+  /// Request App Tracking Transparency permission on iOS
+  /// Must be called before initializing Mobile Ads SDK
+  Future<TrackingStatus> requestTrackingPermission() async {
+    // Only request on iOS
+    if (!Platform.isIOS) {
+      return TrackingStatus.notSupported;
+    }
+
+    // Check current status first
+    final status = await AppTrackingTransparency.trackingAuthorizationStatus;
+    
+    // If not determined yet, request permission
+    if (status == TrackingStatus.notDetermined) {
+      // Small delay to ensure app is fully loaded (Apple recommendation)
+      await Future.delayed(const Duration(milliseconds: 500));
+      final newStatus = await AppTrackingTransparency.requestTrackingAuthorization();
+      print('📱 ATT Permission Result: $newStatus');
+      return newStatus;
+    }
+    
+    print('📱 ATT Status already set: $status');
+    return status;
+  }
+
   Future<void> initialize() async {
+    // Request ATT permission BEFORE initializing ads (iOS 14.5+ requirement)
+    await requestTrackingPermission();
+    
     await MobileAds.instance.initialize();
     loadInterstitial(); // Pre-load immediately
   }

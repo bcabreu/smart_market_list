@@ -67,6 +67,7 @@ dependencies:
   google_mobile_ads: ^6.0.0
   firebase_storage: ^12.4.10
   in_app_review: ^2.0.11
+  app_tracking_transparency: ^2.0.6
 
 dev_dependencies:
   flutter_test:
