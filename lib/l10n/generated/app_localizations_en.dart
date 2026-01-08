@@ -194,6 +194,16 @@ class AppLocalizationsEn extends AppLocalizations {
       'Compare prices and save\nby saving your shopping receipts.';
 
   @override
+  String get selectMonth => 'Select Month';
+
+  @override
+  String get noNotesInMonth => 'No notes this month';
+
+  @override
+  String get noNotesInMonthSubtitle =>
+      'Add a note for this month\nor select another period.';
+
+  @override
   String get imageNotFound => 'Image not found';
 
   @override

@@ -458,6 +458,24 @@ abstract class AppLocalizations {
   /// **'Compare prices and save\nby saving your shopping receipts.'**
   String get noSavedNotesSubtitle;
 
+  /// No description provided for @selectMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Month'**
+  String get selectMonth;
+
+  /// No description provided for @noNotesInMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'No notes this month'**
+  String get noNotesInMonth;
+
+  /// No description provided for @noNotesInMonthSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a note for this month\nor select another period.'**
+  String get noNotesInMonthSubtitle;
+
   /// No description provided for @imageNotFound.
   ///
   /// In en, this message translates to:

@@ -15,20 +15,57 @@ import 'package:smart_market_list/l10n/generated/app_localizations.dart';
 import 'package:smart_market_list/providers/user_profile_provider.dart';
 import 'package:smart_market_list/ui/common/modals/paywall_modal.dart';
 
-class ShoppingNotesScreen extends ConsumerWidget {
+class ShoppingNotesScreen extends ConsumerStatefulWidget {
   const ShoppingNotesScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ShoppingNotesScreen> createState() => _ShoppingNotesScreenState();
+}
+
+class _ShoppingNotesScreenState extends ConsumerState<ShoppingNotesScreen> {
+  late DateTime _selectedMonth;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedMonth = DateTime(DateTime.now().year, DateTime.now().month);
+  }
+
+  String _formatMonthYear(DateTime date, String locale) {
+    final format = DateFormat('MMMM yyyy', locale);
+    final formatted = format.format(date);
+    // Capitalize first letter
+    return formatted[0].toUpperCase() + formatted.substring(1);
+  }
+
+  List<DateTime> _getAvailableMonths(List notes) {
+    final months = <DateTime>{};
+    for (final note in notes) {
+      months.add(DateTime(note.date.year, note.date.month));
+    }
+    final sortedMonths = months.toList()..sort((a, b) => b.compareTo(a));
+    
+    // Ensure current month is always available
+    final currentMonth = DateTime(DateTime.now().year, DateTime.now().month);
+    if (!sortedMonths.contains(currentMonth)) {
+      sortedMonths.insert(0, currentMonth);
+    }
+    
+    return sortedMonths;
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final notesAsync = ref.watch(shoppingNotesProvider);
     final l10n = AppLocalizations.of(context)!;
     final locale = Localizations.localeOf(context);
+    final localeStr = locale.toString();
     final currencySymbol = locale.languageCode == 'pt' ? 'R\$' : '\$';
     final currencyFormat = NumberFormat.currency(
-      locale: locale.toString(),
+      locale: localeStr,
       symbol: currencySymbol,
     );
-
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
       body: SafeArea(
@@ -75,9 +112,7 @@ class ShoppingNotesScreen extends ConsumerWidget {
                         l10n.shoppingNotesSubtitle,
                         style: TextStyle(
                           fontSize: 14,
-                          color: Theme.of(context).brightness == Brightness.dark
-                              ? Colors.grey[400]
-                              : Colors.grey[600],
+                          color: isDark ? Colors.grey[400] : Colors.grey[600],
                         ),
                       ),
                     ],
@@ -86,15 +121,20 @@ class ShoppingNotesScreen extends ConsumerWidget {
               ),
             ),
 
-            // Summary Card
+            // Month Selector & Summary Card
             notesAsync.when(
               data: (notes) {
-                final totalSpent = notes.fold<double>(
+                // Filter notes by selected month
+                final filteredNotes = notes.where((note) {
+                  return note.date.year == _selectedMonth.year &&
+                      note.date.month == _selectedMonth.month;
+                }).toList();
+
+                final totalSpent = filteredNotes.fold<double>(
                   0,
                   (sum, note) => sum + note.total,
                 );
 
-                final isDark = Theme.of(context).brightness == Brightness.dark;
                 final cardColor = isDark 
                     ? const Color(0xFF1E2C2C)
                     : const Color(0xFFE0F7FA).withOpacity(0.5);
@@ -102,75 +142,123 @@ class ShoppingNotesScreen extends ConsumerWidget {
                     ? const Color(0xFF2C4A4A)
                     : const Color(0xFFB2EBF2);
 
-                return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                    decoration: BoxDecoration(
-                      color: cardColor,
-                      borderRadius: BorderRadius.circular(24),
-                      border: Border.all(
-                        color: borderColor,
-                        width: 1,
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              l10n.totalSpent,
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: isDark ? Colors.grey[400] : Colors.grey[700],
-                                fontWeight: FontWeight.w500,
+                final availableMonths = _getAvailableMonths(notes);
+
+                return Column(
+                  children: [
+                    // Month Selector
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                      child: GestureDetector(
+                        onTap: () {
+                          _showMonthPicker(context, availableMonths, localeStr);
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          decoration: BoxDecoration(
+                            color: isDark ? const Color(0xFF2C2C2C) : Colors.grey[100],
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.calendar_month_rounded,
+                                size: 20,
+                                color: AppColors.secondary,
                               ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              currencyFormat.format(totalSpent),
-                              style: const TextStyle(
-                                fontSize: 32,
-                                fontWeight: FontWeight.bold,
-                                color: Color(0xFF26A69A), // Teal 400
-                                height: 1.0,
-                                letterSpacing: -1,
-                              ),
-                            ),
-                          ],
-                        ),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            Text(
-                              l10n.savedNotes,
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: isDark ? Colors.grey[500] : Colors.grey[600],
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Padding(
-                              padding: const EdgeInsets.only(top: 8),
-                              child: Text(
-                                notes.length.toString(),
+                              const SizedBox(width: 8),
+                              Text(
+                                _formatMonthYear(_selectedMonth, localeStr),
                                 style: TextStyle(
-                                  fontSize: 28,
-                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
                                   color: isDark ? Colors.white : Colors.black87,
-                                  height: 1.0,
                                 ),
                               ),
+                              const SizedBox(width: 8),
+                              Icon(
+                                Icons.keyboard_arrow_down_rounded,
+                                color: isDark ? Colors.grey[400] : Colors.grey[600],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    // Summary Card
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                        decoration: BoxDecoration(
+                          color: cardColor,
+                          borderRadius: BorderRadius.circular(24),
+                          border: Border.all(
+                            color: borderColor,
+                            width: 1,
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  l10n.totalSpent,
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: isDark ? Colors.grey[400] : Colors.grey[700],
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  currencyFormat.format(totalSpent),
+                                  style: const TextStyle(
+                                    fontSize: 32,
+                                    fontWeight: FontWeight.bold,
+                                    color: Color(0xFF26A69A),
+                                    height: 1.0,
+                                    letterSpacing: -1,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                Text(
+                                  l10n.savedNotes,
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: isDark ? Colors.grey[500] : Colors.grey[600],
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 8),
+                                  child: Text(
+                                    filteredNotes.length.toString(),
+                                    style: TextStyle(
+                                      fontSize: 28,
+                                      fontWeight: FontWeight.bold,
+                                      color: isDark ? Colors.white : Colors.black87,
+                                      height: 1.0,
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                           ],
                         ),
-                      ],
+                      ),
                     ),
-                  ),
+                  ],
                 );
               },
               loading: () => const SizedBox.shrink(),
@@ -181,7 +269,13 @@ class ShoppingNotesScreen extends ConsumerWidget {
             Expanded(
               child: notesAsync.when(
                 data: (notes) {
-                  if (notes.isEmpty) {
+                  // Filter notes by selected month
+                  final filteredNotes = notes.where((note) {
+                    return note.date.year == _selectedMonth.year &&
+                        note.date.month == _selectedMonth.month;
+                  }).toList();
+
+                  if (filteredNotes.isEmpty) {
                     return Center(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -200,7 +294,7 @@ class ShoppingNotesScreen extends ConsumerWidget {
                           ),
                           const SizedBox(height: 24),
                           Text(
-                            l10n.noSavedNotes,
+                            l10n.noNotesInMonth,
                             style: const TextStyle(
                               fontSize: 20,
                               fontWeight: FontWeight.bold,
@@ -208,7 +302,7 @@ class ShoppingNotesScreen extends ConsumerWidget {
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            l10n.noSavedNotesSubtitle,
+                            l10n.noNotesInMonthSubtitle,
                             textAlign: TextAlign.center,
                             style: const TextStyle(color: AppColors.mutedForeground),
                           ),
@@ -219,9 +313,9 @@ class ShoppingNotesScreen extends ConsumerWidget {
 
                   return ListView.builder(
                     padding: const EdgeInsets.all(16),
-                    itemCount: notes.length,
+                    itemCount: filteredNotes.length,
                     itemBuilder: (context, index) {
-                      final note = notes[index];
+                      final note = filteredNotes[index];
                       return StaggeredEntry(
                         index: index,
                         child: NoteItemWrapper(
@@ -237,14 +331,11 @@ class ShoppingNotesScreen extends ConsumerWidget {
                                     String? imagePath = note.photoUrl;
                                     
                                     if (!note.photoUrl!.startsWith('http')) {
-                                      // Check if it's a full path or just a filename
                                       final isFullPath = note.photoUrl!.contains('/');
                                       
                                       if (isFullPath) {
-                                        // It's a full path, check if file exists at that path
                                         final file = File(note.photoUrl!);
                                         if (!await file.exists()) {
-                                          // Try to find by filename in documents directory
                                           try {
                                             final docsDir = await getApplicationDocumentsDirectory();
                                             final name = note.photoUrl!.split('/').last;
@@ -260,7 +351,6 @@ class ShoppingNotesScreen extends ConsumerWidget {
                                           }
                                         }
                                       } else {
-                                        // It's just a filename, construct the full path
                                         try {
                                           final docsDir = await getApplicationDocumentsDirectory();
                                           final fullPath = '${docsDir.path}/${note.photoUrl}';
@@ -353,9 +443,7 @@ class ShoppingNotesScreen extends ConsumerWidget {
                                             style: TextStyle(
                                               fontSize: 20,
                                               fontWeight: FontWeight.bold,
-                                              color: Theme.of(context).brightness == Brightness.dark 
-                                                  ? Colors.white 
-                                                  : Colors.black87,
+                                              color: isDark ? Colors.white : Colors.black87,
                                             ),
                                             textAlign: TextAlign.center,
                                           ),
@@ -364,9 +452,7 @@ class ShoppingNotesScreen extends ConsumerWidget {
                                             l10n.deleteNoteMessage,
                                             style: TextStyle(
                                               fontSize: 14,
-                                              color: Theme.of(context).brightness == Brightness.dark 
-                                                  ? Colors.grey[400] 
-                                                  : Colors.grey[600],
+                                              color: isDark ? Colors.grey[400] : Colors.grey[600],
                                             ),
                                             textAlign: TextAlign.center,
                                           ),
@@ -385,9 +471,7 @@ class ShoppingNotesScreen extends ConsumerWidget {
                                                   child: Text(
                                                     l10n.cancel,
                                                     style: TextStyle(
-                                                      color: Theme.of(context).brightness == Brightness.dark 
-                                                          ? Colors.grey[400] 
-                                                          : Colors.grey[600],
+                                                      color: isDark ? Colors.grey[400] : Colors.grey[600],
                                                       fontWeight: FontWeight.w600,
                                                     ),
                                                   ),
@@ -397,8 +481,8 @@ class ShoppingNotesScreen extends ConsumerWidget {
                                               Expanded(
                                                 child: ElevatedButton(
                                                   onPressed: () {
-                                                    Navigator.pop(context); // Close dialog
-                                                    triggerAnimation(); // Trigger exit animation
+                                                    Navigator.pop(context);
+                                                    triggerAnimation();
                                                   },
                                                   style: ElevatedButton.styleFrom(
                                                     backgroundColor: const Color(0xFFEF5350), 
@@ -459,6 +543,77 @@ class ShoppingNotesScreen extends ConsumerWidget {
         },
         color: AppColors.secondary,
       ),
+    );
+  }
+
+  void _showMonthPicker(BuildContext context, List<DateTime> availableMonths, String locale) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  children: [
+                    const Icon(Icons.calendar_month, color: AppColors.secondary),
+                    const SizedBox(width: 12),
+                    Text(
+                      AppLocalizations.of(context)!.selectMonth,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Divider(height: 1),
+              ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxHeight: MediaQuery.of(context).size.height * 0.4,
+                ),
+                child: ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: availableMonths.length,
+                  itemBuilder: (context, index) {
+                    final month = availableMonths[index];
+                    final isSelected = month.year == _selectedMonth.year &&
+                        month.month == _selectedMonth.month;
+                    
+                    return ListTile(
+                      leading: Icon(
+                        isSelected ? Icons.check_circle : Icons.circle_outlined,
+                        color: isSelected ? AppColors.secondary : Colors.grey,
+                      ),
+                      title: Text(
+                        _formatMonthYear(month, locale),
+                        style: TextStyle(
+                          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                          color: isSelected ? AppColors.secondary : null,
+                        ),
+                      ),
+                      onTap: () {
+                        setState(() => _selectedMonth = month);
+                        Navigator.pop(context);
+                      },
+                    );
+                  },
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
+          ),
+        );
+      },
     );
   }
 }

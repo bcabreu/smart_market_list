@@ -194,6 +194,16 @@ class AppLocalizationsPt extends AppLocalizations {
       'Compare preços e economize\nsalvando suas notas fiscais.';
 
   @override
+  String get selectMonth => 'Selecionar Mês';
+
+  @override
+  String get noNotesInMonth => 'Nenhuma nota neste mês';
+
+  @override
+  String get noNotesInMonthSubtitle =>
+      'Adicione uma nota para este mês\nou selecione outro período.';
+
+  @override
   String get imageNotFound => 'Imagem não encontrada';
 
   @override
