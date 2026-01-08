@@ -2282,6 +2282,18 @@ abstract class AppLocalizations {
   /// **'To share your list, please log in or create an account.'**
   String get loginToShareMessage;
 
+  /// No description provided for @savingNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Saving note...'**
+  String get savingNote;
+
+  /// No description provided for @pleaseWait.
+  ///
+  /// In en, this message translates to:
+  /// **'Please wait a moment'**
+  String get pleaseWait;
+
   /// No description provided for @me.
   ///
   /// In en, this message translates to:

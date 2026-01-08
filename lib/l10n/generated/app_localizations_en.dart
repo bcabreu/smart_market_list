@@ -1178,6 +1178,12 @@ class AppLocalizationsEn extends AppLocalizations {
       'To share your list, please log in or create an account.';
 
   @override
+  String get savingNote => 'Saving note...';
+
+  @override
+  String get pleaseWait => 'Please wait a moment';
+
+  @override
   String get me => 'Me';
 
   @override

@@ -1182,6 +1182,12 @@ class AppLocalizationsPt extends AppLocalizations {
       'Para compartilhar sua lista, faça login ou crie uma conta.';
 
   @override
+  String get savingNote => 'Salvando nota...';
+
+  @override
+  String get pleaseWait => 'Aguarde um momento';
+
+  @override
   String get me => 'Eu';
 
   @override

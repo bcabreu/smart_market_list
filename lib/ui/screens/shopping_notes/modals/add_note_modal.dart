@@ -123,75 +123,123 @@ class _AddNoteModalState extends ConsumerState<AddNoteModal> {
 
   Future<void> _saveNote() async {
     if (_formKey.currentState!.validate()) {
-      // Parse total value - Handle both dot and comma
-      String cleanValue = _totalController.text.trim();
+      final l10n = AppLocalizations.of(context)!;
       
-      // Remove currency symbol if present
-      final locale = Localizations.localeOf(context);
-      final currencySymbol = locale.languageCode == 'pt' ? 'R\$' : '\$';
-      cleanValue = cleanValue.replaceAll(currencySymbol, '').trim();
-
-      // Normalize decimal separator
-      if (cleanValue.contains(',')) {
-        cleanValue = cleanValue.replaceAll('.', '').replaceAll(',', '.');
-      }
-
-      double totalValue = double.tryParse(cleanValue) ?? 0.0;
-
-      // Create a single item representing the total purchase
-      final items = [
-        ShoppingItem(
-          name: AppLocalizations.of(context)!.generalPurchase,
-          price: totalValue,
-          quantity: '1',
-        )
-      ];
-
-      String? permanentImagePath;
-      if (_imagePath != null) {
-        try {
-          // Get user's family ID for cloud storage path
-          final userProfile = ref.read(userProfileProvider).value;
-          final familyId = userProfile?.familyId;
-          
-          if (familyId != null) {
-            // Upload to Firebase Storage
-            final extension = p.extension(_imagePath!);
-            final fileName = 'note_${DateTime.now().millisecondsSinceEpoch}$extension';
-            final storageRef = FirebaseStorage.instance
-                .ref()
-                .child('families/$familyId/notes/$fileName');
-            
-            final uploadTask = await storageRef.putFile(File(_imagePath!));
-            permanentImagePath = await uploadTask.ref.getDownloadURL();
-            debugPrint('📸 Note photo uploaded to Firebase Storage: $permanentImagePath');
-          } else {
-            // Fallback: Save locally if no family (shouldn't happen for premium users)
-            final directory = await getApplicationDocumentsDirectory();
-            final extension = p.extension(_imagePath!);
-            final fileName = 'note_${DateTime.now().millisecondsSinceEpoch}$extension';
-            final savedImage = File('${directory.path}/$fileName');
-            await File(_imagePath!).copy(savedImage.path);
-            permanentImagePath = savedImage.path;
-            debugPrint('📸 Note photo saved locally (no familyId): $permanentImagePath');
-          }
-        } catch (e) {
-          debugPrint('Error uploading/saving image: $e');
-          // Keep null if upload fails
-          permanentImagePath = null;
-        }
-      }
-
-      final note = ShoppingNote(
-        storeName: _storeController.text,
-        date: DateTime.now(),
-        items: items,
-        photoUrl: permanentImagePath,
+      // Show loading dialog
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => PopScope(
+          canPop: false,
+          child: Dialog(
+            backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const CircularProgressIndicator(color: AppColors.secondary),
+                  const SizedBox(height: 16),
+                  Text(
+                    _imagePath != null ? l10n.uploadingPhoto : l10n.savingNote,
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                  ),
+                  if (_imagePath != null) ...[
+                    const SizedBox(height: 8),
+                    Text(
+                      l10n.pleaseWait,
+                      style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
+        ),
       );
 
-      ref.read(shoppingNotesServiceProvider).createNote(note);
-      if (mounted) {
-        Navigator.pop(context);
+      try {
+        // Parse total value - Handle both dot and comma
+        String cleanValue = _totalController.text.trim();
+        
+        // Remove currency symbol if present
+        final locale = Localizations.localeOf(context);
+        final currencySymbol = locale.languageCode == 'pt' ? 'R\$' : '\$';
+        cleanValue = cleanValue.replaceAll(currencySymbol, '').trim();
+
+        // Normalize decimal separator
+        if (cleanValue.contains(',')) {
+          cleanValue = cleanValue.replaceAll('.', '').replaceAll(',', '.');
+        }
+
+        double totalValue = double.tryParse(cleanValue) ?? 0.0;
+
+        // Create a single item representing the total purchase
+        final items = [
+          ShoppingItem(
+            name: l10n.generalPurchase,
+            price: totalValue,
+            quantity: '1',
+          )
+        ];
+
+        String? permanentImagePath;
+        if (_imagePath != null) {
+          try {
+            // Get user's family ID for cloud storage path
+            final userProfile = ref.read(userProfileProvider).value;
+            final familyId = userProfile?.familyId;
+            
+            if (familyId != null) {
+              // Upload to Firebase Storage
+              final extension = p.extension(_imagePath!);
+              final fileName = 'note_${DateTime.now().millisecondsSinceEpoch}$extension';
+              final storageRef = FirebaseStorage.instance
+                  .ref()
+                  .child('families/$familyId/notes/$fileName');
+              
+              final uploadTask = await storageRef.putFile(File(_imagePath!));
+              permanentImagePath = await uploadTask.ref.getDownloadURL();
+              debugPrint('📸 Note photo uploaded to Firebase Storage: $permanentImagePath');
+            } else {
+              // Fallback: Save locally if no family (shouldn't happen for premium users)
+              final directory = await getApplicationDocumentsDirectory();
+              final extension = p.extension(_imagePath!);
+              final fileName = 'note_${DateTime.now().millisecondsSinceEpoch}$extension';
+              final savedImage = File('${directory.path}/$fileName');
+              await File(_imagePath!).copy(savedImage.path);
+              permanentImagePath = savedImage.path;
+              debugPrint('📸 Note photo saved locally (no familyId): $permanentImagePath');
+            }
+          } catch (e) {
+            debugPrint('Error uploading/saving image: $e');
+            // Keep null if upload fails
+            permanentImagePath = null;
+          }
+        }
+
+        final note = ShoppingNote(
+          storeName: _storeController.text,
+          date: DateTime.now(),
+          items: items,
+          photoUrl: permanentImagePath,
+        );
+
+        ref.read(shoppingNotesServiceProvider).createNote(note);
+        
+        if (mounted) {
+          // Close loading dialog
+          Navigator.of(context, rootNavigator: true).pop();
+          // Close modal
+          Navigator.pop(context);
+        }
+      } catch (e) {
+        if (mounted) {
+          // Close loading dialog on error
+          Navigator.of(context, rootNavigator: true).pop();
+        }
+        debugPrint('Error saving note: $e');
       }
     }
   }
@@ -208,6 +256,7 @@ class _AddNoteModalState extends ConsumerState<AddNoteModal> {
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
       child: Container(
+      height: MediaQuery.of(context).size.height * 0.9,
       decoration: BoxDecoration(
         color: Theme.of(context).scaffoldBackgroundColor,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
@@ -216,7 +265,8 @@ class _AddNoteModalState extends ConsumerState<AddNoteModal> {
         children: [
           Expanded(
             child: SingleChildScrollView(
-        child: Column(
+              padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+              child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             // Header
