@@ -420,19 +420,12 @@ class _AddNoteModalState extends ConsumerState<AddNoteModal> {
               ),
             ),
 
-            if (!Platform.isAndroid) ...[
-              _buildSaveButton(l10n),
+            _buildSaveButton(l10n),
               const SizedBox(height: 24),
-            ],
           ],
         ),
         ),
       ),
-      if (Platform.isAndroid)
-        Padding(
-          padding: EdgeInsets.only(bottom: 24 + math.max(MediaQuery.of(context).viewPadding.bottom, 45.0), top: 16),
-          child: _buildSaveButton(l10n),
-        ),
       ],
     )));
   }

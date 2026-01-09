@@ -878,20 +878,14 @@ class _AddItemModalState extends ConsumerState<AddItemModal> {
                     ),
 
 
-                  if (!Platform.isAndroid) ...[
-                    const SizedBox(height: 32),
+                  const SizedBox(height: 32),
                     _buildButton(context, l10n),
                     const SizedBox(height: 24),
-                  ],
                 ],
               ),
             ),
           ),
-          if (Platform.isAndroid)
-            Padding(
-              padding: EdgeInsets.fromLTRB(24, 16, 24, 24 + math.max(MediaQuery.of(context).viewPadding.bottom, 45.0)),
-              child: _buildButton(context, l10n),
-            ),
+
 
         ],
       ),
