@@ -19,7 +19,12 @@ final itemSuggestionsProvider = Provider<List<ProductSuggestion>>((ref) {
   // 1. Build a map of history items (Name -> Item) to get user preferences
   final Map<String, ShoppingItem> historyMap = {};
 
-  // Add items from active lists
+  // Add items from persistent history first
+  for (final item in historyItems) {
+    historyMap[item.name.toLowerCase()] = item;
+  }
+
+  // Add items from active lists (overwrites persistent history if same name, as active lists have the most recent inline price changes)
   listsAsync.whenData((lists) {
     for (final list in lists) {
       for (final item in list.items) {
@@ -27,11 +32,6 @@ final itemSuggestionsProvider = Provider<List<ProductSuggestion>>((ref) {
       }
     }
   });
-
-  // Add items from persistent history (overwrites active lists if same name, which is desired as history is updated on save)
-  for (final item in historyItems) {
-    historyMap[item.name.toLowerCase()] = item;
-  }
 
   final List<ProductSuggestion> suggestions = [];
   final Set<String> processedNames = {};
@@ -55,6 +55,7 @@ final itemSuggestionsProvider = Provider<List<ProductSuggestion>>((ref) {
         defaultQuantity: historyItem.quantity, // User's preferred quantity
         // Use user's image if it's different/custom, otherwise fallback to catalog
         imageUrl: historyItem.imageUrl.isNotEmpty ? historyItem.imageUrl : catalogItem.imageUrl,
+        price: historyItem.price,
       ));
     } else {
       // Not in history: Use catalog default
@@ -73,6 +74,7 @@ final itemSuggestionsProvider = Provider<List<ProductSuggestion>>((ref) {
            category: item.category,
            defaultQuantity: item.quantity,
            imageUrl: item.imageUrl,
+           price: item.price,
          ));
          processedNames.add(entry.key);
        }

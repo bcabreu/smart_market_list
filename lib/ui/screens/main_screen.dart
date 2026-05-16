@@ -25,6 +25,8 @@ import 'package:smart_market_list/providers/user_profile_provider.dart';
 import 'package:smart_market_list/providers/sharing_provider.dart';
 import 'package:smart_market_list/providers/recipes_provider.dart';
 import 'package:smart_market_list/core/services/sharing_service.dart';
+import 'package:smart_market_list/core/services/ad_service.dart';
+import 'package:smart_market_list/ui/common/modals/paywall_modal.dart';
 
 class MainScreen extends ConsumerStatefulWidget {
   const MainScreen({super.key});
@@ -53,6 +55,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _validateSession();
+      _checkPaywallOnOpen();
     });
   }
 
@@ -62,6 +65,31 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     } catch (e) {
       print('Session validation failed: $e');
       // If user was signed out by validation, the stream will update the UI automatically.
+    }
+  }
+
+  Future<void> _checkPaywallOnOpen() async {
+    // Wait for profile to be available (handles cold start)
+    await Future.delayed(const Duration(seconds: 2));
+    
+    if (!mounted) return;
+    
+    try {
+      final userProfile = await ref.read(userProfileProvider.future);
+      final isPremium = userProfile != null && userProfile.isPremium;
+      
+      if (isPremium) return; // Premium users never see this
+      
+      final shouldShow = AdService.instance.shouldShowPaywallOnOpen();
+      
+      if (shouldShow && mounted) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const PaywallModal()),
+        );
+      }
+    } catch (e) {
+      print('Paywall on open check error: $e');
     }
   }
 

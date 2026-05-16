@@ -20,11 +20,16 @@ class ReviewService {
   static const String _promptCountKey = 'review_prompt_count';
   static const String _appOpenCountKey = 'app_open_count';
   static const String _listsCompletedKey = 'lists_completed_count';
+  static const String _itemsAddedKey = 'items_added_count';
+  static const String _activeDaysKey = 'active_days';
+  static const String _lastActiveDayKey = 'last_active_day';
   static const String _hasReviewedKey = 'has_reviewed';
 
   // Configuration
   static const int _minAppOpens = 5;           // Minimum app opens before prompting
   static const int _minListsCompleted = 2;     // Minimum completed lists before prompting
+  static const int _minItemsAdded = 30;        // Minimum items added before prompting
+  static const int _minActiveDays = 7;         // Minimum active days before prompting
   static const int _cooldownDays = 30;         // Days between prompts
   static const int _maxPrompts = 3;            // Maximum total prompts
 
@@ -39,6 +44,7 @@ class ReviewService {
         _box = Hive.box(_boxName);
       }
       await incrementAppOpens();
+      await _trackActiveDay();
     } catch (e) {
       debugPrint('ReviewService init error: $e');
     }
@@ -66,6 +72,34 @@ class ReviewService {
     }
   }
 
+  /// Track items added
+  Future<void> incrementItemsAdded() async {
+    try {
+      final currentCount = _box?.get(_itemsAddedKey, defaultValue: 0) ?? 0;
+      await _box?.put(_itemsAddedKey, currentCount + 1);
+      debugPrint('📊 Items added: ${currentCount + 1}');
+    } catch (e) {
+      debugPrint('Error tracking items added: $e');
+    }
+  }
+
+  /// Track unique active days
+  Future<void> _trackActiveDay() async {
+    try {
+      final today = DateTime.now().toIso8601String().substring(0, 10); // "2026-05-16"
+      final lastDay = _box?.get(_lastActiveDayKey) as String?;
+      
+      if (lastDay != today) {
+        await _box?.put(_lastActiveDayKey, today);
+        final currentDays = _box?.get(_activeDaysKey, defaultValue: 0) ?? 0;
+        await _box?.put(_activeDaysKey, currentDays + 1);
+        debugPrint('📊 Active days: ${currentDays + 1}');
+      }
+    } catch (e) {
+      debugPrint('Error tracking active days: $e');
+    }
+  }
+
   /// Check if we should show review prompt
   Future<bool> shouldPromptReview() async {
     try {
@@ -90,10 +124,17 @@ class ReviewService {
         return false;
       }
 
-      // Check minimum lists completed
+      // Check engagement: at least ONE of these conditions must be met
       final listsCompleted = _box?.get(_listsCompletedKey, defaultValue: 0) ?? 0;
-      if (listsCompleted < _minListsCompleted) {
-        debugPrint('🎯 ReviewService: Not enough lists completed ($listsCompleted < $_minListsCompleted)');
+      final itemsAdded = _box?.get(_itemsAddedKey, defaultValue: 0) ?? 0;
+      final activeDays = _box?.get(_activeDaysKey, defaultValue: 0) ?? 0;
+      
+      final hasCompletedLists = listsCompleted >= _minListsCompleted;
+      final hasAddedEnoughItems = itemsAdded >= _minItemsAdded;
+      final hasEnoughActiveDays = activeDays >= _minActiveDays;
+      
+      if (!hasCompletedLists && !hasAddedEnoughItems && !hasEnoughActiveDays) {
+        debugPrint('🎯 ReviewService: No engagement threshold met (lists: $listsCompleted, items: $itemsAdded, days: $activeDays)');
         return false;
       }
 

@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:app_tracking_transparency/app_tracking_transparency.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 
 class AdService {
   static final AdService instance = AdService._internal();
@@ -15,9 +16,18 @@ class AdService {
   InterstitialAd? _interstitialAd;
   bool _isInterstitialLoading = false;
   
-  // Counter for item adds
+  // Counter for item adds (session-based, for interstitial ads)
   int _itemsAddedSessionCount = 0;
   static const int _adFrequency = 10;
+
+  // Counter for paywall upsell (persistent, accumulated across sessions)
+  static const int _paywallFrequency = 10;
+  static const String _paywallCounterKey = 'paywall_item_counter';
+
+  // Counter for app open paywall (persistent)
+  static const int _firstPaywallOpen = 3; // Show on 3rd app open
+  static const int _repeatPaywallInterval = 5; // Then every 5 opens
+  static const String _appOpenCounterKey = 'app_open_counter';
 
   // Counter for recipe views
   int _recipesViewedSessionCount = 0;
@@ -164,6 +174,59 @@ class AdService {
     onContinue();
     return false;
   }
+
+  /// Checks if premium paywall should be shown based on accumulated item count.
+  /// Uses persistent storage so count survives app restarts.
+  /// Returns true if paywall should be shown (every 10 items).
+  bool shouldShowPaywall() {
+    try {
+      final box = Hive.box('settings');
+      int count = box.get(_paywallCounterKey, defaultValue: 0) as int;
+      count++;
+      
+      if (count >= _paywallFrequency) {
+        box.put(_paywallCounterKey, 0); // Reset
+        print('AdService: Paywall trigger reached ($count items)');
+        return true;
+      }
+      
+      box.put(_paywallCounterKey, count);
+      print('AdService: Paywall counter: $count/$_paywallFrequency');
+      return false;
+    } catch (e) {
+      print('AdService: Paywall counter error: $e');
+      return false;
+    }
+  }
+
+  /// Checks if premium paywall should be shown on app open.
+  /// Shows on the 3rd open, then every 5th open after that (8th, 13th, 18th...).
+  bool shouldShowPaywallOnOpen() {
+    try {
+      final box = Hive.box('settings');
+      int count = box.get(_appOpenCounterKey, defaultValue: 0) as int;
+      count++;
+      box.put(_appOpenCounterKey, count);
+      
+      print('AdService: App open count: $count');
+      
+      // First trigger at 3rd open
+      if (count == _firstPaywallOpen) {
+        return true;
+      }
+      
+      // After 3rd open, trigger every 5 opens (8, 13, 18, 23...)
+      if (count > _firstPaywallOpen && (count - _firstPaywallOpen) % _repeatPaywallInterval == 0) {
+        return true;
+      }
+      
+      return false;
+    } catch (e) {
+      print('AdService: App open counter error: $e');
+      return false;
+    }
+  }
+
   /// Disposes current ad
   void dispose() {
     _interstitialAd?.dispose();

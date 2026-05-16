@@ -24,6 +24,8 @@ import 'package:smart_market_list/data/static/product_catalog.dart';
 import 'package:smart_market_list/providers/hidden_suggestions_provider.dart';
 import 'package:smart_market_list/providers/history_provider.dart';
 import 'package:intl/intl.dart';
+import 'package:smart_market_list/ui/common/modals/paywall_modal.dart';
+import 'package:smart_market_list/core/services/review_service.dart';
 
 class AddItemModal extends ConsumerStatefulWidget {
   final Function(ShoppingItem) onAdd;
@@ -88,14 +90,39 @@ class _AddItemModalState extends ConsumerState<AddItemModal> {
     }
   }
 
+  String _capitalizeWords(String text) {
+    if (text.trim().isEmpty) return text;
+    return text.trim().split(' ').map((word) {
+      if (word.isEmpty) return word;
+      return word[0].toUpperCase() + word.substring(1).toLowerCase();
+    }).join(' ');
+  }
+
   Future<void> _submit() async {
-    if (_nameController.text.isNotEmpty) {
+    if (_nameController.text.trim().isNotEmpty) {
+      final itemName = _capitalizeWords(_nameController.text);
+      
+      double finalPrice = _parsePrice(_priceController.text);
+      
+      // Fallback: If user didn't type a price or select from dropdown, try to fetch from history
+      if (finalPrice == 0.0) {
+        final suggestions = ref.read(itemSuggestionsProvider);
+        for (final s in suggestions) {
+          if (s.name.toLowerCase() == itemName.toLowerCase()) {
+            if (s.price > 0) {
+              finalPrice = s.price;
+            }
+            break;
+          }
+        }
+      }
+
       final item = ShoppingItem(
         id: widget.itemToEdit?.id, // Preserve ID if editing
-        name: _nameController.text,
+        name: itemName,
         unitQuantity: _unitQuantity,
         quantity: '$_unitQuantity un',
-        price: _parsePrice(_priceController.text),
+        price: finalPrice,
         category: _selectedCategory,
         imageUrl: _imagePath ?? '',
         checked: widget.itemToEdit?.checked ?? false, // Preserve checked status
@@ -108,6 +135,9 @@ class _AddItemModalState extends ConsumerState<AddItemModal> {
       // Save to history for future suggestions
       await ref.read(historyProvider.notifier).addOrUpdate(item);
       
+      // Track item addition for review prompt
+      ReviewService().incrementItemsAdded();
+      
       final userProfile = ref.read(userProfileProvider).value;
       final isPremium = userProfile != null && userProfile.isPremium;
       
@@ -119,14 +149,30 @@ class _AddItemModalState extends ConsumerState<AddItemModal> {
       }
 
       if (!isPremium) {
-         // Check if we need to show an ad (every 10 items)
-         final triggered = AdService.instance.checkItemAdTrigger(onContinue: completeAdd);
-         if (!triggered) {
-           // If false, it called completeAdd immediately, so we don't need to do anything.
-           // But actually checkItemAdTrigger calls onContinue inside.
+         // Check if paywall upsell should show (persistent, every 10 items)
+         final showPaywall = AdService.instance.shouldShowPaywall();
+         
+         if (showPaywall) {
+           // Add item first (non-blocking), then show paywall
+           completeAdd();
+           if (mounted) {
+             Navigator.push(
+               context,
+               MaterialPageRoute(builder: (_) => const PaywallModal()),
+             );
+           }
+         } else {
+           // Normal ad flow (session-based, every 10 items)
+           AdService.instance.checkItemAdTrigger(onContinue: () {
+             completeAdd();
+             // Check review prompt after adding item
+             ReviewService().checkAndPromptReview();
+           });
          }
       } else {
          completeAdd();
+         // Check review prompt after adding item
+         ReviewService().checkAndPromptReview();
       }
     }
   }
@@ -236,6 +282,10 @@ class _AddItemModalState extends ConsumerState<AddItemModal> {
                         _selectedCategory = selection.category;
                         if (selection.imageUrl.isNotEmpty) {
                           _imagePath = selection.imageUrl;
+                        }
+                        if (selection.price > 0) {
+                          final locale = Localizations.localeOf(context).toString();
+                          _priceController.text = NumberFormat.currency(locale: locale, symbol: '', decimalDigits: 2).format(selection.price).trim();
                         }
                         // Always set quantity to 1, ignore weight/unit in defaultQuantity
                         // (e.g., "500g" should not set quantity to 500)
