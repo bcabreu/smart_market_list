@@ -1,5 +1,4 @@
 
-import 'dart:typed_data';
 
 import 'package:flutter/widgets.dart';
 import 'package:intl/intl.dart';

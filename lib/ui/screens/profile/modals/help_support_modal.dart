@@ -26,7 +26,6 @@ class HelpSupportModal extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Container(
       height: MediaQuery.of(context).size.height * 0.85,
@@ -47,16 +46,13 @@ class HelpSupportModal extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 16),
-          
+
           // Title
           Text(
             l10n.helpSupport,
-            style: const TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-            ),
+            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
           ),
-          
+
           const SizedBox(height: 24),
 
           // Content
@@ -79,9 +75,9 @@ class HelpSupportModal extends StatelessWidget {
                     elevation: 0,
                   ),
                 ),
-                
+
                 const SizedBox(height: 32),
-                
+
                 Text(
                   l10n.faq,
                   style: const TextStyle(
@@ -89,38 +85,31 @@ class HelpSupportModal extends StatelessWidget {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                
+
                 const SizedBox(height: 16),
 
                 _buildFaqItem(
-                  context, 
-                  l10n.faqHowToShare, 
-                  l10n.faqHowToShareAnswer
+                  context,
+                  l10n.faqHowToShare,
+                  l10n.faqHowToShareAnswer,
                 ),
                 _buildFaqItem(
-                  context, 
-                  l10n.faqPremiumBenefits, 
-                  l10n.faqPremiumBenefitsAnswer
+                  context,
+                  l10n.faqPremiumBenefits,
+                  l10n.faqPremiumBenefitsAnswer,
                 ),
-                _buildFaqItem(
-                  context, 
-                  l10n.faqRestore, 
-                  l10n.faqRestoreAnswer
-                ),
+                _buildFaqItem(context, l10n.faqRestore, l10n.faqRestoreAnswer),
 
                 const SizedBox(height: 32),
-                
+
                 // Version
                 Center(
                   child: Text(
                     '${l10n.appVersion} 1.0.0',
-                    style: TextStyle(
-                      color: Colors.grey[500],
-                      fontSize: 12,
-                    ),
+                    style: TextStyle(color: Colors.grey[500], fontSize: 12),
                   ),
                 ),
-                
+
                 const SizedBox(height: 32),
               ],
             ),
@@ -132,7 +121,7 @@ class HelpSupportModal extends StatelessWidget {
 
   Widget _buildFaqItem(BuildContext context, String question, String answer) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    
+
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(

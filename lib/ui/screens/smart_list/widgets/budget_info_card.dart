@@ -11,18 +11,17 @@ import 'package:smart_market_list/providers/tax_provider.dart';
 
 class BudgetInfoCard extends ConsumerStatefulWidget {
   final ShoppingList list;
-  
+
   const BudgetInfoCard({super.key, required this.list});
 
   @override
   ConsumerState<BudgetInfoCard> createState() => _BudgetInfoCardState();
 }
 
-
 class _BudgetInfoCardState extends ConsumerState<BudgetInfoCard> {
   late TextEditingController _controller;
   final FocusNode _focusNode = FocusNode();
-  
+
   // These will be initialized in build or didChangeDependencies to respect locale
   late NumberFormat _currencyFormat;
   late NumberFormat _numberFormat;
@@ -32,7 +31,10 @@ class _BudgetInfoCardState extends ConsumerState<BudgetInfoCard> {
     super.didChangeDependencies();
     final locale = Localizations.localeOf(context);
     final symbol = locale.languageCode == 'pt' ? 'R\$' : '\$';
-    _currencyFormat = NumberFormat.currency(locale: locale.toString(), symbol: symbol);
+    _currencyFormat = NumberFormat.currency(
+      locale: locale.toString(),
+      symbol: symbol,
+    );
     _numberFormat = NumberFormat.decimalPattern(locale.toString());
   }
 
@@ -69,10 +71,10 @@ class _BudgetInfoCardState extends ConsumerState<BudgetInfoCard> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final l10n = AppLocalizations.of(context)!;
     final currencySymbol = locale.languageCode == 'pt' ? 'R\$' : '\$';
-    
+
     // Clear controller so placeholder shows current value
     _controller.clear();
-    
+
     showDialog(
       context: context,
       builder: (dialogContext) => Dialog(
@@ -126,7 +128,7 @@ class _BudgetInfoCardState extends ConsumerState<BudgetInfoCard> {
                 ],
               ),
               const SizedBox(height: 24),
-              
+
               // Budget Input
               Row(
                 children: [
@@ -143,8 +145,12 @@ class _BudgetInfoCardState extends ConsumerState<BudgetInfoCard> {
                     child: TextField(
                       controller: _controller,
                       focusNode: _focusNode,
-                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                      inputFormatters: [CurrencyInputFormatter(locale: locale.toString())],
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
+                      inputFormatters: [
+                        CurrencyInputFormatter(locale: locale.toString()),
+                      ],
                       autofocus: true,
                       textAlign: TextAlign.center,
                       style: TextStyle(
@@ -159,7 +165,10 @@ class _BudgetInfoCardState extends ConsumerState<BudgetInfoCard> {
                           fontWeight: FontWeight.bold,
                           color: isDark ? Colors.grey[500] : Colors.grey[400],
                         ),
-                        contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+                        contentPadding: const EdgeInsets.symmetric(
+                          vertical: 16,
+                          horizontal: 16,
+                        ),
                         filled: true,
                         fillColor: isDark ? Colors.grey[800] : Colors.grey[100],
                         border: OutlineInputBorder(
@@ -168,16 +177,19 @@ class _BudgetInfoCardState extends ConsumerState<BudgetInfoCard> {
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(color: AppColors.primary, width: 2),
+                          borderSide: const BorderSide(
+                            color: AppColors.primary,
+                            width: 2,
+                          ),
                         ),
                       ),
                     ),
                   ),
                 ],
               ),
-              
+
               const SizedBox(height: 24),
-              
+
               // Buttons
               Row(
                 children: [
@@ -241,15 +253,15 @@ class _BudgetInfoCardState extends ConsumerState<BudgetInfoCard> {
   void _save() {
     final locale = Localizations.localeOf(context);
     String cleanText = _controller.text;
-    
+
     if (locale.languageCode == 'pt') {
-        cleanText = cleanText.replaceAll('.', '').replaceAll(',', '.');
+      cleanText = cleanText.replaceAll('.', '').replaceAll(',', '.');
     } else {
-        cleanText = cleanText.replaceAll(',', '');
+      cleanText = cleanText.replaceAll(',', '');
     }
 
     final newBudget = double.tryParse(cleanText) ?? widget.list.budget;
-    
+
     if (newBudget != widget.list.budget) {
       final service = ref.read(shoppingListServiceProvider);
       // Create a copy with the new budget and update
@@ -262,15 +274,14 @@ class _BudgetInfoCardState extends ConsumerState<BudgetInfoCard> {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final l10n = AppLocalizations.of(context)!;
-    final locale = Localizations.localeOf(context);
-    
-    final cardColor = isDark 
+
+    final cardColor = isDark
         ? const Color(0xFF1E2C2C)
         : const Color(0xFFE0F7FA).withOpacity(0.5);
     final borderColor = isDark
         ? const Color(0xFF2C4A4A)
         : const Color(0xFFB2EBF2);
-    
+
     final labelColor = isDark ? Colors.grey[400] : Colors.grey[600];
     final valueColor = AppColors.primary;
     final limitColor = isDark ? Colors.white : Colors.black87;
@@ -294,10 +305,7 @@ class _BudgetInfoCardState extends ConsumerState<BudgetInfoCard> {
             children: [
               Text(
                 l10n.currentTotal,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: labelColor,
-                ),
+                style: TextStyle(fontSize: 12, color: labelColor),
               ),
               const SizedBox(height: 2),
               Consumer(
@@ -305,14 +313,17 @@ class _BudgetInfoCardState extends ConsumerState<BudgetInfoCard> {
                   final taxRate = ref.watch(taxRateProvider);
                   final taxAmount = widget.list.totalSpent * (taxRate / 100);
                   final totalWithTax = widget.list.totalSpent + taxAmount;
-                  
+
                   return TweenAnimationBuilder<double>(
                     tween: Tween<double>(begin: 0, end: totalWithTax),
                     duration: const Duration(milliseconds: 800),
                     curve: Curves.easeOutCubic,
                     builder: (context, value, child) {
-                      final isOverBudget = widget.list.budget > 0 && value > widget.list.budget;
-                      final color = isOverBudget ? const Color(0xFFEF5350) : valueColor;
+                      final isOverBudget =
+                          widget.list.budget > 0 && value > widget.list.budget;
+                      final color = isOverBudget
+                          ? const Color(0xFFEF5350)
+                          : valueColor;
 
                       if (taxRate > 0) {
                         return Column(
@@ -329,10 +340,7 @@ class _BudgetInfoCardState extends ConsumerState<BudgetInfoCard> {
                             ),
                             Text(
                               '${_currencyFormat.format(widget.list.totalSpent)} + ${taxRate.toStringAsFixed(1)}% Tax',
-                              style: TextStyle(
-                                fontSize: 10,
-                                color: labelColor,
-                              ),
+                              style: TextStyle(fontSize: 10, color: labelColor),
                             ),
                           ],
                         );
@@ -349,7 +357,7 @@ class _BudgetInfoCardState extends ConsumerState<BudgetInfoCard> {
                       );
                     },
                   );
-                }
+                },
               ),
             ],
           ),
@@ -361,10 +369,7 @@ class _BudgetInfoCardState extends ConsumerState<BudgetInfoCard> {
             children: [
               Text(
                 l10n.budgetLimit,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: labelColor,
-                ),
+                style: TextStyle(fontSize: 12, color: labelColor),
               ),
               const SizedBox(height: 2),
               InkWell(
@@ -382,11 +387,7 @@ class _BudgetInfoCardState extends ConsumerState<BudgetInfoCard> {
                       ),
                     ),
                     const SizedBox(width: 4),
-                    Icon(
-                      Icons.edit_outlined,
-                      size: 14,
-                      color: labelColor,
-                    ),
+                    Icon(Icons.edit_outlined, size: 14, color: labelColor),
                   ],
                 ),
               ),

@@ -1,6 +1,5 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:smart_market_list/core/theme/app_colors.dart';
 import 'package:smart_market_list/data/models/recipe.dart';
 import 'package:smart_market_list/l10n/generated/app_localizations.dart';
 
@@ -25,7 +24,7 @@ class RecipeCard extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final backgroundColor = isDark ? const Color(0xFF1E1E1E) : Colors.white;
     final l10n = AppLocalizations.of(context)!;
-    
+
     // Normalize difficulty for display
     final difficultyText = _getLocalizedDifficulty(recipe.difficulty, l10n);
     final difficultyColor = _getDifficultyColor(recipe.difficulty);
@@ -93,7 +92,10 @@ class RecipeCard extends StatelessWidget {
                     top: 12,
                     left: 12,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
                       decoration: BoxDecoration(
                         color: difficultyColor,
                         borderRadius: BorderRadius.circular(20),
@@ -121,7 +123,9 @@ class RecipeCard extends StatelessWidget {
                           shape: BoxShape.circle,
                         ),
                         child: Icon(
-                          recipe.isFavorite ? Icons.favorite : Icons.favorite_border,
+                          recipe.isFavorite
+                              ? Icons.favorite
+                              : Icons.favorite_border,
                           color: recipe.isFavorite ? Colors.red : Colors.white,
                           size: 20,
                         ),
@@ -157,9 +161,15 @@ class RecipeCard extends StatelessWidget {
                         const SizedBox(height: 8),
                         Row(
                           children: [
-                            _buildMetadataChip(Icons.access_time, '${recipe.prepTime} ${l10n.cookTime ?? "min"}'),
+                            _buildMetadataChip(
+                              Icons.access_time,
+                              '${recipe.prepTime} ${l10n.cookTime}',
+                            ),
                             const SizedBox(width: 8),
-                            _buildMetadataChip(Icons.people_outline, '${recipe.servings}'),
+                            _buildMetadataChip(
+                              Icons.people_outline,
+                              '${recipe.servings}',
+                            ),
                           ],
                         ),
                       ],
@@ -170,14 +180,21 @@ class RecipeCard extends StatelessWidget {
 
               // Footer
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Flexible(
                       child: Row(
                         children: [
-                          const Icon(Icons.circle, size: 10, color: Color(0xFF4DB6AC)),
+                          const Icon(
+                            Icons.circle,
+                            size: 10,
+                            color: Color(0xFF4DB6AC),
+                          ),
                           const SizedBox(width: 6),
                           Flexible(
                             child: Text(
@@ -198,7 +215,11 @@ class RecipeCard extends StatelessWidget {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [
-                          const Icon(Icons.local_fire_department_rounded, size: 14, color: Color(0xFFFF7043)),
+                          const Icon(
+                            Icons.local_fire_department_rounded,
+                            size: 14,
+                            color: Color(0xFFFF7043),
+                          ),
                           const SizedBox(width: 4),
                           Flexible(
                             child: Text(
@@ -250,11 +271,18 @@ class RecipeCard extends StatelessWidget {
 
   String _getLocalizedDifficulty(String difficulty, AppLocalizations l10n) {
     final lower = difficulty.toLowerCase().trim();
-    if (lower.contains('fácil') || lower.contains('facil') || lower.contains('easy')) {
+    if (lower.contains('fácil') ||
+        lower.contains('facil') ||
+        lower.contains('easy')) {
       return l10n.difficultyEasy;
-    } else if (lower.contains('médio') || lower.contains('medio') || lower.contains('medium')) {
+    } else if (lower.contains('médio') ||
+        lower.contains('medio') ||
+        lower.contains('medium')) {
       return l10n.difficultyMedium;
-    } else if (lower.contains('difícil') || lower.contains('dificil') || lower.contains('hard') || lower.contains('difficile')) {
+    } else if (lower.contains('difícil') ||
+        lower.contains('dificil') ||
+        lower.contains('hard') ||
+        lower.contains('difficile')) {
       return l10n.difficultyHard;
     }
     // Default fallback
@@ -263,13 +291,20 @@ class RecipeCard extends StatelessWidget {
 
   Color _getDifficultyColor(String difficulty) {
     final lower = difficulty.toLowerCase().trim();
-    if (lower.contains('fácil') || lower.contains('facil') || lower.contains('easy')) {
+    if (lower.contains('fácil') ||
+        lower.contains('facil') ||
+        lower.contains('easy')) {
       return const Color(0xFF00C853); // Green
-    } else if (lower.contains('médio') || lower.contains('medio') || lower.contains('medium')) {
+    } else if (lower.contains('médio') ||
+        lower.contains('medio') ||
+        lower.contains('medium')) {
       return const Color(0xFFFF9800); // Orange
-    } else if (lower.contains('difícil') || lower.contains('dificil') || lower.contains('hard') || lower.contains('difficile')) {
+    } else if (lower.contains('difícil') ||
+        lower.contains('dificil') ||
+        lower.contains('hard') ||
+        lower.contains('difficile')) {
       return const Color(0xFFD50000); // Red
-    } 
+    }
     return const Color(0xFF2196F3); // Blue default
   }
 }

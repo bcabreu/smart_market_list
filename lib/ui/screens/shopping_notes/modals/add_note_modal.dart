@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:math' as math;
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -68,7 +67,7 @@ class _AddNoteModalState extends ConsumerState<AddNoteModal> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-             Text(
+            Text(
               l10n.notePhotoLabel.replaceAll(' (opcional)', ''),
               style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
@@ -101,7 +100,11 @@ class _AddNoteModalState extends ConsumerState<AddNoteModal> {
     );
   }
 
-  Widget _buildActionButton({required IconData icon, required String label, required VoidCallback onTap}) {
+  Widget _buildActionButton({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+  }) {
     return GestureDetector(
       onTap: onTap,
       child: Column(
@@ -124,7 +127,7 @@ class _AddNoteModalState extends ConsumerState<AddNoteModal> {
   Future<void> _saveNote() async {
     if (_formKey.currentState!.validate()) {
       final l10n = AppLocalizations.of(context)!;
-      
+
       // Show loading dialog
       showDialog(
         context: context,
@@ -133,7 +136,9 @@ class _AddNoteModalState extends ConsumerState<AddNoteModal> {
           canPop: false,
           child: Dialog(
             backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
             child: Padding(
               padding: const EdgeInsets.all(24),
               child: Column(
@@ -143,7 +148,10 @@ class _AddNoteModalState extends ConsumerState<AddNoteModal> {
                   const SizedBox(height: 16),
                   Text(
                     _imagePath != null ? l10n.uploadingPhoto : l10n.savingNote,
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
                   if (_imagePath != null) ...[
                     const SizedBox(height: 8),
@@ -162,7 +170,7 @@ class _AddNoteModalState extends ConsumerState<AddNoteModal> {
       try {
         // Parse total value - Handle both dot and comma
         String cleanValue = _totalController.text.trim();
-        
+
         // Remove currency symbol if present
         final locale = Localizations.localeOf(context);
         final currencySymbol = locale.languageCode == 'pt' ? 'R\$' : '\$';
@@ -181,7 +189,7 @@ class _AddNoteModalState extends ConsumerState<AddNoteModal> {
             name: l10n.generalPurchase,
             price: totalValue,
             quantity: '1',
-          )
+          ),
         ];
 
         String? permanentImagePath;
@@ -190,27 +198,36 @@ class _AddNoteModalState extends ConsumerState<AddNoteModal> {
             // Get user's family ID for cloud storage path
             final userProfile = ref.read(userProfileProvider).value;
             final familyId = userProfile?.familyId;
-            
+
             if (familyId != null) {
               // Upload to Firebase Storage
               final extension = p.extension(_imagePath!);
-              final fileName = 'note_${DateTime.now().millisecondsSinceEpoch}$extension';
-              final storageRef = FirebaseStorage.instance
-                  .ref()
-                  .child('families/$familyId/notes/$fileName');
-              
-              final uploadTask = await storageRef.putFile(File(_imagePath!));
+              final fileName =
+                  'note_${DateTime.now().millisecondsSinceEpoch}$extension';
+              final storageRef = FirebaseStorage.instance.ref().child(
+                'families/$familyId/notes/$fileName',
+              );
+
+              final uploadTask = await storageRef.putFile(
+                File(_imagePath!),
+                SettableMetadata(contentType: 'image/jpeg'),
+              );
               permanentImagePath = await uploadTask.ref.getDownloadURL();
-              debugPrint('📸 Note photo uploaded to Firebase Storage: $permanentImagePath');
+              debugPrint(
+                '📸 Note photo uploaded to Firebase Storage: $permanentImagePath',
+              );
             } else {
               // Fallback: Save locally if no family (shouldn't happen for premium users)
               final directory = await getApplicationDocumentsDirectory();
               final extension = p.extension(_imagePath!);
-              final fileName = 'note_${DateTime.now().millisecondsSinceEpoch}$extension';
+              final fileName =
+                  'note_${DateTime.now().millisecondsSinceEpoch}$extension';
               final savedImage = File('${directory.path}/$fileName');
               await File(_imagePath!).copy(savedImage.path);
               permanentImagePath = savedImage.path;
-              debugPrint('📸 Note photo saved locally (no familyId): $permanentImagePath');
+              debugPrint(
+                '📸 Note photo saved locally (no familyId): $permanentImagePath',
+              );
             }
           } catch (e) {
             debugPrint('Error uploading/saving image: $e');
@@ -226,8 +243,8 @@ class _AddNoteModalState extends ConsumerState<AddNoteModal> {
           photoUrl: permanentImagePath,
         );
 
-        ref.read(shoppingNotesServiceProvider).createNote(note);
-        
+        await ref.read(shoppingNotesServiceProvider).createNote(note);
+
         if (mounted) {
           // Close loading dialog
           Navigator.of(context, rootNavigator: true).pop();
@@ -247,7 +264,9 @@ class _AddNoteModalState extends ConsumerState<AddNoteModal> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final inputFillColor = isDark ? const Color(0xFF2C2C2C) : const Color(0xFFF5F5F5);
+    final inputFillColor = isDark
+        ? const Color(0xFF2C2C2C)
+        : const Color(0xFFF5F5F5);
     final borderColor = isDark ? Colors.grey[800]! : Colors.grey[300]!;
     final l10n = AppLocalizations.of(context)!;
     final locale = Localizations.localeOf(context);
@@ -256,178 +275,233 @@ class _AddNoteModalState extends ConsumerState<AddNoteModal> {
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
       child: Container(
-      height: MediaQuery.of(context).size.height * 0.9,
-      decoration: BoxDecoration(
-        color: Theme.of(context).scaffoldBackgroundColor,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      child: Column(
-        children: [
-          Expanded(
-            child: SingleChildScrollView(
-              padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
-              child: Column(
-          mainAxisSize: MainAxisSize.min,
+        height: MediaQuery.of(context).size.height * 0.9,
+        decoration: BoxDecoration(
+          color: Theme.of(context).scaffoldBackgroundColor,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: Column(
           children: [
-            // Header
-            Padding(
-              padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        l10n.newNoteTitle,
-                        style: const TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        l10n.newNoteSubtitle,
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: isDark ? Colors.grey[400] : Colors.grey[600],
-                        ),
-                      ),
-                    ],
-                  ),
-                  Container(
-                    decoration: BoxDecoration(
-                      color: isDark ? Colors.grey[800] : Colors.grey[100],
-                      shape: BoxShape.circle,
-                    ),
-                    child: IconButton(
-                      icon: const Icon(Icons.close, size: 20),
-                      onPressed: () => Navigator.pop(context),
-                      color: isDark ? Colors.grey[400] : Colors.grey[600],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: Form(
-                key: _formKey,
+            Expanded(
+              child: SingleChildScrollView(
+                padding: EdgeInsets.only(
+                  bottom: MediaQuery.of(context).viewInsets.bottom,
+                ),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    // Store Name
-                    _buildLabel(l10n.storeLabel, Icons.store_outlined, isDark),
-                    const SizedBox(height: 8),
-                    TextFormField(
-                      controller: _storeController,
-                      decoration: InputDecoration(
-                        hintText: l10n.storeHint,
-                        filled: true,
-                        fillColor: inputFillColor,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide.none,
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                      ),
-                      validator: (value) => value?.isEmpty ?? true ? l10n.requiredField : null,
-                    ),
-                    const SizedBox(height: 24),
-
-                    // Total Value
-                    _buildLabel(l10n.totalValueLabel, Icons.attach_money, isDark),
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        Text(
-                          currencySymbol,
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: isDark ? Colors.white : Colors.black87,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: TextFormField(
-                            controller: _totalController,
-                            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                            inputFormatters: [CurrencyInputFormatter(locale: Localizations.localeOf(context).toString())],
-                            decoration: InputDecoration(
-                              hintText: locale.languageCode == 'pt' ? '0,00' : '0.00',
-                              filled: true,
-                              fillColor: inputFillColor,
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: BorderSide.none,
-                              ),
-                              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                            ),
-                            validator: (value) => value?.isEmpty ?? true ? l10n.requiredField : null,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 24),
-                    // Photo Upload
-                    _buildLabel(l10n.notePhotoLabel, Icons.camera_alt_outlined, isDark),
-                    const SizedBox(height: 8),
-                    GestureDetector(
-                      onTap: _showImageSourceOptions,
-                      child: CustomPaint(
-                        painter: DashedBorderPainter(color: borderColor),
-                        child: Container(
-                          width: double.infinity,
-                          height: 160,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: _imagePath != null
-                              ? ClipRRect(
-                                  borderRadius: BorderRadius.circular(12),
-                                  child: Image.file(
-                                    File(_imagePath!),
-                                    fit: BoxFit.cover,
-                                  ),
-                                )
-                              : Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Icon(
-                                      Icons.camera_alt_rounded,
-                                      size: 48,
-                                      color: isDark ? Colors.grey[600] : Colors.grey[400],
-                                    ),
-                                    const SizedBox(height: 12),
-                                    Text(
-                                      l10n.addPhotoHint,
-                                      style: TextStyle(
-                                        color: isDark ? Colors.grey[500] : Colors.grey[500],
-                                        fontSize: 14,
-                                      ),
-                                    ),
-                                  ],
+                    // Header
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                l10n.newNoteTitle,
+                                style: const TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
                                 ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                l10n.newNoteSubtitle,
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: isDark
+                                      ? Colors.grey[400]
+                                      : Colors.grey[600],
+                                ),
+                              ),
+                            ],
+                          ),
+                          Container(
+                            decoration: BoxDecoration(
+                              color: isDark
+                                  ? Colors.grey[800]
+                                  : Colors.grey[100],
+                              shape: BoxShape.circle,
+                            ),
+                            child: IconButton(
+                              icon: const Icon(Icons.close, size: 20),
+                              onPressed: () => Navigator.pop(context),
+                              color: isDark
+                                  ? Colors.grey[400]
+                                  : Colors.grey[600],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      child: Form(
+                        key: _formKey,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Store Name
+                            _buildLabel(
+                              l10n.storeLabel,
+                              Icons.store_outlined,
+                              isDark,
+                            ),
+                            const SizedBox(height: 8),
+                            TextFormField(
+                              controller: _storeController,
+                              decoration: InputDecoration(
+                                hintText: l10n.storeHint,
+                                filled: true,
+                                fillColor: inputFillColor,
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: BorderSide.none,
+                                ),
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 16,
+                                ),
+                              ),
+                              validator: (value) => value?.isEmpty ?? true
+                                  ? l10n.requiredField
+                                  : null,
+                            ),
+                            const SizedBox(height: 24),
+
+                            // Total Value
+                            _buildLabel(
+                              l10n.totalValueLabel,
+                              Icons.attach_money,
+                              isDark,
+                            ),
+                            const SizedBox(height: 8),
+                            Row(
+                              children: [
+                                Text(
+                                  currencySymbol,
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: isDark
+                                        ? Colors.white
+                                        : Colors.black87,
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: TextFormField(
+                                    controller: _totalController,
+                                    keyboardType:
+                                        const TextInputType.numberWithOptions(
+                                          decimal: true,
+                                        ),
+                                    inputFormatters: [
+                                      CurrencyInputFormatter(
+                                        locale: Localizations.localeOf(
+                                          context,
+                                        ).toString(),
+                                      ),
+                                    ],
+                                    decoration: InputDecoration(
+                                      hintText: locale.languageCode == 'pt'
+                                          ? '0,00'
+                                          : '0.00',
+                                      filled: true,
+                                      fillColor: inputFillColor,
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                        borderSide: BorderSide.none,
+                                      ),
+                                      contentPadding:
+                                          const EdgeInsets.symmetric(
+                                            horizontal: 16,
+                                            vertical: 16,
+                                          ),
+                                    ),
+                                    validator: (value) => value?.isEmpty ?? true
+                                        ? l10n.requiredField
+                                        : null,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 24),
+                            // Photo Upload
+                            _buildLabel(
+                              l10n.notePhotoLabel,
+                              Icons.camera_alt_outlined,
+                              isDark,
+                            ),
+                            const SizedBox(height: 8),
+                            GestureDetector(
+                              onTap: _showImageSourceOptions,
+                              child: CustomPaint(
+                                painter: DashedBorderPainter(
+                                  color: borderColor,
+                                ),
+                                child: Container(
+                                  width: double.infinity,
+                                  height: 160,
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: _imagePath != null
+                                      ? ClipRRect(
+                                          borderRadius: BorderRadius.circular(
+                                            12,
+                                          ),
+                                          child: Image.file(
+                                            File(_imagePath!),
+                                            fit: BoxFit.cover,
+                                          ),
+                                        )
+                                      : Column(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          children: [
+                                            Icon(
+                                              Icons.camera_alt_rounded,
+                                              size: 48,
+                                              color: isDark
+                                                  ? Colors.grey[600]
+                                                  : Colors.grey[400],
+                                            ),
+                                            const SizedBox(height: 12),
+                                            Text(
+                                              l10n.addPhotoHint,
+                                              style: TextStyle(
+                                                color: isDark
+                                                    ? Colors.grey[500]
+                                                    : Colors.grey[500],
+                                                fontSize: 14,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 32),
+                          ],
                         ),
                       ),
                     ),
-                    const SizedBox(height: 32),
+
+                    _buildSaveButton(l10n),
+                    const SizedBox(height: 24),
                   ],
                 ),
               ),
             ),
-
-            _buildSaveButton(l10n),
-              const SizedBox(height: 24),
           ],
         ),
-        ),
       ),
-      ],
-    )));
+    );
   }
 
   Widget _buildSaveButton(AppLocalizations l10n) {
@@ -515,10 +589,10 @@ class DashedBorderPainter extends CustomPainter {
     );
 
     final path = Path()..addRRect(rrect);
-    
+
     final Path dashPath = Path();
     double distance = 0.0;
-    
+
     for (final PathMetric pathMetric in path.computeMetrics()) {
       while (distance < pathMetric.length) {
         dashPath.addPath(
@@ -533,6 +607,6 @@ class DashedBorderPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(DashedBorderPainter oldDelegate) => 
+  bool shouldRepaint(DashedBorderPainter oldDelegate) =>
       color != oldDelegate.color || strokeWidth != oldDelegate.strokeWidth;
 }

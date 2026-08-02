@@ -47,13 +47,17 @@ class ShoppingList extends HiveObject {
     this.ownerId,
     this.inviteCode,
     this.familyId,
-  })  : id = id ?? const Uuid().v4(),
-        items = items ?? [],
-        members = members ?? [],
-        createdAt = createdAt ?? DateTime.now();
+  }) : id = id ?? const Uuid().v4(),
+       items = items ?? [],
+       members = members ?? [],
+       createdAt = createdAt ?? DateTime.now();
 
-  double get totalSpent => items.fold(0.0, (sum, item) => sum + (item.checked ? item.totalPrice : 0.0));
-  double get totalEstimated => items.fold(0.0, (sum, item) => sum + item.totalPrice);
+  double get totalSpent => items.fold(
+    0.0,
+    (sum, item) => sum + (item.checked ? item.totalPrice : 0.0),
+  );
+  double get totalEstimated =>
+      items.fold(0.0, (sum, item) => sum + item.totalPrice);
   double get percentage => budget > 0 ? (totalSpent / budget) * 100 : 0;
 
   ShoppingList copyWith({
@@ -67,6 +71,7 @@ class ShoppingList extends HiveObject {
     String? ownerId,
     String? inviteCode,
     String? familyId,
+    bool clearFamilyId = false,
   }) {
     return ShoppingList(
       id: id ?? this.id,
@@ -78,9 +83,10 @@ class ShoppingList extends HiveObject {
       members: members ?? this.members,
       ownerId: ownerId ?? this.ownerId,
       inviteCode: inviteCode ?? this.inviteCode,
-      familyId: familyId ?? this.familyId,
+      familyId: clearFamilyId ? null : familyId ?? this.familyId,
     );
   }
+
   Map<String, dynamic> toMap() {
     return {
       'id': id,
@@ -103,10 +109,12 @@ class ShoppingList extends HiveObject {
       emoji: map['emoji'] ?? '🛒',
       budget: (map['budget'] ?? 500.0).toDouble(),
       items: (map['items'] as List<dynamic>? ?? [])
-          .where((x) => x is Map<String, dynamic>)
-          .map<ShoppingItem>((x) => ShoppingItem.fromMap(x as Map<String, dynamic>))
+          .whereType<Map<String, dynamic>>()
+          .map<ShoppingItem>((x) => ShoppingItem.fromMap(x))
           .toList(),
-      createdAt: DateTime.fromMillisecondsSinceEpoch(map['createdAt'] ?? DateTime.now().millisecondsSinceEpoch),
+      createdAt: DateTime.fromMillisecondsSinceEpoch(
+        map['createdAt'] ?? DateTime.now().millisecondsSinceEpoch,
+      ),
       members: List<String>.from(map['members'] ?? []),
       ownerId: map['ownerId'],
       inviteCode: map['inviteCode'],

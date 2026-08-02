@@ -58,93 +58,116 @@ class _ProfileSummaryState extends ConsumerState<ProfileSummary> {
 
         // 2. If logged in, upload to Cloud
         if (ref.read(isLoggedInProvider)) {
-           final user = ref.read(authStateProvider).asData?.value;
-           if (user == null) return;
+          final user = ref.read(authStateProvider).asData?.value;
+          if (user == null) return;
+          final previousPhotoUrl = user.photoURL;
 
-           // Show loading feedback
-           if (mounted) {
-             LoadingDialog.show(context, l10n.uploadingPhoto);
-           }
+          // Show loading feedback
+          if (mounted) {
+            LoadingDialog.show(context, l10n.uploadingPhoto);
+          }
 
-           try {
-             // FIX: Use unique filename to avoid overwriting/caching issues
-             final timestamp = DateTime.now().millisecondsSinceEpoch;
-             final storageRef = FirebaseStorage.instance
-                 .ref()
-                 .child('users/${user.uid}/profile_$timestamp.jpg');
-             
-             final file = File(pickedFile.path);
-             
-             print("🚀 Starting Upload to: ${storageRef.fullPath}");
-             
-             // Simple upload without forcing metadata to see if it helps
-             final uploadTask = storageRef.putFile(file);
-             
-             // Wait for upload to complete
-             final snapshot = await uploadTask;
-             
-             print("✅ Upload State: ${snapshot.state}");
-             
-             if (snapshot.state == TaskState.success) {
-               // RETRY LOGIC: Sometimes getDownloadURL fails immediately after upload due to eventual consistency
-               String? downloadUrl;
-               int retries = 5; 
-               while (retries > 0) {
-                 try {
-                   downloadUrl = await snapshot.ref.getDownloadURL();
-                   break;
-                 } catch (e) {
-                   print("⚠️ getDownloadURL failed, retrying... ($retries left) - $e");
-                   await Future.delayed(const Duration(milliseconds: 2000));
-                   retries--;
-                 }
-               }
-               
-               if (downloadUrl == null) throw Exception('Retries exhausted: Could not retrieve download URL.');
+          try {
+            // FIX: Use unique filename to avoid overwriting/caching issues
+            final timestamp = DateTime.now().millisecondsSinceEpoch;
+            final storageRef = FirebaseStorage.instance.ref().child(
+              'users/${user.uid}/profile_$timestamp.jpg',
+            );
 
-               print("🔗 Got URL: $downloadUrl");
+            final file = File(pickedFile.path);
 
-               // Update Auth & Firestore
-               await ref.read(authServiceProvider).updatePhotoURL(downloadUrl);
-               
-               // Update Local Provider
-               await ref.read(profileImageProvider.notifier).setNetworkImage(downloadUrl);
-               
-               if (mounted) {
-                 LoadingDialog.hide(context);
-                 StatusFeedbackModal.show(
-                   context,
-                   title: l10n.awesome,
-                   message: l10n.uploadSuccess,
-                   type: FeedbackType.success,
-                 );
-               }
-             } else {
-               throw Exception('Upload Failed. State: ${snapshot.state}');
-             }
+            print("🚀 Starting Upload to: ${storageRef.fullPath}");
 
-           } catch (e) {
-             print('❌ Upload error details: $e');
-             if (mounted) {
+            // Simple upload without forcing metadata to see if it helps
+            final uploadTask = storageRef.putFile(
+              file,
+              SettableMetadata(contentType: 'image/jpeg'),
+            );
+
+            // Wait for upload to complete
+            final snapshot = await uploadTask;
+
+            print("✅ Upload State: ${snapshot.state}");
+
+            if (snapshot.state == TaskState.success) {
+              // RETRY LOGIC: Sometimes getDownloadURL fails immediately after upload due to eventual consistency
+              String? downloadUrl;
+              int retries = 5;
+              while (retries > 0) {
+                try {
+                  downloadUrl = await snapshot.ref.getDownloadURL();
+                  break;
+                } catch (e) {
+                  print(
+                    "⚠️ getDownloadURL failed, retrying... ($retries left) - $e",
+                  );
+                  await Future.delayed(const Duration(milliseconds: 2000));
+                  retries--;
+                }
+              }
+
+              if (downloadUrl == null) {
+                throw Exception(
+                  'Retries exhausted: Could not retrieve download URL.',
+                );
+              }
+
+              print("🔗 Got URL: $downloadUrl");
+
+              // Update Auth & Firestore
+              await ref.read(authServiceProvider).updatePhotoURL(downloadUrl);
+
+              if (previousPhotoUrl != null &&
+                  previousPhotoUrl.startsWith('http') &&
+                  previousPhotoUrl != downloadUrl) {
+                try {
+                  await FirebaseStorage.instance
+                      .refFromURL(previousPhotoUrl)
+                      .delete();
+                } on FirebaseException catch (error) {
+                  if (error.code != 'object-not-found') rethrow;
+                }
+              }
+
+              // Update Local Provider
+              await ref
+                  .read(profileImageProvider.notifier)
+                  .setNetworkImage(downloadUrl);
+
+              if (mounted) {
                 LoadingDialog.hide(context);
                 StatusFeedbackModal.show(
                   context,
-                  title: l10n.errorTitle,
-                  message: l10n.uploadError,
-                  type: FeedbackType.error,
+                  title: l10n.awesome,
+                  message: l10n.uploadSuccess,
+                  type: FeedbackType.success,
                 );
-             }
-           }
+              }
+            } else {
+              throw Exception('Upload Failed. State: ${snapshot.state}');
+            }
+          } catch (e) {
+            print('❌ Upload error details: $e');
+            if (mounted) {
+              LoadingDialog.hide(context);
+              StatusFeedbackModal.show(
+                context,
+                title: l10n.errorTitle,
+                message: l10n.uploadError,
+                type: FeedbackType.error,
+              );
+            }
+          }
         }
       }
     } catch (e) {
       if (mounted) {
         // Only hide if it was showing
-        if (Navigator.canPop(context)) LoadingDialog.hide(context); 
-        
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.imageError(e.toString()))),
-        );
+        if (Navigator.canPop(context)) LoadingDialog.hide(context);
+
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.imageError(e.toString()))));
       }
     }
   }
@@ -198,7 +221,12 @@ class _ProfileSummaryState extends ConsumerState<ProfileSummary> {
     );
   }
 
-  Widget _buildActionButton(BuildContext context, {required IconData icon, required String label, required VoidCallback onTap}) {
+  Widget _buildActionButton(
+    BuildContext context, {
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+  }) {
     return GestureDetector(
       onTap: onTap,
       child: Column(
@@ -246,7 +274,7 @@ class _ProfileSummaryState extends ConsumerState<ProfileSummary> {
         _nameController.text = userName ?? l10n.guest;
         // Small delay to ensure widget is built/visible
         Future.delayed(Duration.zero, () {
-            _nameFocusNode.requestFocus();
+          _nameFocusNode.requestFocus();
         });
       }
     });
@@ -259,7 +287,7 @@ class _ProfileSummaryState extends ConsumerState<ProfileSummary> {
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF1E1E1E) : Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(32),
-        border: isDark 
+        border: isDark
             ? Border.all(color: Colors.white.withOpacity(0.1), width: 1)
             : null,
         boxShadow: [
@@ -291,7 +319,8 @@ class _ProfileSummaryState extends ConsumerState<ProfileSummary> {
                       ? DecorationImage(
                           image: profileImagePath.startsWith('http')
                               ? NetworkImage(profileImagePath)
-                              : FileImage(File(profileImagePath)) as ImageProvider,
+                              : FileImage(File(profileImagePath))
+                                    as ImageProvider,
                           fit: BoxFit.cover,
                         )
                       : null,
@@ -378,7 +407,7 @@ class _ProfileSummaryState extends ConsumerState<ProfileSummary> {
 
           // Name or Edit Input
           if (isEditingName)
-             Row(
+            Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 SizedBox(
@@ -442,18 +471,18 @@ class _ProfileSummaryState extends ConsumerState<ProfileSummary> {
                 letterSpacing: -0.5,
               ),
             ),
-            if (isLoggedIn && ref.watch(userEmailProvider) != null) ...[
-              const SizedBox(height: 4),
-              Text(
-                ref.watch(userEmailProvider)!,
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.normal,
-                  color: isDark ? Colors.grey[400] : Colors.grey[600],
-                ),
+          if (isLoggedIn && ref.watch(userEmailProvider) != null) ...[
+            const SizedBox(height: 4),
+            Text(
+              ref.watch(userEmailProvider)!,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.normal,
+                color: isDark ? Colors.grey[400] : Colors.grey[600],
               ),
-            ],
-            
+            ),
+          ],
+
           const SizedBox(height: 12),
 
           // Status Row (Only for Premium)
@@ -463,14 +492,14 @@ class _ProfileSummaryState extends ConsumerState<ProfileSummary> {
               children: [
                 Text(
                   (() {
-                     final date = ref.watch(premiumSinceProvider);
-                     final locale = Localizations.localeOf(context).languageCode;
-                     if (date == null) return '';
-                     
-                     final formatter = DateFormat('MMM yyyy', locale);
-                     // Capitalize first letter for consistency
-                     final formatted = formatter.format(date);
-                     return '${l10n.clientSince} ${formatted[0].toUpperCase()}${formatted.substring(1)}';
+                    final date = ref.watch(premiumSinceProvider);
+                    final locale = Localizations.localeOf(context).languageCode;
+                    if (date == null) return '';
+
+                    final formatter = DateFormat('MMM yyyy', locale);
+                    // Capitalize first letter for consistency
+                    final formatted = formatter.format(date);
+                    return '${l10n.clientSince} ${formatted[0].toUpperCase()}${formatted.substring(1)}';
                   })(),
                   style: TextStyle(
                     color: isDark ? Colors.grey[400] : Colors.grey[600],
@@ -479,14 +508,21 @@ class _ProfileSummaryState extends ConsumerState<ProfileSummary> {
                 ),
                 const SizedBox(width: 12),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
                   decoration: BoxDecoration(
                     color: const Color(0xFFFF8F00), // Orange
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Row(
                     children: [
-                      const FaIcon(FontAwesomeIcons.crown, color: Colors.white, size: 12),
+                      const FaIcon(
+                        FontAwesomeIcons.crown,
+                        color: Colors.white,
+                        size: 12,
+                      ),
                       const SizedBox(width: 6),
                       Text(
                         l10n.premiumLabel,
@@ -503,7 +539,7 @@ class _ProfileSummaryState extends ConsumerState<ProfileSummary> {
             ),
             const SizedBox(height: 24),
           ],
-          
+
           if (!isLoggedIn) ...[
             Text(
               l10n.guestMessage,
@@ -521,7 +557,9 @@ class _ProfileSummaryState extends ConsumerState<ProfileSummary> {
                     onPressed: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => const LoginScreen()),
+                        MaterialPageRoute(
+                          builder: (context) => const LoginScreen(),
+                        ),
                       );
                     },
                     style: ElevatedButton.styleFrom(
@@ -548,14 +586,16 @@ class _ProfileSummaryState extends ConsumerState<ProfileSummary> {
                     onPressed: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => const SignUpScreen()),
+                        MaterialPageRoute(
+                          builder: (context) => const SignUpScreen(),
+                        ),
                       );
                     },
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       side: BorderSide(
-                        color: isDark 
-                            ? Colors.white.withOpacity(0.2) 
+                        color: isDark
+                            ? Colors.white.withOpacity(0.2)
                             : Colors.black.withOpacity(0.1),
                       ),
                       shape: RoundedRectangleBorder(
@@ -590,5 +630,4 @@ class _ProfileSummaryState extends ConsumerState<ProfileSummary> {
       ),
     );
   }
-
 }

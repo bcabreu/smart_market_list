@@ -262,7 +262,7 @@ class _ShoppingNotesScreenState extends ConsumerState<ShoppingNotesScreen> {
                 );
               },
               loading: () => const SizedBox.shrink(),
-              error: (_, __) => const SizedBox.shrink(),
+              error: (_, _) => const SizedBox.shrink(),
             ),
 
             // List or Empty State

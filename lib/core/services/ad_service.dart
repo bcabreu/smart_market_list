@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:app_tracking_transparency/app_tracking_transparency.dart';
@@ -15,7 +16,10 @@ class AdService {
 
   InterstitialAd? _interstitialAd;
   bool _isInterstitialLoading = false;
-  
+  bool _initialized = false;
+
+  bool get canShowAds => _initialized;
+
   // Counter for item adds (session-based, for interstitial ads)
   int _itemsAddedSessionCount = 0;
   static const int _adFrequency = 10;
@@ -43,32 +47,75 @@ class AdService {
 
     // Check current status first
     final status = await AppTrackingTransparency.trackingAuthorizationStatus;
-    
+
     // If not determined yet, request permission
     if (status == TrackingStatus.notDetermined) {
       // Small delay to ensure app is fully loaded (Apple recommendation)
       await Future.delayed(const Duration(milliseconds: 500));
-      final newStatus = await AppTrackingTransparency.requestTrackingAuthorization();
+      final newStatus =
+          await AppTrackingTransparency.requestTrackingAuthorization();
       print('📱 ATT Permission Result: $newStatus');
       return newStatus;
     }
-    
+
     print('📱 ATT Status already set: $status');
     return status;
   }
 
   Future<void> initialize() async {
-    // Request ATT permission BEFORE initializing ads (iOS 14.5+ requirement)
+    if (_initialized) return;
+
+    final consentCompleter = Completer<void>();
+    ConsentInformation.instance.requestConsentInfoUpdate(
+      ConsentRequestParameters(),
+      () async {
+        try {
+          await ConsentForm.loadAndShowConsentFormIfRequired((error) {
+            if (error != null) {
+              debugPrint('Consent form error: ${error.message}');
+            }
+            if (!consentCompleter.isCompleted) consentCompleter.complete();
+          });
+        } catch (error) {
+          debugPrint('Consent form failed: $error');
+          if (!consentCompleter.isCompleted) consentCompleter.complete();
+        }
+      },
+      (error) {
+        debugPrint('Consent update error: ${error.message}');
+        if (!consentCompleter.isCompleted) consentCompleter.complete();
+      },
+    );
+    await consentCompleter.future;
+
+    if (!await ConsentInformation.instance.canRequestAds()) {
+      debugPrint('Ads disabled until consent requirements are satisfied.');
+      return;
+    }
+
     await requestTrackingPermission();
-    
     await MobileAds.instance.initialize();
-    loadInterstitial(); // Pre-load immediately
+    _initialized = true;
+  }
+
+  Future<bool> privacyOptionsRequired() async {
+    return await ConsentInformation.instance
+            .getPrivacyOptionsRequirementStatus() ==
+        PrivacyOptionsRequirementStatus.required;
+  }
+
+  Future<void> showPrivacyOptions() {
+    return ConsentForm.showPrivacyOptionsForm((error) {
+      if (error != null) {
+        debugPrint('Privacy options error: ${error.message}');
+      }
+    });
   }
 
   String get bannerAdUnitId {
     if (Platform.isAndroid) {
       // Android Banner ID (Production)
-      return 'ca-app-pub-8735023541465246/9121190351';  
+      return 'ca-app-pub-8735023541465246/9121190351';
     } else if (Platform.isIOS) {
       // Prod ID for iOS Banner
       return 'ca-app-pub-8735023541465246/9460101708';
@@ -91,6 +138,7 @@ class AdService {
 
   /// Load an interstitial ad to be ready for showing
   void loadInterstitial() {
+    if (!_initialized) return;
     if (_interstitialAd != null || _isInterstitialLoading) return;
 
     _isInterstitialLoading = true;
@@ -112,11 +160,13 @@ class AdService {
     );
   }
 
-  /// Show the interstitial ad if available. 
+  /// Show the interstitial ad if available.
   /// Executes [onAdDismissed] when closed, or immediately if ad not ready.
   void showInterstitialAd({required VoidCallback onAdDismissed}) {
     if (_interstitialAd == null) {
-      print('Warning: Interstitial Ad not ready, executing callback immediately.');
+      print(
+        'Warning: Interstitial Ad not ready, executing callback immediately.',
+      );
       onAdDismissed();
       loadInterstitial(); // Try to load for next time
       return;
@@ -145,15 +195,16 @@ class AdService {
   /// Returns true if ad was triggered (and callback will be called).
   /// Returns false if ad not triggered (callback called immediately).
   bool checkItemAdTrigger({required VoidCallback onContinue}) {
+    loadInterstitial();
     _itemsAddedSessionCount++;
     print('AdService: Items added: $_itemsAddedSessionCount');
-    
+
     if (_itemsAddedSessionCount >= _adFrequency) {
       _itemsAddedSessionCount = 0; // Reset
       showInterstitialAd(onAdDismissed: onContinue);
       return true;
     }
-    
+
     onContinue();
     return false;
   }
@@ -162,15 +213,16 @@ class AdService {
   /// Returns true if ad was triggered (and callback will be called).
   /// Returns false if ad not triggered (callback called immediately).
   bool checkRecipeAdTrigger({required VoidCallback onContinue}) {
+    loadInterstitial();
     _recipesViewedSessionCount++;
     print('AdService: Recipes viewed: $_recipesViewedSessionCount');
-    
+
     if (_recipesViewedSessionCount >= _recipeAdFrequency) {
       _recipesViewedSessionCount = 0; // Reset
       showInterstitialAd(onAdDismissed: onContinue);
       return true;
     }
-    
+
     onContinue();
     return false;
   }
@@ -183,13 +235,13 @@ class AdService {
       final box = Hive.box('settings');
       int count = box.get(_paywallCounterKey, defaultValue: 0) as int;
       count++;
-      
+
       if (count >= _paywallFrequency) {
         box.put(_paywallCounterKey, 0); // Reset
         print('AdService: Paywall trigger reached ($count items)');
         return true;
       }
-      
+
       box.put(_paywallCounterKey, count);
       print('AdService: Paywall counter: $count/$_paywallFrequency');
       return false;
@@ -207,19 +259,20 @@ class AdService {
       int count = box.get(_appOpenCounterKey, defaultValue: 0) as int;
       count++;
       box.put(_appOpenCounterKey, count);
-      
+
       print('AdService: App open count: $count');
-      
+
       // First trigger at 3rd open
       if (count == _firstPaywallOpen) {
         return true;
       }
-      
+
       // After 3rd open, trigger every 5 opens (8, 13, 18, 23...)
-      if (count > _firstPaywallOpen && (count - _firstPaywallOpen) % _repeatPaywallInterval == 0) {
+      if (count > _firstPaywallOpen &&
+          (count - _firstPaywallOpen) % _repeatPaywallInterval == 0) {
         return true;
       }
-      
+
       return false;
     } catch (e) {
       print('AdService: App open counter error: $e');

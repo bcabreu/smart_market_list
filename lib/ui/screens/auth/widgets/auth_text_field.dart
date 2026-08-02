@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:smart_market_list/core/theme/app_colors.dart';
 
 class AuthTextField extends StatelessWidget {
   final String label;

@@ -18,10 +18,8 @@ final recipesServiceProvider = Provider<RecipesService>((ref) {
 
 final recipesProvider = StreamProvider<List<Recipe>>((ref) {
   final box = ref.watch(recipesBoxProvider);
-  final service = ref.watch(recipesServiceProvider);
-  
-  // Ensure data is refreshed from API
-
-
-  return box.watch().map((event) => box.values.toList()).startWith(box.values.toList());
+  return box
+      .watch()
+      .map((event) => box.values.toList())
+      .startWith(box.values.toList());
 });

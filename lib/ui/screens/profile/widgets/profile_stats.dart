@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:smart_market_list/core/theme/app_colors.dart';
 import 'package:smart_market_list/providers/recipes_provider.dart';
 import 'package:smart_market_list/providers/shopping_notes_provider.dart';
 import 'package:smart_market_list/ui/screens/profile/favorite_recipes_screen.dart';
 import 'package:smart_market_list/ui/screens/profile/shared_lists_screen.dart';
 import 'package:smart_market_list/providers/navigation_provider.dart';
 import 'package:smart_market_list/providers/shopping_list_provider.dart';
-import 'package:smart_market_list/providers/shared_users_provider.dart';
 import 'package:smart_market_list/providers/user_profile_provider.dart';
 
 import 'package:smart_market_list/l10n/generated/app_localizations.dart';

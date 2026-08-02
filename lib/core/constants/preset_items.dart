@@ -1,4 +1,3 @@
-import 'package:smart_market_list/data/models/shopping_item.dart';
 
 class PresetItem {
   final String name;

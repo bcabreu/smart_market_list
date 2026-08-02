@@ -32,11 +32,16 @@ class ShoppingItem extends HiveObject {
   @HiveField(8)
   final DateTime? statusChangedAt;
 
-  @HiveField(9)
+  @HiveField(9, defaultValue: 1)
   int unitQuantity;
+
+  @HiveField(10)
+  final DateTime? historyUpdatedAt;
 
   /// Calcula o preço total: quantidade × preço unitário
   double get totalPrice => unitQuantity * price;
+
+  DateTime get historyTimestamp => historyUpdatedAt ?? createdAt;
 
   ShoppingItem({
     String? id,
@@ -49,6 +54,7 @@ class ShoppingItem extends HiveObject {
     DateTime? createdAt,
     this.statusChangedAt,
     this.unitQuantity = 1,
+    this.historyUpdatedAt,
   }) : id = id ?? const Uuid().v4(),
        createdAt = createdAt ?? DateTime.now();
 
@@ -63,6 +69,7 @@ class ShoppingItem extends HiveObject {
     DateTime? createdAt,
     DateTime? statusChangedAt,
     int? unitQuantity,
+    DateTime? historyUpdatedAt,
   }) {
     return ShoppingItem(
       id: id ?? this.id,
@@ -75,8 +82,10 @@ class ShoppingItem extends HiveObject {
       createdAt: createdAt ?? this.createdAt,
       statusChangedAt: statusChangedAt ?? this.statusChangedAt,
       unitQuantity: unitQuantity ?? this.unitQuantity,
+      historyUpdatedAt: historyUpdatedAt ?? this.historyUpdatedAt,
     );
   }
+
   Map<String, dynamic> toMap() {
     return {
       'id': id,
@@ -89,6 +98,7 @@ class ShoppingItem extends HiveObject {
       'createdAt': createdAt.millisecondsSinceEpoch,
       'statusChangedAt': statusChangedAt?.millisecondsSinceEpoch,
       'unitQuantity': unitQuantity,
+      'historyUpdatedAt': historyUpdatedAt?.millisecondsSinceEpoch,
     };
   }
 
@@ -101,9 +111,16 @@ class ShoppingItem extends HiveObject {
       category: map['category'] ?? 'outros',
       checked: map['checked'] ?? false,
       imageUrl: map['imageUrl'] ?? '',
-      createdAt: DateTime.fromMillisecondsSinceEpoch(map['createdAt'] ?? DateTime.now().millisecondsSinceEpoch),
-      statusChangedAt: map['statusChangedAt'] != null ? DateTime.fromMillisecondsSinceEpoch(map['statusChangedAt']) : null,
+      createdAt: DateTime.fromMillisecondsSinceEpoch(
+        map['createdAt'] ?? DateTime.now().millisecondsSinceEpoch,
+      ),
+      statusChangedAt: map['statusChangedAt'] != null
+          ? DateTime.fromMillisecondsSinceEpoch(map['statusChangedAt'])
+          : null,
       unitQuantity: map['unitQuantity'] ?? 1,
+      historyUpdatedAt: map['historyUpdatedAt'] != null
+          ? DateTime.fromMillisecondsSinceEpoch(map['historyUpdatedAt'])
+          : null,
     );
   }
 }

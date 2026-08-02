@@ -61,8 +61,8 @@ class ShoppingNote extends HiveObject {
       date: (map['date'] as Timestamp).toDate(),
       address: map['address'] ?? '',
       items: (map['items'] as List<dynamic>?)
-          ?.where((x) => x is Map<String, dynamic>)
-          .map((x) => ShoppingItem.fromMap(x as Map<String, dynamic>))
+          ?.whereType<Map<String, dynamic>>()
+          .map((x) => ShoppingItem.fromMap(x))
           .toList() ?? [],
       photoUrl: map['photoUrl'],
     );

@@ -1,0 +1,78 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function userDoc(userId) {
+      return firestore.get(
+        /databases/(default)/documents/users/$(userId)
+      );
+    }
+
+    function familyDoc(familyId) {
+      return firestore.get(
+        /databases/(default)/documents/families/$(familyId)
+      );
+    }
+
+    function activePaidOwner(userId) {
+      let owner = userDoc(userId).data;
+      return owner.purchasePremium == true
+        && (owner.purchaseExpiresAt == null
+          || owner.purchaseExpiresAt > request.time);
+    }
+
+    function fullWorkspaceAccess(familyId) {
+      let family = familyDoc(familyId).data;
+      let caller = userDoc(request.auth.uid).data;
+      let owner = userDoc(family.ownerId).data;
+      return signedIn()
+        && caller.familyId == familyId
+        && (
+          (family.ownerId == request.auth.uid
+            && activePaidOwner(request.auth.uid))
+          || (family.guestId == request.auth.uid
+            && owner.purchasePremium == true
+            && owner.purchasePlanType == 'premium_family'
+            && (owner.purchaseExpiresAt == null
+              || owner.purchaseExpiresAt > request.time))
+        );
+    }
+
+    function sameActiveFamily(userId) {
+      let caller = userDoc(request.auth.uid).data;
+      let target = userDoc(userId).data;
+      return signedIn()
+        && caller.familyId != null
+        && caller.familyId == target.familyId
+        && fullWorkspaceAccess(caller.familyId);
+    }
+
+    function validImageUpload() {
+      return request.resource != null
+        && request.resource.size < 5 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+    }
+
+    match /users/{userId}/{fileName} {
+      allow read: if signedIn()
+        && (request.auth.uid == userId || sameActiveFamily(userId));
+      allow create, update:
+        if request.auth.uid == userId && validImageUpload();
+      allow delete: if request.auth.uid == userId;
+    }
+
+    match /families/{familyId}/notes/{fileName} {
+      allow read: if fullWorkspaceAccess(familyId);
+      allow create, update:
+        if fullWorkspaceAccess(familyId) && validImageUpload();
+      allow delete: if fullWorkspaceAccess(familyId);
+    }
+
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

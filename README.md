@@ -1,16 +1,29 @@
-# smart_market_list
+# Smart Market List
 
-A new Flutter project.
+Aplicativo Flutter de listas de compras com Firebase e RevenueCat.
 
-## Getting Started
+## Regras dos planos
 
-This project is a starting point for a Flutter application.
+- Premium Individual: pode compartilhar listas específicas com qualquer
+  pessoa autenticada. O convidado recebe somente a lista aceita e não recebe
+  Premium.
+- Premium Família: o titular pode convidar uma pessoa para o espaço completo.
+  O convidado herda Premium enquanto a assinatura Família do titular estiver
+  ativa.
+- Expiração, cancelamento ou downgrade revoga no servidor os recursos e
+  compartilhamentos que dependiam daquele plano.
 
-A few resources to get you started if this is your first Flutter project:
+As permissões são validadas pelas regras Firebase e pelas Cloud Functions; o
+cliente não pode conceder Premium, alterar membros ou consumir convites
+diretamente.
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+## Desenvolvimento
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+```sh
+flutter pub get
+flutter test
+flutter run
+```
+
+Antes de publicar, siga integralmente o
+[guia de segurança e implantação](SECURITY_DEPLOYMENT.md).

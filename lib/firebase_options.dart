@@ -51,7 +51,7 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions android = FirebaseOptions(
     apiKey: 'AIzaSyAk7kcwGOfs-HvwrgpsU8yWIx6bCO8l9lQ',
-    appId: '1:1033855354360:android:5a3c9e18d822e46b19020d',
+    appId: '1:1033855354360:android:c026faf09935a1ca19020d',
     messagingSenderId: '1033855354360',
     projectId: 'smart-market-list-82bf7',
     storageBucket: 'smart-market-list-82bf7.firebasestorage.app',

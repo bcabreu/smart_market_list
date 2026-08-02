@@ -13,7 +13,7 @@ class ReviewService {
   ReviewService._internal();
 
   final InAppReview _inAppReview = InAppReview.instance;
-  
+
   // Keys for Hive storage
   static const String _boxName = 'review_settings';
   static const String _lastPromptKey = 'last_review_prompt';
@@ -26,12 +26,13 @@ class ReviewService {
   static const String _hasReviewedKey = 'has_reviewed';
 
   // Configuration
-  static const int _minAppOpens = 5;           // Minimum app opens before prompting
-  static const int _minListsCompleted = 2;     // Minimum completed lists before prompting
-  static const int _minItemsAdded = 30;        // Minimum items added before prompting
-  static const int _minActiveDays = 7;         // Minimum active days before prompting
-  static const int _cooldownDays = 30;         // Days between prompts
-  static const int _maxPrompts = 3;            // Maximum total prompts
+  static const int _minAppOpens = 5; // Minimum app opens before prompting
+  static const int _minListsCompleted =
+      2; // Minimum completed lists before prompting
+  static const int _minItemsAdded = 30; // Minimum items added before prompting
+  static const int _minActiveDays = 7; // Minimum active days before prompting
+  static const int _cooldownDays = 30; // Days between prompts
+  static const int _maxPrompts = 3; // Maximum total prompts
 
   Box? _box;
 
@@ -86,9 +87,12 @@ class ReviewService {
   /// Track unique active days
   Future<void> _trackActiveDay() async {
     try {
-      final today = DateTime.now().toIso8601String().substring(0, 10); // "2026-05-16"
+      final today = DateTime.now().toIso8601String().substring(
+        0,
+        10,
+      ); // "2026-05-16"
       final lastDay = _box?.get(_lastActiveDayKey) as String?;
-      
+
       if (lastDay != today) {
         await _box?.put(_lastActiveDayKey, today);
         final currentDays = _box?.get(_activeDaysKey, defaultValue: 0) ?? 0;
@@ -104,7 +108,8 @@ class ReviewService {
   Future<bool> shouldPromptReview() async {
     try {
       // Check if already reviewed (user said yes before)
-      final hasReviewed = _box?.get(_hasReviewedKey, defaultValue: false) ?? false;
+      final hasReviewed =
+          _box?.get(_hasReviewedKey, defaultValue: false) ?? false;
       if (hasReviewed) {
         debugPrint('🎯 ReviewService: Already reviewed, skipping');
         return false;
@@ -120,31 +125,42 @@ class ReviewService {
       // Check minimum app opens
       final appOpens = _box?.get(_appOpenCountKey, defaultValue: 0) ?? 0;
       if (appOpens < _minAppOpens) {
-        debugPrint('🎯 ReviewService: Not enough app opens ($appOpens < $_minAppOpens)');
+        debugPrint(
+          '🎯 ReviewService: Not enough app opens ($appOpens < $_minAppOpens)',
+        );
         return false;
       }
 
       // Check engagement: at least ONE of these conditions must be met
-      final listsCompleted = _box?.get(_listsCompletedKey, defaultValue: 0) ?? 0;
+      final listsCompleted =
+          _box?.get(_listsCompletedKey, defaultValue: 0) ?? 0;
       final itemsAdded = _box?.get(_itemsAddedKey, defaultValue: 0) ?? 0;
       final activeDays = _box?.get(_activeDaysKey, defaultValue: 0) ?? 0;
-      
+
       final hasCompletedLists = listsCompleted >= _minListsCompleted;
       final hasAddedEnoughItems = itemsAdded >= _minItemsAdded;
       final hasEnoughActiveDays = activeDays >= _minActiveDays;
-      
+
       if (!hasCompletedLists && !hasAddedEnoughItems && !hasEnoughActiveDays) {
-        debugPrint('🎯 ReviewService: No engagement threshold met (lists: $listsCompleted, items: $itemsAdded, days: $activeDays)');
+        debugPrint(
+          '🎯 ReviewService: No engagement threshold met (lists: $listsCompleted, items: $itemsAdded, days: $activeDays)',
+        );
         return false;
       }
 
       // Check cooldown period
       final lastPromptMillis = _box?.get(_lastPromptKey) as int?;
       if (lastPromptMillis != null) {
-        final lastPrompt = DateTime.fromMillisecondsSinceEpoch(lastPromptMillis);
-        final daysSinceLastPrompt = DateTime.now().difference(lastPrompt).inDays;
+        final lastPrompt = DateTime.fromMillisecondsSinceEpoch(
+          lastPromptMillis,
+        );
+        final daysSinceLastPrompt = DateTime.now()
+            .difference(lastPrompt)
+            .inDays;
         if (daysSinceLastPrompt < _cooldownDays) {
-          debugPrint('🎯 ReviewService: Still in cooldown ($daysSinceLastPrompt days < $_cooldownDays)');
+          debugPrint(
+            '🎯 ReviewService: Still in cooldown ($daysSinceLastPrompt days < $_cooldownDays)',
+          );
           return false;
         }
       }
@@ -152,11 +168,15 @@ class ReviewService {
       // Check if in-app review is available
       final isAvailable = await _inAppReview.isAvailable();
       if (!isAvailable) {
-        debugPrint('🎯 ReviewService: In-app review not available on this device');
+        debugPrint(
+          '🎯 ReviewService: In-app review not available on this device',
+        );
         return false;
       }
 
-      debugPrint('✅ ReviewService: All conditions met, should prompt for review');
+      debugPrint(
+        '✅ ReviewService: All conditions met, should prompt for review',
+      );
       return true;
     } catch (e) {
       debugPrint('Error checking review conditions: $e');
@@ -174,11 +194,11 @@ class ReviewService {
 
       debugPrint('🌟 Requesting in-app review...');
       await _inAppReview.requestReview();
-      
+
       // Mark as reviewed (assume they did after seeing the prompt)
       // Note: We can't actually know if they left a review
       await _box?.put(_hasReviewedKey, true);
-      
+
       debugPrint('🌟 In-app review requested successfully');
     } catch (e) {
       debugPrint('Error requesting review: $e');
@@ -196,9 +216,7 @@ class ReviewService {
   /// Open the app store page directly (fallback/manual option)
   Future<void> openStoreListing() async {
     try {
-      await _inAppReview.openStoreListing(
-        appStoreId: '6738698003', // Your App Store ID
-      );
+      await _inAppReview.openStoreListing(appStoreId: '6756240280');
     } catch (e) {
       debugPrint('Error opening store listing: $e');
     }

@@ -1,7 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:smart_market_list/providers/user_profile_provider.dart';
-import 'package:smart_market_list/providers/subscription_provider.dart';
 
 // Premium Status & Date Notifier
 class PremiumNotifier extends StateNotifier<DateTime?> {
@@ -35,20 +34,16 @@ class PremiumNotifier extends StateNotifier<DateTime?> {
   }
 }
 
-final premiumSinceProvider = StateNotifierProvider<PremiumNotifier, DateTime?>((ref) {
+final premiumSinceProvider = StateNotifierProvider<PremiumNotifier, DateTime?>((
+  ref,
+) {
   return PremiumNotifier();
 });
 
-// Derived provider for boolean check (backward compatibility + RevenueCat)
+// The server-controlled profile is the only feature-gating source.
 final isPremiumProvider = Provider<bool>((ref) {
-  // 1. Check RevenueCat Status (Real Source of Truth)
-  final subscriptionActive = ref.watch(subscriptionStatusProvider);
-  
-  // 2. Fallback to Legacy/Local (if migrating or manual override)
-  final localPremium = ref.watch(premiumSinceProvider) != null;
   final cloudProfile = ref.watch(userProfileProvider).asData?.value;
-  
-  return subscriptionActive || localPremium || (cloudProfile?.isPremium ?? false);
+  return cloudProfile?.isPremium ?? false;
 });
 
 class UserNameNotifier extends StateNotifier<String?> {
@@ -77,7 +72,9 @@ class UserNameNotifier extends StateNotifier<String?> {
 }
 
 // User email provider
-final userEmailProvider = StateNotifierProvider<UserEmailNotifier, String?>((ref) {
+final userEmailProvider = StateNotifierProvider<UserEmailNotifier, String?>((
+  ref,
+) {
   return UserEmailNotifier();
 });
 
@@ -107,12 +104,16 @@ class UserEmailNotifier extends StateNotifier<String?> {
 }
 
 // User name provider
-final userNameProvider = StateNotifierProvider<UserNameNotifier, String?>((ref) {
+final userNameProvider = StateNotifierProvider<UserNameNotifier, String?>((
+  ref,
+) {
   return UserNameNotifier();
 });
 
 // Auth status provider using StateNotifier for persistence
-final isLoggedInProvider = StateNotifierProvider<IsLoggedInNotifier, bool>((ref) {
+final isLoggedInProvider = StateNotifierProvider<IsLoggedInNotifier, bool>((
+  ref,
+) {
   return IsLoggedInNotifier();
 });
 

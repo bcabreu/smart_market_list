@@ -50,9 +50,9 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     super.initState();
     // Initialize Deep Links with a slight delay to ensure Native Bridge is ready (iOS Fix)
     Future.delayed(const Duration(milliseconds: 800), () {
-       _initDeepLinks();
+      _initDeepLinks();
     });
-    
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _validateSession();
       _checkPaywallOnOpen();
@@ -71,17 +71,17 @@ class _MainScreenState extends ConsumerState<MainScreen> {
   Future<void> _checkPaywallOnOpen() async {
     // Wait for profile to be available (handles cold start)
     await Future.delayed(const Duration(seconds: 2));
-    
+
     if (!mounted) return;
-    
+
     try {
       final userProfile = await ref.read(userProfileProvider.future);
       final isPremium = userProfile != null && userProfile.isPremium;
-      
+
       if (isPremium) return; // Premium users never see this
-      
+
       final shouldShow = AdService.instance.shouldShowPaywallOnOpen();
-      
+
       if (shouldShow && mounted) {
         Navigator.push(
           context,
@@ -95,26 +95,28 @@ class _MainScreenState extends ConsumerState<MainScreen> {
 
   void _initDeepLinks() {
     // We use read here because it's a one-time subscription setup
-     ref.read(sharingServiceProvider).initDeepLinks(
-      onJoinList: (listId, familyId) {
-        _handleJoinList(listId, familyId);
-      },
-      onJoinFamily: (familyId, inviteCode) {
-        _handleJoinFamily(familyId, inviteCode);
-      },
-      onOpenRecipe: (recipeId) {
-        // Switch to Recipes Tab (Index 2)
-        ref.read(bottomNavIndexProvider.notifier).state = 2;
-        _handleOpenRecipe(recipeId);
-      },
-    );
+    ref
+        .read(sharingServiceProvider)
+        .initDeepLinks(
+          onJoinList: (listId, familyId, inviteId, token) {
+            _handleJoinList(listId, familyId, inviteId, token);
+          },
+          onJoinFamily: (inviteId, token) {
+            _handleJoinFamily(inviteId, token);
+          },
+          onOpenRecipe: (recipeId) {
+            // Switch to Recipes Tab (Index 2)
+            ref.read(bottomNavIndexProvider.notifier).state = 2;
+            _handleOpenRecipe(recipeId);
+          },
+        );
   }
 
   Future<void> _handleOpenRecipe(String recipeId) async {
     // 1. Try to find in currently loaded list (Cache/Local)
     final recipes = ref.read(recipesProvider).value ?? [];
     Recipe? recipe;
-    
+
     try {
       recipe = recipes.firstWhere((r) => r.id == recipeId);
     } catch (e) {
@@ -126,13 +128,18 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     if (recipe == null) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Carregando receita...'), duration: Duration(seconds: 1)),
+          const SnackBar(
+            content: Text('Carregando receita...'),
+            duration: Duration(seconds: 1),
+          ),
         );
       }
-      
+
       try {
         final lang = Localizations.localeOf(context).languageCode;
-        recipe = await ref.read(recipesServiceProvider).getRecipeById(recipeId, languageCode: lang);
+        recipe = await ref
+            .read(recipesServiceProvider)
+            .getRecipeById(recipeId, languageCode: lang);
       } catch (e) {
         print('Error fetching recipe deep link: $e');
       }
@@ -151,180 +158,202 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     } else {
       // 4. Error if still null
       if (mounted) {
-         StatusFeedbackModal.show(
-           context,
-           title: AppLocalizations.of(context)!.errorTitle,
-           message: "Recipe not found.",
-           type: FeedbackType.error,
-           );
+        StatusFeedbackModal.show(
+          context,
+          title: AppLocalizations.of(context)!.errorTitle,
+          message: "Recipe not found.",
+          type: FeedbackType.error,
+        );
       }
     }
   }
-  
-  Future<void> _handleJoinFamily(String familyId, String? inviteCode) async {
+
+  Future<void> _handleJoinFamily(String inviteId, String token) async {
     final user = await ref.read(userProfileProvider.future);
     final l10n = AppLocalizations.of(context)!;
-    
+
     if (user != null) {
       try {
-        await ref.read(sharingServiceProvider).joinFamily(familyId, user.uid, inviteCode: inviteCode);
+        await ref
+            .read(sharingServiceProvider)
+            .joinFamily(inviteId: inviteId, token: token);
         if (mounted) {
-           StatusFeedbackModal.show(
-             context,
-             title: l10n.welcomeToFamilyTitle,
-             message: l10n.welcomeToFamilyMessage,
-             type: FeedbackType.success,
-           );
-           // Refresh profile
-           ref.refresh(userProfileProvider);
+          StatusFeedbackModal.show(
+            context,
+            title: l10n.welcomeToFamilyTitle,
+            message: l10n.welcomeToFamilyMessage,
+            type: FeedbackType.success,
+          );
+          // Refresh profile
+          ref.invalidate(userProfileProvider);
         }
       } catch (e) {
         if (mounted) {
-           String errorMessage;
-           String errorTitle = l10n.errorTitle;
-           
-           final msg = e.toString();
-           if (msg.contains('familyAlreadyHasMember')) {
-             errorMessage = l10n.familyAlreadyHasMember;
-           } else if (msg.contains('inviteInvalidOrExpired')) {
-             errorMessage = l10n.inviteInvalidOrExpired;
-           } else if (msg.contains('familyNotFound')) {
-             errorMessage = l10n.genericError('Family not found');
-           } else {
-             // Fallback for unexpected errors, stripping "Exception: "
-             errorMessage = msg.replaceAll('Exception: ', '');
-           }
-           
-           StatusFeedbackModal.show(
-             context,
-             title: errorTitle,
-             message: errorMessage,
-             type: FeedbackType.error,
-           );
+          String errorMessage;
+          String errorTitle = l10n.errorTitle;
+
+          final msg = e.toString();
+          if (msg.contains('familyAlreadyHasMember')) {
+            errorMessage = l10n.familyAlreadyHasMember;
+          } else if (msg.contains('inviteInvalidOrExpired')) {
+            errorMessage = l10n.inviteInvalidOrExpired;
+          } else if (msg.contains('familyNotFound')) {
+            errorMessage = l10n.genericError('Family not found');
+          } else {
+            // Fallback for unexpected errors, stripping "Exception: "
+            errorMessage = msg.replaceAll('Exception: ', '');
+          }
+
+          StatusFeedbackModal.show(
+            context,
+            title: errorTitle,
+            message: errorMessage,
+            type: FeedbackType.error,
+          );
         }
       }
     } else {
-       // ... existing pending logic ...
-       // Store pending invite code
-       SharingService.pendingFamilyId = familyId;
-       SharingService.pendingInviteCode = inviteCode; // Need to add this static field
-       SharingService.pendingListId = null;
-       
-       if (mounted) {
-         // ... existing warning logic ...
-       }
+      // ... existing pending logic ...
+      // Store pending invite code
+      SharingService.pendingAction = 'join_family';
+      SharingService.pendingInviteId = inviteId;
+      SharingService.pendingToken = token;
+      SharingService.pendingListId = null;
+
+      if (mounted) {
+        _showLoginSheet();
+      }
     }
   }
   // Code removed
 
-
   void _showLoginSheet() {
-      showModalBottomSheet(
-        context: context,
-        isScrollControlled: true,
-        backgroundColor: Colors.transparent,
-        builder: (context) => Container(
-          decoration: BoxDecoration(
-            color: Theme.of(context).scaffoldBackgroundColor,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-          ),
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.group_add_rounded, size: 48, color: AppColors.primary),
-              const SizedBox(height: 16),
-              const Text(
-                'Entrar na Família',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                'Para aceitar o convite da família, você precisa entrar ou criar uma conta.',
-                textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.grey),
-              ),
-              const SizedBox(height: 24),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.pop(context); 
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => LoginScreen()),
-                    );
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  ),
-                  child: const Text('Entrar'),
-                ),
-              ),
-              const SizedBox(height: 12),
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton(
-                  onPressed: () {
-                    Navigator.pop(context); 
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => SignUpScreen()),
-                    );
-                  },
-                  style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    side: const BorderSide(color: AppColors.primary),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  ),
-                  child: const Text('Criar Conta'),
-                ),
-              ),
-              const SizedBox(height: 20),
-            ],
-          ),
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        decoration: BoxDecoration(
+          color: Theme.of(context).scaffoldBackgroundColor,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
         ),
-      );
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(
+              Icons.group_add_rounded,
+              size: 48,
+              color: AppColors.primary,
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'Entrar na Família',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'Para aceitar o convite da família, você precisa entrar ou criar uma conta.',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.grey),
+            ),
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => LoginScreen()),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: const Text('Entrar'),
+              ),
+            ),
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => SignUpScreen()),
+                  );
+                },
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  side: const BorderSide(color: AppColors.primary),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: const Text('Criar Conta'),
+              ),
+            ),
+            const SizedBox(height: 20),
+          ],
+        ),
+      ),
+    );
   }
 
-  Future<void> _handleJoinList(String listId, String familyId) async {
+  Future<void> _handleJoinList(
+    String listId,
+    String familyId,
+    String inviteId,
+    String token,
+  ) async {
     // Wait for the user profile to be loaded (handles cold start race condition)
     final user = await ref.read(userProfileProvider.future);
-    
+
     if (user != null) {
       try {
-        await ref.read(sharingServiceProvider).joinList(listId, familyId, user.uid);
+        await ref
+            .read(sharingServiceProvider)
+            .joinList(inviteId: inviteId, token: token);
         if (mounted) {
-           StatusFeedbackModal.show(
-             context,
-             title: AppLocalizations.of(context)!.successTitle,
-             message: AppLocalizations.of(context)!.welcomeToList,
-             type: FeedbackType.success,
-           );
-           // Switch to SmartListScreen and select the new list
-           ref.read(bottomNavIndexProvider.notifier).state = 0;
-           ref.read(currentListIdProvider.notifier).state = listId;
+          StatusFeedbackModal.show(
+            context,
+            title: AppLocalizations.of(context)!.successTitle,
+            message: AppLocalizations.of(context)!.welcomeToList,
+            type: FeedbackType.success,
+          );
+          // Switch to SmartListScreen and select the new list
+          ref.read(bottomNavIndexProvider.notifier).state = 0;
+          ref.read(currentListIdProvider.notifier).state = listId;
         }
       } catch (e) {
         if (mounted) {
-           StatusFeedbackModal.show(
-             context,
-             title: AppLocalizations.of(context)!.errorTitle,
-             message: AppLocalizations.of(context)!.joinListError(e.toString()),
-             type: FeedbackType.error,
-           );
+          StatusFeedbackModal.show(
+            context,
+            title: AppLocalizations.of(context)!.errorTitle,
+            message: AppLocalizations.of(context)!.joinListError(e.toString()),
+            type: FeedbackType.error,
+          );
         }
       }
     } else {
       // User not authenticated. Store pending invite and redirect/prompt.
-      print('⚠️ User not authenticated. Storing pending invite for list $listId.');
+      print(
+        '⚠️ User not authenticated. Storing pending invite for list $listId.',
+      );
       SharingService.pendingListId = listId;
       SharingService.pendingFamilyId = familyId;
-      
+      SharingService.pendingAction = 'join_list';
+      SharingService.pendingInviteId = inviteId;
+      SharingService.pendingToken = token;
+
       if (mounted) {
         // Show a modal asking to Login or Signup to join the list
         showModalBottomSheet(
@@ -334,13 +363,19 @@ class _MainScreenState extends ConsumerState<MainScreen> {
           builder: (context) => Container(
             decoration: BoxDecoration(
               color: Theme.of(context).scaffoldBackgroundColor,
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(20),
+              ),
             ),
             padding: const EdgeInsets.all(24),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.group_add_rounded, size: 48, color: AppColors.primary),
+                const Icon(
+                  Icons.group_add_rounded,
+                  size: 48,
+                  color: AppColors.primary,
+                ),
                 const SizedBox(height: 16),
                 const Text(
                   'Entrar na Lista Compartilhada',
@@ -368,7 +403,9 @@ class _MainScreenState extends ConsumerState<MainScreen> {
                       backgroundColor: AppColors.primary,
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
                     child: const Text('Entrar'),
                   ),
@@ -387,7 +424,9 @@ class _MainScreenState extends ConsumerState<MainScreen> {
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       side: const BorderSide(color: AppColors.primary),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
                     child: const Text('Criar Conta'),
                   ),
@@ -415,7 +454,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     final currentIndex = ref.watch(bottomNavIndexProvider);
     // Activate Sync Manager
     ref.watch(syncManagerProvider);
-    
+
     // Listen to changes to update previous index for animation
     ref.listen(bottomNavIndexProvider, (previous, next) {
       if (previous != null) {
@@ -429,36 +468,44 @@ class _MainScreenState extends ConsumerState<MainScreen> {
         if (user != null) {
           // Sync Email
           if (user.email != null && user.email!.isNotEmpty) {
-             ref.read(userEmailProvider.notifier).setEmail(user.email!);
+            ref.read(userEmailProvider.notifier).setEmail(user.email!);
           }
           // Sync Name (if available)
           if (user.displayName != null && user.displayName!.isNotEmpty) {
-             ref.read(userNameProvider.notifier).setName(user.displayName!);
+            ref.read(userNameProvider.notifier).setName(user.displayName!);
           }
-          
-          // Check for Pending Invites
-          if (SharingService.pendingListId != null && SharingService.pendingFamilyId != null) {
-            _handleJoinList(SharingService.pendingListId!, SharingService.pendingFamilyId!);
-            SharingService.pendingListId = null;
-            SharingService.pendingFamilyId = null;
-             // Pending Family Join (without list)
-            _handleJoinFamily(SharingService.pendingFamilyId!, SharingService.pendingInviteCode);
-            SharingService.pendingFamilyId = null;
-            SharingService.pendingInviteCode = null;
+
+          final action = SharingService.pendingAction;
+          final inviteId = SharingService.pendingInviteId;
+          final token = SharingService.pendingToken;
+          final listId = SharingService.pendingListId;
+          final familyId = SharingService.pendingFamilyId;
+          SharingService.clearPendingInvite();
+
+          if (action == 'join_list' &&
+              inviteId != null &&
+              token != null &&
+              listId != null &&
+              familyId != null) {
+            _handleJoinList(listId, familyId, inviteId, token);
+          } else if (action == 'join_family' &&
+              inviteId != null &&
+              token != null) {
+            _handleJoinFamily(inviteId, token);
           }
         }
       });
     });
-    
+
     // Sync Local Name from Firestore Profile (Restores name after reinstall)
     ref.listen(userProfileProvider, (previous, next) {
       next.whenData((profile) {
         if (profile != null && profile.name != null) {
-           final currentLocalName = ref.read(userNameProvider);
-           // Only update if local is empty (priority to local edits, but fill holes from cloud)
-           if (currentLocalName == null || currentLocalName.isEmpty) {
-              ref.read(userNameProvider.notifier).setName(profile.name!);
-           }
+          final currentLocalName = ref.read(userNameProvider);
+          // Only update if local is empty (priority to local edits, but fill holes from cloud)
+          if (currentLocalName == null || currentLocalName.isEmpty) {
+            ref.read(userNameProvider.notifier).setName(profile.name!);
+          }
         }
       });
     });
@@ -467,19 +514,20 @@ class _MainScreenState extends ConsumerState<MainScreen> {
       body: PageTransitionSwitcher(
         duration: const Duration(milliseconds: 500),
         reverse: currentIndex < _previousIndex,
-        transitionBuilder: (
-          Widget child,
-          Animation<double> animation,
-          Animation<double> secondaryAnimation,
-        ) {
-          return SharedAxisTransition(
-            animation: animation,
-            secondaryAnimation: secondaryAnimation,
-            transitionType: SharedAxisTransitionType.horizontal,
-            fillColor: Theme.of(context).scaffoldBackgroundColor,
-            child: child,
-          );
-        },
+        transitionBuilder:
+            (
+              Widget child,
+              Animation<double> animation,
+              Animation<double> secondaryAnimation,
+            ) {
+              return SharedAxisTransition(
+                animation: animation,
+                secondaryAnimation: secondaryAnimation,
+                transitionType: SharedAxisTransitionType.horizontal,
+                fillColor: Theme.of(context).scaffoldBackgroundColor,
+                child: child,
+              );
+            },
         child: _screens[currentIndex],
       ),
       bottomNavigationBar: SafeArea(
@@ -502,4 +550,3 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     );
   }
 }
-

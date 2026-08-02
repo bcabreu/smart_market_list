@@ -5,9 +5,11 @@ import 'package:hive_flutter/hive_flutter.dart';
 import '../data/local/shopping_list_service.dart';
 import '../data/models/shopping_list.dart';
 import '../core/services/firestore_service.dart';
+import '../core/services/backend_service.dart';
 import 'user_profile_provider.dart';
 import 'shopping_notes_provider.dart';
 import 'recipes_provider.dart';
+import 'history_provider.dart';
 
 final shoppingListBoxProvider = Provider<Box<ShoppingList>>((ref) {
   return Hive.box<ShoppingList>('shopping_lists');
@@ -16,13 +18,23 @@ final shoppingListBoxProvider = Provider<Box<ShoppingList>>((ref) {
 final shoppingListServiceProvider = Provider<ShoppingListService>((ref) {
   final box = ref.watch(shoppingListBoxProvider);
   final firestoreService = ref.watch(firestoreServiceProvider);
-  return ShoppingListService(box, firestoreService);
+  final backendService = ref.watch(backendServiceProvider);
+  final historyNotifier = ref.read(historyProvider.notifier);
+  return ShoppingListService(
+    box,
+    firestoreService,
+    backendService,
+    historyNotifier.addOrUpdate,
+  );
 });
 
 final shoppingListsProvider = StreamProvider<List<ShoppingList>>((ref) {
   final box = ref.watch(shoppingListBoxProvider);
   // Return initial values and listen to changes
-  return box.watch().map((event) => box.values.toList()).startWith(box.values.toList());
+  return box
+      .watch()
+      .map((event) => box.values.toList())
+      .startWith(box.values.toList());
 });
 
 final currentListIdProvider = StateProvider<String?>((ref) => null);
@@ -30,53 +42,52 @@ final currentListIdProvider = StateProvider<String?>((ref) => null);
 final currentListProvider = Provider<ShoppingList?>((ref) {
   final listsAsync = ref.watch(shoppingListsProvider);
   final currentId = ref.watch(currentListIdProvider);
-  
+
   return listsAsync.when(
     data: (lists) {
       if (lists.isEmpty) return null;
       if (currentId == null) return lists.first;
-      return lists.firstWhere((l) => l.id == currentId, orElse: () => lists.first);
+      return lists.firstWhere(
+        (l) => l.id == currentId,
+        orElse: () => lists.first,
+      );
     },
     loading: () => null,
-    error: (_, __) => null,
+    error: (_, _) => null,
   );
 });
 
 // Track initial sync status
 final initialListSyncProvider = StreamProvider<bool>((ref) {
   final service = ref.watch(shoppingListServiceProvider);
-  
+
   final controller = StreamController<bool>();
-  
+
   // Emit initial value
   controller.add(service.listsSyncedNotifier.value);
-  
+
   void listener() {
     if (!controller.isClosed) {
       controller.add(service.listsSyncedNotifier.value);
     }
   }
-  
+
   service.listsSyncedNotifier.addListener(listener);
-  
+
   ref.onDispose(() {
     service.listsSyncedNotifier.removeListener(listener);
     controller.close();
   });
-  
+
   return controller.stream;
 });
-
-
-
-
 
 final syncManagerProvider = Provider<void>((ref) {
   final userProfileAsync = ref.watch(userProfileProvider);
   final shoppingListService = ref.watch(shoppingListServiceProvider);
   final notesService = ref.watch(shoppingNotesServiceProvider);
   final recipesService = ref.watch(recipesServiceProvider);
-  
+
   userProfileAsync.whenData((profile) {
     if (profile?.familyId != null) {
       // Logic: Sync is enabled for Premium users (or everyone? User said Premium shares, but Free joins).
@@ -84,33 +95,44 @@ final syncManagerProvider = Provider<void>((ref) {
       // `startSync` logic inside `ShoppingListService` handles both Family (Personal) and Shared.
       // If I am Free, maybe I don't get Family Sync but I GET Shared Sync?
       // For now, enable sync for Valid Users (Guest or Auth).
-      
+
       // Pass UID to startSync
-      shoppingListService.startSync(profile!.familyId!, profile.uid);
-      
+      unawaited(
+        shoppingListService.startSync(
+          profile!.familyId!,
+          profile.uid,
+          syncFamilyLists: profile.canSyncCurrentWorkspace,
+          clearWorkspaceCache:
+              profile.role == 'guest' && !profile.hasActiveFamilyWorkspace,
+        ),
+      );
+
       // Notes/Recipes might still check premium inside their services or here?
       // Assuming Notes/Recipes are premium features or restricted.
       // Keeping original check if desired, but user wants "Free user to see the list".
       // So sync MUST be active for Free users too regarding SHARED lists.
-      
+
       // Re-evaluating logic:
       // Old logic: if (premium) startSync.
       // New logic: ALWAYS startSync to get Shared Lists.
       // BUT `getFamilyLists` might be restricted on server side or client side if we want.
       // The user prompt implies: "Free user ... sees the list".
       // So we should enable sync for all users who have a familyId (which guests do).
-      
-      if (profile.isPremium) {
-         notesService.startSync(profile.familyId!);
-         recipesService.startSync(profile.familyId!);
+
+      if (profile.canSyncCurrentWorkspace) {
+        notesService.startSync(profile.familyId!);
+        recipesService.startSync(profile.familyId!);
       } else {
-         notesService.stopSync();
-         recipesService.stopSync();
+        final preservePersonalData = profile.role == 'owner';
+        unawaited(notesService.stopSync(clearLocalData: !preservePersonalData));
+        unawaited(
+          recipesService.stopSync(clearFamilyFavorites: !preservePersonalData),
+        );
       }
     } else {
       shoppingListService.stopSync();
-      notesService.stopSync();
-      recipesService.stopSync();
+      unawaited(notesService.stopSync(clearLocalData: true));
+      unawaited(recipesService.stopSync(clearFamilyFavorites: true));
     }
   });
 });

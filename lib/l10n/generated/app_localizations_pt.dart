@@ -30,6 +30,13 @@ class AppLocalizationsPt extends AppLocalizations {
   String get notificationsSubtitle => 'Alertas de promoção';
 
   @override
+  String get adPrivacyOptions => 'Privacidade dos anúncios';
+
+  @override
+  String get adPrivacyOptionsSubtitle =>
+      'Revise suas escolhas de consentimento';
+
+  @override
   String get language => 'Idioma';
 
   @override

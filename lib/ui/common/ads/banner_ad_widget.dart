@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/services/ad_service.dart';
-import '../../../data/models/user_profile.dart';
-import '../../../providers/user_provider.dart';
 import '../../../providers/user_profile_provider.dart';
 
 class BannerAdWidget extends ConsumerStatefulWidget {
@@ -16,18 +14,17 @@ class BannerAdWidget extends ConsumerStatefulWidget {
 class _BannerAdWidgetState extends ConsumerState<BannerAdWidget> {
   BannerAd? _bannerAd;
   bool _isLoaded = false;
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    _loadAd();
-  }
+  bool _loadScheduled = false;
 
   void _loadAd() {
-    // Check if user is premium (any premium type)
+    _loadScheduled = false;
+    if (!mounted || _bannerAd != null || !AdService.instance.canShowAds) {
+      return;
+    }
+
     final userProfile = ref.read(userProfileProvider).value;
     if (userProfile != null && userProfile.isPremium) {
-      return; // Do not load ad for premium users
+      return;
     }
 
     final bannerId = AdService.instance.bannerAdUnitId;
@@ -38,9 +35,7 @@ class _BannerAdWidgetState extends ConsumerState<BannerAdWidget> {
       size: AdSize.banner,
       listener: BannerAdListener(
         onAdLoaded: (ad) {
-          setState(() {
-            _isLoaded = true;
-          });
+          if (mounted) setState(() => _isLoaded = true);
         },
         onAdFailedToLoad: (ad, err) {
           print('Failed to load a banner ad: ${err.message}');
@@ -58,10 +53,25 @@ class _BannerAdWidgetState extends ConsumerState<BannerAdWidget> {
 
   @override
   Widget build(BuildContext context) {
-    // Re-check premium status in build to react to changes (e.g. upgrade)
-    final userProfile = ref.watch(userProfileProvider).value;
+    final profileState = ref.watch(userProfileProvider);
+    if (profileState.isLoading) return const SizedBox.shrink();
+
+    final userProfile = profileState.value;
     if (userProfile != null && userProfile.isPremium) {
+      final existingAd = _bannerAd;
+      if (existingAd != null) {
+        _bannerAd = null;
+        _isLoaded = false;
+        WidgetsBinding.instance.addPostFrameCallback(
+          (_) => existingAd.dispose(),
+        );
+      }
       return const SizedBox.shrink();
+    }
+
+    if (_bannerAd == null && !_loadScheduled && AdService.instance.canShowAds) {
+      _loadScheduled = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) => _loadAd());
     }
 
     if (_bannerAd != null && _isLoaded) {

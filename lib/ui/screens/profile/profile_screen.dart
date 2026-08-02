@@ -1,10 +1,12 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
-import 'package:hive_flutter/hive_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:smart_market_list/core/theme/app_colors.dart';
+import 'package:smart_market_list/core/services/ad_service.dart';
 import 'package:smart_market_list/providers/subscription_provider.dart';
-
+import 'package:smart_market_list/core/services/backend_service.dart';
 
 import 'package:smart_market_list/providers/theme_provider.dart';
 import 'package:smart_market_list/providers/user_provider.dart';
@@ -13,7 +15,6 @@ import 'package:smart_market_list/ui/screens/profile/widgets/profile_summary.dar
 import 'package:smart_market_list/ui/screens/profile/widgets/profile_header.dart';
 import 'package:smart_market_list/ui/screens/profile/widgets/profile_stats.dart';
 import 'package:smart_market_list/ui/screens/profile/widgets/settings_card.dart';
-import 'package:smart_market_list/providers/notifications_provider.dart';
 import 'package:smart_market_list/ui/screens/profile/modals/share_list_modal.dart';
 import 'package:smart_market_list/ui/screens/profile/modals/expense_charts_modal.dart';
 import 'package:smart_market_list/ui/screens/profile/modals/help_support_modal.dart';
@@ -27,8 +28,6 @@ import 'package:smart_market_list/providers/shopping_notes_provider.dart';
 import 'package:smart_market_list/l10n/generated/app_localizations.dart';
 import 'package:smart_market_list/providers/shopping_list_provider.dart';
 import 'package:smart_market_list/providers/shared_users_provider.dart';
-import 'package:smart_market_list/data/models/shopping_list.dart';
-import 'package:smart_market_list/providers/recipes_provider.dart';
 import 'package:smart_market_list/providers/auth_provider.dart';
 
 import 'package:smart_market_list/providers/profile_provider.dart';
@@ -65,13 +64,18 @@ class ProfileScreen extends ConsumerWidget {
               ),
               Text(
                 AppLocalizations.of(context)!.language,
-                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(height: 16),
               ListTile(
                 leading: const Text('📱', style: TextStyle(fontSize: 24)),
                 title: Text(AppLocalizations.of(context)!.darkModeSystem),
-                trailing: currentLocale == null ? const Icon(Icons.check, color: AppColors.primary) : null,
+                trailing: currentLocale == null
+                    ? const Icon(Icons.check, color: AppColors.primary)
+                    : null,
                 onTap: () {
                   ref.read(localeProvider.notifier).setLocale(null);
                   Navigator.pop(context);
@@ -80,18 +84,26 @@ class ProfileScreen extends ConsumerWidget {
               ListTile(
                 leading: const Text('🇺🇸', style: TextStyle(fontSize: 24)),
                 title: const Text('English'),
-                trailing: currentLocale?.languageCode == 'en' ? const Icon(Icons.check, color: AppColors.primary) : null,
+                trailing: currentLocale?.languageCode == 'en'
+                    ? const Icon(Icons.check, color: AppColors.primary)
+                    : null,
                 onTap: () {
-                  ref.read(localeProvider.notifier).setLocale(const Locale('en'));
+                  ref
+                      .read(localeProvider.notifier)
+                      .setLocale(const Locale('en'));
                   Navigator.pop(context);
                 },
               ),
               ListTile(
                 leading: const Text('🇧🇷', style: TextStyle(fontSize: 24)),
                 title: const Text('Português (BR)'),
-                trailing: currentLocale?.languageCode == 'pt' ? const Icon(Icons.check, color: AppColors.primary) : null,
+                trailing: currentLocale?.languageCode == 'pt'
+                    ? const Icon(Icons.check, color: AppColors.primary)
+                    : null,
                 onTap: () {
-                  ref.read(localeProvider.notifier).setLocale(const Locale('pt'));
+                  ref
+                      .read(localeProvider.notifier)
+                      .setLocale(const Locale('pt'));
                   Navigator.pop(context);
                 },
               ),
@@ -106,8 +118,10 @@ class ProfileScreen extends ConsumerWidget {
   void _showTaxRateInput(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
     final currentRate = ref.read(taxRateProvider);
-    final controller = TextEditingController(text: currentRate == 0 ? '' : currentRate.toString());
-    
+    final controller = TextEditingController(
+      text: currentRate == 0 ? '' : currentRate.toString(),
+    );
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -119,7 +133,9 @@ class ProfileScreen extends ConsumerWidget {
             const SizedBox(height: 16),
             TextField(
               controller: controller,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
               decoration: const InputDecoration(
                 suffixText: '%',
                 border: OutlineInputBorder(),
@@ -135,7 +151,8 @@ class ProfileScreen extends ConsumerWidget {
           ),
           ElevatedButton(
             onPressed: () {
-              final val = double.tryParse(controller.text.replaceAll(',', '.')) ?? 0.0;
+              final val =
+                  double.tryParse(controller.text.replaceAll(',', '.')) ?? 0.0;
               ref.read(taxRateProvider.notifier).setTaxRate(val);
               Navigator.pop(context);
             },
@@ -171,7 +188,7 @@ class ProfileScreen extends ConsumerWidget {
               padding: const EdgeInsets.all(24),
               child: Row(
                 children: [
-                   Text(
+                  Text(
                     l10n.privacy,
                     style: TextStyle(
                       fontSize: 20,
@@ -201,7 +218,7 @@ class ProfileScreen extends ConsumerWidget {
                 ),
               ),
             ),
-             Padding(
+            Padding(
               padding: const EdgeInsets.all(24),
               child: SizedBox(
                 width: double.infinity,
@@ -241,7 +258,7 @@ class ProfileScreen extends ConsumerWidget {
               padding: const EdgeInsets.all(24),
               child: Row(
                 children: [
-                   Text(
+                  Text(
                     l10n.termsOfUse,
                     style: TextStyle(
                       fontSize: 20,
@@ -271,7 +288,7 @@ class ProfileScreen extends ConsumerWidget {
                 ),
               ),
             ),
-             Padding(
+            Padding(
               padding: const EdgeInsets.all(24),
               child: SizedBox(
                 width: double.infinity,
@@ -300,20 +317,18 @@ class ProfileScreen extends ConsumerWidget {
     final isPremium = ref.watch(isPremiumProvider);
     final isLoggedIn = ref.watch(isLoggedInProvider);
     final themeMode = ref.watch(themeModeProvider);
-    final notificationsEnabled = ref.watch(notificationsEnabledProvider);
     final locale = ref.watch(localeProvider);
     final l10n = AppLocalizations.of(context)!;
-    
+
     // Get shared count for active list
     final currentList = ref.watch(currentListProvider);
-    final sharedUsers = currentList != null 
-        ? (ref.watch(sharedUsersProvider)[currentList.id] ?? []) 
+    final sharedUsers = currentList != null
+        ? (ref.watch(sharedUsersProvider)[currentList.id] ?? [])
         : <String>[];
     final sharedCount = sharedUsers.length;
 
     final userProfile = ref.watch(userProfileProvider).value;
-    final rcPlanType = ref.watch(revenueCatPlanTypeProvider);
-    final isFamilyPlan = userProfile?.planType == 'premium_family' || rcPlanType == 'premium_family';
+    final isFamilyPlan = userProfile?.planType == 'premium_family';
 
     // Sync Profile Image from Cloud (Fix for Persistence)
     ref.listen<AsyncValue<UserProfile?>>(userProfileProvider, (previous, next) {
@@ -323,13 +338,15 @@ class ProfileScreen extends ConsumerWidget {
         // Only update if local is empty or different (and assume cloud is truth if local is just a file or mismatch)
         // Actually, cloud should always win on load.
         if (currentImage != profile.photoUrl) {
-           // We might want to check if local is a File (recently picked) vs Network. 
-           // But generally, if cloud updates, we should sync.
-           // Exception: If user JUST picked a photo, local is File path. 
-           // ProfileSummary uploads it, then Cloud updates. 
-           // If we just loaded the app, currentImage is null or from SharedPreferences.
-           
-           ref.read(profileImageProvider.notifier).setNetworkImage(profile.photoUrl!);
+          // We might want to check if local is a File (recently picked) vs Network.
+          // But generally, if cloud updates, we should sync.
+          // Exception: If user JUST picked a photo, local is File path.
+          // ProfileSummary uploads it, then Cloud updates.
+          // If we just loaded the app, currentImage is null or from SharedPreferences.
+
+          ref
+              .read(profileImageProvider.notifier)
+              .setNetworkImage(profile.photoUrl!);
         }
       }
     });
@@ -342,7 +359,7 @@ class ProfileScreen extends ConsumerWidget {
 
             // Fixed Header
             const ProfileHeader(),
-            
+
             // Scrollable Content
             Expanded(
               child: SingleChildScrollView(
@@ -351,14 +368,14 @@ class ProfileScreen extends ConsumerWidget {
                   children: [
                     // Restored Profile Info (Avatar, Stats)
                     const ProfileSummary(),
-                    
+
                     const SizedBox(height: 24),
 
                     // Stats Row
                     const ProfileStats(),
-                    
+
                     const SizedBox(height: 24),
-                    
+
                     // Preferences
                     SettingsCard(
                       title: l10n.settingsTitle,
@@ -369,32 +386,38 @@ class ProfileScreen extends ConsumerWidget {
                           subtitle: _getThemeModeName(themeMode, l10n),
                           trailing: Switch(
                             value: themeMode == ThemeMode.dark,
-                            activeColor: AppColors.primary,
+                            activeThumbColor: AppColors.primary,
                             onChanged: (val) {
-                              ref.read(themeModeProvider.notifier).setTheme(
-                                val ? ThemeMode.dark : ThemeMode.light
-                              );
+                              ref
+                                  .read(themeModeProvider.notifier)
+                                  .setTheme(
+                                    val ? ThemeMode.dark : ThemeMode.light,
+                                  );
                             },
                           ),
                         ),
-                        SettingsTile(
-                          icon: Icons.notifications,
-                          title: l10n.notifications,
-                          subtitle: l10n.notificationsSubtitle,
-                          trailing: Switch(
-                            value: notificationsEnabled,
-                            activeColor: AppColors.primary,
-                            onChanged: (val) {
-                              ref.read(notificationsEnabledProvider.notifier).setEnabled(val);
-                            },
-                          ),
+                        FutureBuilder<bool>(
+                          future: AdService.instance.privacyOptionsRequired(),
+                          builder: (context, snapshot) {
+                            if (snapshot.data != true) {
+                              return const SizedBox.shrink();
+                            }
+                            return SettingsTile(
+                              icon: Icons.privacy_tip_outlined,
+                              title: l10n.adPrivacyOptions,
+                              subtitle: l10n.adPrivacyOptionsSubtitle,
+                              onTap: AdService.instance.showPrivacyOptions,
+                            );
+                          },
                         ),
                         SettingsTile(
                           icon: Icons.language,
                           title: l10n.language,
-                          subtitle: locale == null 
-                              ? l10n.darkModeSystem 
-                              : (locale.languageCode == 'en' ? 'English' : 'Português (BR)'),
+                          subtitle: locale == null
+                              ? l10n.darkModeSystem
+                              : (locale.languageCode == 'en'
+                                    ? 'English'
+                                    : 'Português (BR)'),
                           onTap: () => _showLanguagePicker(context, ref),
                         ),
                         SettingsTile(
@@ -402,20 +425,27 @@ class ProfileScreen extends ConsumerWidget {
                           title: l10n.taxRate,
                           subtitle: l10n.taxRateSubtitle,
                           trailing: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 6,
+                            ),
                             decoration: BoxDecoration(
                               color: Theme.of(context).cardColor,
                               borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: Colors.grey.withOpacity(0.3)),
+                              border: Border.all(
+                                color: Colors.grey.withOpacity(0.3),
+                              ),
                             ),
                             child: Consumer(
                               builder: (context, ref, _) {
                                 final rate = ref.watch(taxRateProvider);
                                 return Text(
                                   '${rate.toStringAsFixed(1)}%',
-                                  style: const TextStyle(fontWeight: FontWeight.bold),
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 );
-                              }
+                              },
                             ),
                           ),
                           onTap: () => _showTaxRateInput(context, ref),
@@ -430,15 +460,18 @@ class ProfileScreen extends ConsumerWidget {
                         SettingsTile(
                           icon: Icons.share,
                           title: l10n.shareList,
-                          subtitle: sharedCount > 0 
-                              ? (locale?.languageCode == 'pt' 
-                                  ? 'Compartilhado com $sharedCount pessoa${sharedCount > 1 ? 's' : ''}' 
-                                  : 'Shared with $sharedCount person${sharedCount > 1 ? 's' : ''}')
+                          subtitle: sharedCount > 0
+                              ? (locale?.languageCode == 'pt'
+                                    ? 'Compartilhado com $sharedCount pessoa${sharedCount > 1 ? 's' : ''}'
+                                    : 'Shared with $sharedCount person${sharedCount > 1 ? 's' : ''}')
                               : l10n.shareListSubtitle,
-                          isLocked: !isFamilyPlan, 
+                          isLocked: !isFamilyPlan,
                           onTap: () {
                             if (!isPremium) {
-                              _showPaywall(context, initialTabIndex: 1); // Direct to Family Paywall
+                              _showPaywall(
+                                context,
+                                initialTabIndex: 1,
+                              ); // Direct to Family Paywall
                             } else {
                               // Open ShareListModal (It handles both Invite and Upgrade logic internally)
                               showModalBottomSheet(
@@ -455,13 +488,14 @@ class ProfileScreen extends ConsumerWidget {
                           title: l10n.expenseCharts,
                           subtitle: l10n.expenseChartsSubtitle,
                           isLocked: !isPremium,
-                          onTap: !isPremium 
-                              ? () => _showPaywall(context) 
+                          onTap: !isPremium
+                              ? () => _showPaywall(context)
                               : () => showModalBottomSheet(
                                   context: context,
                                   isScrollControlled: true,
                                   backgroundColor: Colors.transparent,
-                                  builder: (context) => const ExpenseChartsModal(),
+                                  builder: (context) =>
+                                      const ExpenseChartsModal(),
                                 ),
                         ),
                         SettingsTile(
@@ -469,9 +503,10 @@ class ProfileScreen extends ConsumerWidget {
                           title: l10n.exportReports,
                           subtitle: l10n.exportReportsSubtitle,
                           isLocked: !isPremium,
-                          onTap: !isPremium ? () => _showPaywall(context) : () => _generatePdfReport(context, ref),
+                          onTap: !isPremium
+                              ? () => _showPaywall(context)
+                              : () => _generatePdfReport(context, ref),
                         ),
-
                       ],
                     ),
 
@@ -484,14 +519,14 @@ class ProfileScreen extends ConsumerWidget {
                             icon: Icons.star_rounded,
                             title: l10n.bePremium,
                             subtitle: l10n.unlockResources,
-                            iconColor: Colors.amber, 
+                            iconColor: Colors.amber,
                             onTap: () => _showPaywall(context),
                           ),
                         if (isPremium)
                           SettingsTile(
                             icon: Icons.credit_card,
                             title: l10n.manageSubscription,
-                            onTap: () => _manageSubscription(context),
+                            onTap: () => _manageSubscription(context, ref),
                           ),
                         SettingsTile(
                           icon: Icons.restore,
@@ -544,7 +579,6 @@ class ProfileScreen extends ConsumerWidget {
     );
   }
 
-
   Future<void> _generatePdfReport(BuildContext context, WidgetRef ref) async {
     try {
       // Show loading dialog
@@ -554,12 +588,12 @@ class ProfileScreen extends ConsumerWidget {
       await Future.delayed(const Duration(milliseconds: 500));
 
       final notesAsync = ref.read(shoppingNotesProvider);
-      final notes = notesAsync.value ?? []; 
-      
+      final notes = notesAsync.value ?? [];
+
       // Calculate goals for last 12 months
       final now = DateTime.now();
       final Map<String, double> goalsMap = {};
-      
+
       for (int i = 0; i < 12; i++) {
         final date = DateTime(now.year, now.month - i, 1);
         final key = '${date.year}-${date.month.toString().padLeft(2, '0')}';
@@ -571,24 +605,25 @@ class ProfileScreen extends ConsumerWidget {
       final locale = Localizations.localeOf(context);
 
       await PdfService().generateAndShareReport(
-        notes: notes, 
+        notes: notes,
         goals: goalsMap,
         l10n: l10n,
         locale: locale,
       );
-      
+
       // Hide loading
       if (context.mounted) {
         LoadingDialog.hide(context);
       }
-
     } catch (e) {
       if (context.mounted) {
         LoadingDialog.hide(context);
         StatusFeedbackModal.show(
           context,
           title: AppLocalizations.of(context)!.errorTitle,
-          message: AppLocalizations.of(context)!.reportGenerationError(e.toString()),
+          message: AppLocalizations.of(
+            context,
+          )!.reportGenerationError(e.toString()),
           type: FeedbackType.error,
         );
       }
@@ -597,15 +632,23 @@ class ProfileScreen extends ConsumerWidget {
 
   String _getThemeModeName(ThemeMode mode, AppLocalizations l10n) {
     switch (mode) {
-      case ThemeMode.system: return l10n.darkModeSystem;
-      case ThemeMode.light: return l10n.darkModeLight;
-      case ThemeMode.dark: return l10n.darkModeDark;
+      case ThemeMode.system:
+        return l10n.darkModeSystem;
+      case ThemeMode.light:
+        return l10n.darkModeLight;
+      case ThemeMode.dark:
+        return l10n.darkModeDark;
     }
   }
 
-  Future<void> _manageSubscription(BuildContext context) async {
+  Future<void> _manageSubscription(BuildContext context, WidgetRef ref) async {
     final l10n = AppLocalizations.of(context)!;
-    final Uri url = Uri.parse('https://apps.apple.com/account/subscriptions');
+    final profile = ref.read(userProfileProvider).asData?.value;
+    final fallback = Platform.isIOS
+        ? 'https://apps.apple.com/account/subscriptions'
+        : 'https://play.google.com/store/account/subscriptions'
+              '?package=com.kepoweb.smartmarketlist';
+    final Uri url = Uri.parse(profile?.subscriptionManagementUrl ?? fallback);
     try {
       if (!await launchUrl(url)) {
         throw Exception('Could not launch $url');
@@ -624,20 +667,20 @@ class ProfileScreen extends ConsumerWidget {
 
   Future<void> _restorePurchases(BuildContext context, WidgetRef ref) async {
     final l10n = AppLocalizations.of(context)!;
-    
+
     // Security Check: Prevent Guest Restore (Anti-Farming)
     final isLoggedIn = ref.read(isLoggedInProvider);
     if (!isLoggedIn) {
       if (context.mounted) {
         StatusFeedbackModal.show(
           context,
-          title: l10n.loginRequiredTitle ?? "Login Necessário",
-          message: l10n.loginRequiredMessage ?? "Faça login para restaurar e sincronizar sua assinatura.", // Fallback if keys missing
+          title: l10n.loginRequiredTitle,
+          message: l10n.loginRequiredMessage,
           type: FeedbackType.info,
           onTap: () {
-             // Optional: Navigate to login logic if needed, 
-             // but usually modal dismissal is enough as user sees login buttons
-          } 
+            // Optional: Navigate to login logic if needed,
+            // but usually modal dismissal is enough as user sees login buttons
+          },
         );
       }
       return;
@@ -645,13 +688,19 @@ class ProfileScreen extends ConsumerWidget {
 
     try {
       LoadingDialog.show(context, l10n.restoringPurchases);
-      
-      final success = await ref.read(revenueCatServiceProvider).restorePurchases();
-      
+
+      final success = await ref
+          .read(revenueCatServiceProvider)
+          .restorePurchases();
+      final serverStatus = await ref
+          .read(backendServiceProvider)
+          .syncRevenueCatStatus();
+      final restored = success && serverStatus['isPremium'] == true;
+
       if (context.mounted) {
         LoadingDialog.hide(context);
-        
-        if (success) {
+
+        if (restored) {
           StatusFeedbackModal.show(
             context,
             title: l10n.requestSentTitle,
@@ -679,6 +728,7 @@ class ProfileScreen extends ConsumerWidget {
       }
     }
   }
+
   Future<void> _deleteAccount(BuildContext context, WidgetRef ref) async {
     final l10n = AppLocalizations.of(context)!;
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -686,9 +736,7 @@ class ProfileScreen extends ConsumerWidget {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => Dialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(24),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         backgroundColor: Theme.of(context).cardColor,
         child: Padding(
           padding: const EdgeInsets.all(24),
@@ -709,7 +757,7 @@ class ProfileScreen extends ConsumerWidget {
                 ),
               ),
               const SizedBox(height: 16),
-              
+
               // Title
               Text(
                 l10n.deleteAccountTitle,
@@ -721,7 +769,7 @@ class ProfileScreen extends ConsumerWidget {
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 8),
-              
+
               // Message
               Text(
                 l10n.deleteAccountMessage,
@@ -732,7 +780,7 @@ class ProfileScreen extends ConsumerWidget {
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 24),
-              
+
               // Buttons
               Row(
                 children: [
@@ -782,103 +830,66 @@ class ProfileScreen extends ConsumerWidget {
     );
 
     if (confirmed == true && context.mounted) {
-       LoadingDialog.show(context, l10n.processing);
-       
-       try {
-         final shoppingListService = ref.read(shoppingListServiceProvider);
-         await shoppingListService.deleteAllData();
+      LoadingDialog.show(context, l10n.processing);
 
-         // 2. Create Default List (Fix for Infinite Loading)
-         final defaultList = ShoppingList(name: 'Compras do Mês', emoji: '🛒', budget: 500.0);
-         await shoppingListService.createList(defaultList);
+      try {
+        // Delete remotely first. Local data is only cleared after the
+        // server confirms the complete account deletion.
+        await ref.read(authServiceProvider).deleteAccount();
 
-         // 3. Clear Shopping Notes
-         try {
-            final notesService = ref.read(shoppingNotesServiceProvider);
-            await notesService.deleteAllNotes();
-         } catch (e) {
-            print('Error deleting notes: $e');
-         }
+        await ref.read(isLoggedInProvider.notifier).setLoggedIn(false);
+        await ref.read(userEmailProvider.notifier).clearEmail();
+        await ref.read(userNameProvider.notifier).clearName();
+        await ref.read(profileImageProvider.notifier).clearImage();
 
-         // 4. Clear Favorite Recipes
-         try {
-            final recipesService = ref.read(recipesServiceProvider);
-            await recipesService.clearRecipes();
-         } catch (e) {
-            print('Error deleting recipes: $e');
-         }
-         
-         // 5. Clear Premium Status
-         try {
-            await ref.read(premiumSinceProvider.notifier).setPremium(false);
-         } catch (e) {
-            print('Error clearing premium: $e');
-         }
-         
-         // 6. Delete Account from Firebase
-         try {
-           await ref.read(authServiceProvider).deleteAccount();
-         } catch (e) {
-           // If user not found, they are already deleted. Proceed.
-           if (!e.toString().contains('user-not-found')) {
-             rethrow;
-           }
-         }
+        // Wait a bit for UX
+        await Future.delayed(const Duration(seconds: 1));
 
-         // 7. Clear Shared Preferences & User State (LAST, to prevent Sync Race Conditions)
-         await ref.read(isLoggedInProvider.notifier).setLoggedIn(false);
-         await ref.read(userEmailProvider.notifier).clearEmail();
-         await ref.read(userNameProvider.notifier).clearName();
-         await ref.read(profileImageProvider.notifier).clearImage();
-         
-         // Wait a bit for UX
-         await Future.delayed(const Duration(seconds: 1));
+        if (context.mounted) {
+          LoadingDialog.hide(context);
+          // Navigate to Root
+          Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => false);
+        }
+      } catch (e) {
+        if (context.mounted) {
+          LoadingDialog.hide(context);
 
-         if (context.mounted) {
-           LoadingDialog.hide(context);
-           // Navigate to Root
-           Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => false);
-         }
-       } catch (e) {
-         if (context.mounted) {
-           LoadingDialog.hide(context);
-           
-           String errorMessage = AppLocalizations.of(context)!.accountDeletedError(e.toString());
-           
-           if (e.toString().contains('requires-recent-login')) {
-              errorMessage = AppLocalizations.of(context)!.requiresRecentLogin;
-           }
+          String errorMessage = AppLocalizations.of(
+            context,
+          )!.accountDeletedError(e.toString());
 
-           StatusFeedbackModal.show(
-             context,
-             title: AppLocalizations.of(context)!.errorTitle,
-             message: errorMessage,
-             type: FeedbackType.error,
-           );
-         }
-       }
+          if (e.toString().contains('requires-recent-login')) {
+            errorMessage = AppLocalizations.of(context)!.requiresRecentLogin;
+          }
+
+          StatusFeedbackModal.show(
+            context,
+            title: AppLocalizations.of(context)!.errorTitle,
+            message: errorMessage,
+            type: FeedbackType.error,
+          );
+        }
+      }
     }
   }
 
   Future<void> _logout(BuildContext context, WidgetRef ref) async {
     final l10n = AppLocalizations.of(context)!;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    
+
     // Check if Premium to warn about data loss
     final isPremium = ref.read(isPremiumProvider);
-    
+
     // If not premium, warn heavily
     final String title = isPremium ? l10n.logoutTitle : l10n.logoutTitleWarning;
-    final String message = isPremium 
-        ? l10n.logoutMessage 
+    final String message = isPremium
+        ? l10n.logoutMessage
         : l10n.logoutMessageWarning; // "You are free. Data is local only. Reset?"
 
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => Dialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(24),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         backgroundColor: Theme.of(context).cardColor,
         child: Padding(
           padding: const EdgeInsets.all(24),
@@ -899,7 +910,7 @@ class ProfileScreen extends ConsumerWidget {
                 ),
               ),
               const SizedBox(height: 16),
-              
+
               // Title
               Text(
                 title,
@@ -911,7 +922,7 @@ class ProfileScreen extends ConsumerWidget {
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 8),
-              
+
               // Message
               Text(
                 message,
@@ -922,7 +933,7 @@ class ProfileScreen extends ConsumerWidget {
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 24),
-              
+
               // Buttons
               Row(
                 children: [
@@ -972,62 +983,37 @@ class ProfileScreen extends ConsumerWidget {
     );
 
     if (confirmed == true && context.mounted) {
-       LoadingDialog.show(context, l10n.processing);
-       
-       try {
-          print('LOGOUT DEBUG: Starting local data clear...');
-          
-          final shoppingListService = ref.read(shoppingListServiceProvider);
-          // Stop sync first to prevent conflicts
-          shoppingListService.stopSync();
-          await shoppingListService.deleteAllData();
-          // Clear default_list_id to prevent loading loop
-          if (Hive.isBoxOpen('settings')) {
-            await Hive.box('settings').delete('default_list_id');
-          }
-          print('LOGOUT DEBUG: Lists cleared.');
-          
-          final notesService = ref.read(shoppingNotesServiceProvider);
-          notesService.stopSync();
-          await notesService.deleteAllNotes();
-          print('LOGOUT DEBUG: Notes cleared.');
-          
-          final recipesService = ref.read(recipesServiceProvider);
-          recipesService.stopSync();
-          await recipesService.deleteAllData();
-          print('LOGOUT DEBUG: Recipes cleared.');
-          
-          // Clear Preferences
-          await ref.read(isLoggedInProvider.notifier).setLoggedIn(false);
-          await ref.read(userEmailProvider.notifier).clearEmail();
-          await ref.read(userNameProvider.notifier).clearName();
-          await ref.read(profileImageProvider.notifier).clearImage();
-          await ref.read(premiumSinceProvider.notifier).setPremium(false);
-          print('LOGOUT DEBUG: Providers cleared.');
+      LoadingDialog.show(context, l10n.processing);
 
-          // Sign Out Firebase
-          await ref.read(authServiceProvider).signOut();
-          print('LOGOUT DEBUG: Firebase signed out.');
-          
-             if (context.mounted) {
-             LoadingDialog.hide(context);
-             print('LOGOUT DEBUG: Navigating to MainScreen...');
-             
-             // SmartListScreen will auto-create default list when empty
-          
-             Navigator.of(context).pushAndRemoveUntil(
-               MaterialPageRoute(builder: (context) => const MainScreen()),
-               (route) => false,
-             );
-          }
-       } catch (e) {
-          print('LOGOUT DEBUG: Error caught: $e');
-          if (context.mounted) {
-             LoadingDialog.hide(context);
-             ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
-          }
-       }
+      try {
+        await ref.read(authServiceProvider).signOut();
+
+        await ref.read(isLoggedInProvider.notifier).setLoggedIn(false);
+        await ref.read(userEmailProvider.notifier).clearEmail();
+        await ref.read(userNameProvider.notifier).clearName();
+        await ref.read(profileImageProvider.notifier).clearImage();
+        await ref.read(premiumSinceProvider.notifier).setPremium(false);
+
+        if (context.mounted) {
+          LoadingDialog.hide(context);
+          print('LOGOUT DEBUG: Navigating to MainScreen...');
+
+          // SmartListScreen will auto-create default list when empty
+
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(builder: (context) => const MainScreen()),
+            (route) => false,
+          );
+        }
+      } catch (e) {
+        print('LOGOUT DEBUG: Error caught: $e');
+        if (context.mounted) {
+          LoadingDialog.hide(context);
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('Error: $e')));
+        }
+      }
     }
   }
-
 }

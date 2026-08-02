@@ -17,7 +17,7 @@ class ExpenseChartsModal extends ConsumerStatefulWidget {
 class _ExpenseChartsModalState extends ConsumerState<ExpenseChartsModal> {
   // We no longer need _data state for values, only maybe for optimization but build is fine
   // We still need to know the months we are displaying.
-  
+
   String _getMonthKey(DateTime date) {
     return '${date.year}-${date.month.toString().padLeft(2, '0')}';
   }
@@ -27,9 +27,13 @@ class _ExpenseChartsModalState extends ConsumerState<ExpenseChartsModal> {
     final key = _getMonthKey(date);
     final currentGoal = ref.read(goalsProvider.notifier).getGoal(key);
 
-    final controller = TextEditingController(text: currentGoal.toStringAsFixed(2));
+    final controller = TextEditingController(
+      text: currentGoal.toStringAsFixed(2),
+    );
 
-    final currencyFormat = NumberFormat.simpleCurrency(locale: Localizations.localeOf(context).toString());
+    final currencyFormat = NumberFormat.simpleCurrency(
+      locale: Localizations.localeOf(context).toString(),
+    );
 
     showDialog(
       context: context,
@@ -56,7 +60,7 @@ class _ExpenseChartsModalState extends ConsumerState<ExpenseChartsModal> {
                 // Save to persistence
                 ref.read(goalsProvider.notifier).setGoal(key, val);
                 // No need to setState if we watch the provider, but checking build method
-                // We should watch the goals or force rebuild. 
+                // We should watch the goals or force rebuild.
                 // Since goalsProvider is not being watched for *changes* (it's a notifier/method), we need setState or watch state.
                 setState(() {});
                 Navigator.pop(context);
@@ -65,7 +69,9 @@ class _ExpenseChartsModalState extends ConsumerState<ExpenseChartsModal> {
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
               foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
             ),
             child: Text(l10n.confirm),
           ),
@@ -78,40 +84,50 @@ class _ExpenseChartsModalState extends ConsumerState<ExpenseChartsModal> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final currencyFormat = NumberFormat.simpleCurrency(locale: Localizations.localeOf(context).toString());
-    
+    final currencyFormat = NumberFormat.simpleCurrency(
+      locale: Localizations.localeOf(context).toString(),
+    );
+
     final notesAsync = ref.watch(shoppingNotesProvider);
 
     return notesAsync.when(
-      loading: () => const SizedBox(height: 300, child: Center(child: CircularProgressIndicator())),
-      error: (err, stack) => SizedBox(height: 300, child: Center(child: Text('Error: $err'))),
+      loading: () => const SizedBox(
+        height: 300,
+        child: Center(child: CircularProgressIndicator()),
+      ),
+      error: (err, stack) =>
+          SizedBox(height: 300, child: Center(child: Text('Error: $err'))),
       data: (allNotes) {
         final now = DateTime.now();
         // Generate last 6 months data dynamically
         final displayData = List.generate(6, (index) {
           final date = DateTime(now.year, now.month - index, 1);
           final key = _getMonthKey(date);
-          
+
           // Filter notes for this month
           final monthlyNotes = allNotes.where((note) {
             return note.date.year == date.year && note.date.month == date.month;
           });
-          
-          final totalAmount = monthlyNotes.fold<double>(0, (sum, note) => sum + note.total);
-          
+
+          final totalAmount = monthlyNotes.fold<double>(
+            0,
+            (sum, note) => sum + note.total,
+          );
+
           // Fetch goal
-          final goal = ref.read(goalsProvider.notifier).getGoal(key); // Reading here is fine, setState updates UI
+          final goal = ref
+              .read(goalsProvider.notifier)
+              .getGoal(key); // Reading here is fine, setState updates UI
           // To ensure reactivity on goal change if we used setGoal:
           // We rely on setState in the dialog to trigger this build.
 
-          return {
-            'date': date,
-            'value': totalAmount,
-            'goal': goal,
-          };
+          return {'date': date, 'value': totalAmount, 'goal': goal};
         });
 
-        final total = displayData.fold<double>(0, (sum, item) => sum + (item['value'] as double));
+        final total = displayData.fold<double>(
+          0,
+          (sum, item) => sum + (item['value'] as double),
+        );
         final average = total / displayData.length;
 
         return Container(
@@ -127,13 +143,16 @@ class _ExpenseChartsModalState extends ConsumerState<ExpenseChartsModal> {
               // Header
               Row(
                 children: [
-                   Container(
+                  Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
                       color: AppColors.primary.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: Icon(Icons.show_chart_rounded, color: AppColors.primary),
+                    child: Icon(
+                      Icons.show_chart_rounded,
+                      color: AppColors.primary,
+                    ),
                   ),
                   const SizedBox(width: 16),
                   Expanded(
@@ -161,7 +180,9 @@ class _ExpenseChartsModalState extends ConsumerState<ExpenseChartsModal> {
                     onPressed: () => Navigator.pop(context),
                     icon: const Icon(Icons.close),
                     style: IconButton.styleFrom(
-                      backgroundColor: isDark ? Colors.white.withOpacity(0.05) : Colors.grey[100],
+                      backgroundColor: isDark
+                          ? Colors.white.withOpacity(0.05)
+                          : Colors.grey[100],
                       padding: const EdgeInsets.all(8),
                     ),
                   ),
@@ -178,7 +199,11 @@ class _ExpenseChartsModalState extends ConsumerState<ExpenseChartsModal> {
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.info_outline_rounded, size: 20, color: AppColors.primary),
+                    Icon(
+                      Icons.info_outline_rounded,
+                      size: 20,
+                      color: AppColors.primary,
+                    ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
@@ -196,15 +221,17 @@ class _ExpenseChartsModalState extends ConsumerState<ExpenseChartsModal> {
 
               // Charts
               ...displayData.asMap().entries.map((entry) {
-                final index = entry.key;
                 final item = entry.value;
                 final date = item['date'] as DateTime;
                 final amount = item['value'] as double;
                 final goal = item['goal'] as double;
 
-                final monthName = DateFormat.MMM(Localizations.localeOf(context).toString()).format(date);
-                final formattedMonth = monthName[0].toUpperCase() + monthName.substring(1);
-                
+                final monthName = DateFormat.MMM(
+                  Localizations.localeOf(context).toString(),
+                ).format(date);
+                final formattedMonth =
+                    monthName[0].toUpperCase() + monthName.substring(1);
+
                 // Goal Logic
                 final widthFactor = (amount / goal).clamp(0.0, 1.0);
                 final isOverBudget = amount > goal;
@@ -221,7 +248,9 @@ class _ExpenseChartsModalState extends ConsumerState<ExpenseChartsModal> {
                               Text(
                                 formattedMonth,
                                 style: TextStyle(
-                                  color: isDark ? Colors.grey[400] : Colors.grey[600],
+                                  color: isDark
+                                      ? Colors.grey[400]
+                                      : Colors.grey[600],
                                   fontWeight: FontWeight.w500,
                                 ),
                               ),
@@ -240,13 +269,18 @@ class _ExpenseChartsModalState extends ConsumerState<ExpenseChartsModal> {
                             onTap: () => _showEditGoalDialog(context, date),
                             borderRadius: BorderRadius.circular(8),
                             child: Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 4,
+                                vertical: 2,
+                              ),
                               child: Row(
                                 children: [
                                   Text(
                                     '${l10n.goalLabel}: ${currencyFormat.format(goal)}',
                                     style: TextStyle(
-                                      color: isDark ? Colors.grey[400] : Colors.grey[600],
+                                      color: isDark
+                                          ? Colors.grey[400]
+                                          : Colors.grey[600],
                                       fontSize: 12,
                                     ),
                                   ),
@@ -254,7 +288,9 @@ class _ExpenseChartsModalState extends ConsumerState<ExpenseChartsModal> {
                                   Icon(
                                     Icons.edit_rounded,
                                     size: 12,
-                                    color: isDark ? Colors.grey[400] : Colors.grey[600],
+                                    color: isDark
+                                        ? Colors.grey[400]
+                                        : Colors.grey[600],
                                   ),
                                 ],
                               ),
@@ -272,34 +308,48 @@ class _ExpenseChartsModalState extends ConsumerState<ExpenseChartsModal> {
                                 height: 32,
                                 width: double.infinity,
                                 decoration: BoxDecoration(
-                                  color: isDark ? Colors.white.withOpacity(0.05) : Colors.grey[100],
+                                  color: isDark
+                                      ? Colors.white.withOpacity(0.05)
+                                      : Colors.grey[100],
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                               ),
                               TweenAnimationBuilder<double>(
-                                tween: Tween<double>(begin: 0, end: widthFactor),
+                                tween: Tween<double>(
+                                  begin: 0,
+                                  end: widthFactor,
+                                ),
                                 duration: const Duration(milliseconds: 1200),
                                 curve: Curves.easeOutCubic,
                                 builder: (context, value, child) {
-                                  final percentage = (amount / goal * 100).toInt();
-                                  final status = isOverBudget ? l10n.statusOverBudget : l10n.statusWithinGoal;
+                                  final percentage = (amount / goal * 100)
+                                      .toInt();
+                                  final status = isOverBudget
+                                      ? l10n.statusOverBudget
+                                      : l10n.statusWithinGoal;
                                   final displayText = '$percentage% - $status';
 
                                   return Container(
                                     height: 32,
                                     width: constraints.maxWidth * value,
-                                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                    ),
                                     alignment: Alignment.centerRight,
                                     decoration: BoxDecoration(
-                                      color: isOverBudget ? const Color(0xFFEF5350) : const Color(0xFF4DB6AC), // Red if over, Teal if safe
+                                      color: isOverBudget
+                                          ? const Color(0xFFEF5350)
+                                          : const Color(
+                                              0xFF4DB6AC,
+                                            ), // Red if over, Teal if safe
                                       borderRadius: BorderRadius.circular(8),
                                     ),
-                                    child: value > 0.15 
+                                    child: value > 0.15
                                         ? FittedBox(
                                             fit: BoxFit.scaleDown,
                                             alignment: Alignment.centerRight,
                                             child: Text(
-                                              displayText, 
+                                              displayText,
                                               style: const TextStyle(
                                                 color: Colors.white,
                                                 fontWeight: FontWeight.bold,
@@ -319,7 +369,7 @@ class _ExpenseChartsModalState extends ConsumerState<ExpenseChartsModal> {
                     ],
                   ),
                 );
-              }).toList(),
+              }),
 
               const SizedBox(height: 16),
 
@@ -338,7 +388,7 @@ class _ExpenseChartsModalState extends ConsumerState<ExpenseChartsModal> {
                         Text(
                           l10n.monthlyAverage,
                           style: const TextStyle(
-                            color: Color(0xFF00695C), 
+                            color: Color(0xFF00695C),
                             fontSize: 14,
                           ),
                         ),

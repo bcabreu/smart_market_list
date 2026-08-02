@@ -1,16 +1,19 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:smart_market_list/core/services/backend_service.dart';
 import 'package:smart_market_list/core/services/firestore_service.dart';
+import 'package:smart_market_list/core/services/local_session_service.dart';
 import 'package:smart_market_list/core/services/revenue_cat_service.dart';
-// Note: sign_in_with_apple package might be needed for advanced flows, 
+// Note: sign_in_with_apple package might be needed for advanced flows,
 // but FirebaseAuth.instance.signInWithProvider(AppleAuthProvider()) is the modern native way.
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final GoogleSignIn _googleSignIn = GoogleSignIn();
   final FirestoreService _firestoreService;
+  final BackendService _backendService;
 
-  AuthService(this._firestoreService);
+  AuthService(this._firestoreService, this._backendService);
 
   // Stream of auth changes
   Stream<User?> get authStateChanges => _auth.authStateChanges();
@@ -24,33 +27,40 @@ class AuthService {
     if (user != null) {
       try {
         await user.reload();
+        await _syncUserData(_auth.currentUser);
       } on FirebaseAuthException catch (e) {
         if (e.code == 'user-not-found' || e.code == 'user-disabled') {
-           await signOut();
+          await signOut();
         }
         // Don't rethrow network errors, keep session if just offline
         if (e.code == 'user-not-found' || e.code == 'user-disabled') {
-           rethrow;
+          rethrow;
         }
       }
     }
   }
 
   // Sign In with Email & Password
-  Future<UserCredential> signIn({required String email, required String password}) async {
+  Future<UserCredential> signIn({
+    required String email,
+    required String password,
+  }) async {
     final credential = await _auth.signInWithEmailAndPassword(
-      email: email.trim(), 
-      password: password
+      email: email.trim(),
+      password: password,
     );
     await _syncUserData(credential.user);
     return credential;
   }
 
   // Sign Up with Email & Password
-  Future<UserCredential> signUp({required String email, required String password}) async {
+  Future<UserCredential> signUp({
+    required String email,
+    required String password,
+  }) async {
     final credential = await _auth.createUserWithEmailAndPassword(
-      email: email.trim(), 
-      password: password
+      email: email.trim(),
+      password: password,
     );
     await _syncUserData(credential.user);
     return credential;
@@ -62,7 +72,8 @@ class AuthService {
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
       if (googleUser == null) return null; // Aborted by user
 
-      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
       final AuthCredential credential = GoogleAuthProvider.credential(
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
@@ -87,12 +98,12 @@ class AuthService {
       return userCredential;
     } on FirebaseAuthException catch (e) {
       if (e.code == 'canceled' || e.code == 'unknown') {
-         if (e.code == 'canceled') return null;
-         if (e.message?.contains('canceled') == true) return null;
+        if (e.code == 'canceled') return null;
+        if (e.message?.contains('canceled') == true) return null;
       }
       rethrow;
     } catch (e) {
-       throw Exception('Apple Sign In Failed: $e');
+      throw Exception('Apple Sign In Failed: $e');
     }
   }
 
@@ -125,153 +136,47 @@ class AuthService {
   Future<void> deleteAccount() async {
     final user = _auth.currentUser;
     if (user != null) {
-      // 1. Delete User Data from Firestore
-      try {
-        await _firestoreService.deleteUser(user.uid);
-      } catch (e) {
-        print('Error deleting user Firestore data: $e');
-        // Continue to delete Auth
-      }
-
-      // 2. Delete Auth Account
-      // Note: This requires recent login. If it fails, it will throw, and ProfileScreen catches it.
-      await user.delete();
-
-      // 3. Sign Out (Clean up local state/tokens)
+      // The callable validates recent authentication and deletes Firestore
+      // subcollections, Storage objects, RevenueCat data and Firebase Auth as
+      // one server-controlled operation.
+      await _backendService.deleteAccount();
+      await RevenueCatService().logOut();
       await _googleSignIn.signOut();
       await _auth.signOut();
-      await RevenueCatService().logOut();
+      await LocalSessionService.clearAccountData();
     }
   }
 
   // Sign Out
   Future<void> signOut() async {
+    await RevenueCatService().logOut();
     await _googleSignIn.signOut();
     await _auth.signOut();
-    await RevenueCatService().logOut();
+    await LocalSessionService.clearAccountData();
   }
 
   // Helper to sync user data to Firestore
   Future<void> _syncUserData(User? user, {String? name}) async {
     if (user == null) return;
-    
+
+    await LocalSessionService.activateUser(user.uid);
     await _firestoreService.createOrUpdateUser(
-      user.uid, 
+      user.uid,
       user.email ?? '',
       name: name ?? user.displayName,
-      photoUrl: user.photoURL
+      photoUrl: user.photoURL,
     );
-    await _firestoreService.ensureUserHasFamily(user.uid);
+    await _backendService.ensureUserWorkspace();
 
-    // 1. Identify User in RevenueCat (Strict Mode)
-    // This prevents "Anonymous" device entitlements from leaking to new users
-    // unless the device receipt literally explicitly belongs to them (which RC handles)
+    // RevenueCat identifies the receipt locally, but only the backend may
+    // persist or revoke Premium access.
     await RevenueCatService().logIn(user.uid);
-
-    // Check & Sync Subscription Status (Anonymous -> Authenticated)
-    // Check & Sync Subscription Status (Anonymous -> Authenticated)
     try {
-      var subDetails = await RevenueCatService().getActiveSubscriptionDetails();
-      
-      // AUTO-RESTORE LOGIC REMOVED:
-      // We should NOT auto-restore here. 
-      // If the user's Firestore says they are free, but the device has a receipt, 
-      // calling restorePurchases() would incorrectly grant Premium to this new account (Receipt Transfer).
-      // Restore must be an EXPLICIT user action in the Profile screen.
-      
-      if (subDetails == null || subDetails['isPremium'] != true) {
-         print("ℹ️ User ${user.uid} does not have active RevenueCat entitlements. Checking Firestore fallback...");
-      }
-
-      if (subDetails != null && subDetails['isPremium'] == true) {
-         print("🔄 Syncing existing subscription for ${user.uid}");
-         await _firestoreService.updateUserPremiumStatus(
-           user.uid,
-           isPremium: true,
-           planType: subDetails['planType']
-         );
-      } else {
-         // 🛡️ SECURITY: Check if user is a VALID GUEST (Family Plan)
-         // We must verify:
-         // 1. They have a familyId and are a guest (by planType OR role)
-         // 2. The Family Owner is still ACTIVE and paying.
-         
-         final localUser = await _firestoreService.getUserData(user.uid);
-         
-         // Check if user is in a family as guest (by planType OR role OR being guestId in family)
-         final bool isPossibleFamilyGuest = localUser != null && 
-             localUser['familyId'] != null && 
-             (localUser['planType'] == 'premium_family_guest' || localUser['role'] == 'guest');
-         
-         if (isPossibleFamilyGuest) {
-            final familyId = localUser['familyId'];
-            bool isFamilyValid = false;
-
-            if (familyId != null) {
-              final familyDoc = await _firestoreService.getFamilyDoc(familyId);
-              if (familyDoc != null) {
-                final ownerId = familyDoc['ownerId'];
-                final guestId = familyDoc['guestId'];
-                
-                // Verify: User is actually the registered guest in this family
-                final bool isRegisteredGuest = guestId == user.uid;
-                
-                if (ownerId != null && isRegisteredGuest) {
-                  final ownerUser = await _firestoreService.getUserData(ownerId);
-                  
-                  // Validation: Owner must be Premium AND have Family Plan
-                  if (ownerUser != null && 
-                      ownerUser['isPremium'] == true && 
-                      ownerUser['planType'] == 'premium_family') {
-                    isFamilyValid = true;
-                  } else {
-                    print("⚠️ Family Owner ($ownerId) is no longer Premium/Family. Revoking Guest access.");
-                  }
-                } else {
-                   print("⚠️ User ${user.uid} is not registered as guestId in family $familyId.");
-                }
-              }
-            }
-
-            if (isFamilyValid) {
-               print("🛡️ Family Guest verified (Owner is Active). Restoring/Preserving premium for ${user.uid}");
-               // Ensure the user has correct premium status (in case it was corrupted)
-               await _firestoreService.updateUserPremiumStatus(
-                 user.uid,
-                 isPremium: true,
-                 planType: 'premium_family_guest'
-               );
-               return; // SKIP downgrade
-            } else {
-               print("🚫 Family Guest validation failed (Owner issue or removed). Downgrading.");
-               // Proceed to downgrade below...
-            }
-         }
-
-         // 🎁 Check for Lifetime/Granted Premium (Manually set in Firebase)
-         // This allows you to grant premium to specific users without RevenueCat
-         if (localUser != null && localUser['lifetimePremium'] == true) {
-            print("🎁 Lifetime Premium detected for ${user.uid}. Skipping downgrade.");
-            // Ensure premium status is set correctly
-            if (localUser['isPremium'] != true) {
-               await _firestoreService.updateUserPremiumStatus(
-                 user.uid,
-                 isPremium: true,
-                 planType: 'lifetime'
-               );
-            }
-            return; // SKIP downgrade
-         }
-
-         // Auto-Downgrade (Anti-Farming Logic)
-         print("📉 Syncing downgrade/removal for ${user.uid}");
-         await _firestoreService.updateUserPremiumStatus(
-           user.uid,
-           isPremium: false
-         );
-      }
+      await _backendService.syncRevenueCatStatus();
     } catch (e) {
-      print("⚠️ Auto-sync subscription failed: $e");
+      // Keep the last server-known status when offline. Firestore/Storage rules
+      // still enforce any known expiration timestamp.
+      print('⚠️ Server subscription sync failed: $e');
     }
   }
 }

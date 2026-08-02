@@ -1,14 +1,12 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:smart_market_list/core/theme/app_colors.dart';
 import 'package:smart_market_list/data/models/recipe.dart';
 import 'package:smart_market_list/data/models/shopping_item.dart';
 import 'package:smart_market_list/providers/shopping_list_provider.dart';
 import 'package:smart_market_list/providers/user_provider.dart';
 import 'package:smart_market_list/l10n/generated/app_localizations.dart';
 import 'package:smart_market_list/ui/common/modals/paywall_modal.dart';
-import 'package:share_plus/share_plus.dart';
 import 'package:smart_market_list/providers/recipes_provider.dart';
 import 'package:smart_market_list/providers/sharing_provider.dart';
 import 'dart:io';
@@ -19,20 +17,26 @@ class RecipeDetailModal extends ConsumerWidget {
 
   const RecipeDetailModal({super.key, required this.recipe});
 
+  @override
   Widget build(BuildContext context, WidgetRef ref) {
     final shoppingListsAsync = ref.watch(shoppingListsProvider);
     final shoppingListService = ref.watch(shoppingListServiceProvider);
     final l10n = AppLocalizations.of(context)!;
-    
+
     // Resolve current recipe state (for reactive favorites)
     final recipes = ref.watch(recipesProvider).value ?? [];
-    final currentRecipe = recipes.firstWhere((r) => r.id == recipe.id, orElse: () => recipe);
+    final currentRecipe = recipes.firstWhere(
+      (r) => r.id == recipe.id,
+      orElse: () => recipe,
+    );
 
     // Get target list (current or first)
-    final targetList = ref.watch(currentListProvider) ?? shoppingListsAsync.value?.firstOrNull;
-    
+    final targetList =
+        ref.watch(currentListProvider) ?? shoppingListsAsync.value?.firstOrNull;
+
     // Get active items ONLY from the target (active) list
-    final activeItems = targetList?.items.map((i) => i.name.toLowerCase()).toSet() ?? {};
+    final activeItems =
+        targetList?.items.map((i) => i.name.toLowerCase()).toSet() ?? {};
 
     final availableIngredients = <String>[];
     final missingIngredients = <String>[];
@@ -54,34 +58,36 @@ class RecipeDetailModal extends ConsumerWidget {
 
     Future<void> addItems(List<String> ingredients) async {
       if (targetList == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.noListFound)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.noListFound)));
         return;
       }
 
       try {
         // Create new items
-        final newItems = ingredients.map((name) => ShoppingItem(
-          name: name,
-          category: 'outros', // Could be smarter here
-        )).toList();
+        final newItems = ingredients
+            .map(
+              (name) => ShoppingItem(
+                name: name,
+                category: 'outros', // Could be smarter here
+              ),
+            )
+            .toList();
 
         // Add to list via service
-        // We can optimize by adding all at once if service supported it, 
+        // We can optimize by adding all at once if service supported it,
         // but for now we'll loop or update the list directly.
         // Updating list directly is better for batch add.
-        
-        final currentItems = List<ShoppingItem>.from(targetList.items);
-        currentItems.addAll(newItems);
-        
-        final updatedList = targetList.copyWith(items: currentItems);
-        await shoppingListService.updateList(updatedList);
+
+        await shoppingListService.addItems(targetList.id, newItems);
 
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(l10n.itemsAdded(ingredients.length, targetList.name)),
+              content: Text(
+                l10n.itemsAdded(ingredients.length, targetList.name),
+              ),
               backgroundColor: const Color(0xFF4DB6AC),
               behavior: SnackBarBehavior.floating,
             ),
@@ -121,14 +127,22 @@ class RecipeDetailModal extends ConsumerWidget {
                       child: CircleAvatar(
                         backgroundColor: Colors.black54,
                         child: IconButton(
-                          icon: const Icon(Icons.share, color: Colors.white, size: 20),
+                          icon: const Icon(
+                            Icons.share,
+                            color: Colors.white,
+                            size: 20,
+                          ),
                           onPressed: () async {
-                             await ref.read(sharingServiceProvider).shareRecipe(
-                               recipeId: currentRecipe.id, 
-                               recipeName: currentRecipe.name,
-                               shareMessage: l10n.shareRecipeMessage(currentRecipe.name),
-                               viewRecipeLabel: l10n.viewRecipe,
-                             );
+                            await ref
+                                .read(sharingServiceProvider)
+                                .shareRecipe(
+                                  recipeId: currentRecipe.id,
+                                  recipeName: currentRecipe.name,
+                                  shareMessage: l10n.shareRecipeMessage(
+                                    currentRecipe.name,
+                                  ),
+                                  viewRecipeLabel: l10n.viewRecipe,
+                                );
                           },
                         ),
                       ),
@@ -140,8 +154,12 @@ class RecipeDetailModal extends ConsumerWidget {
                         backgroundColor: Colors.black54,
                         child: IconButton(
                           icon: Icon(
-                            currentRecipe.isFavorite ? Icons.favorite : Icons.favorite_border,
-                            color: currentRecipe.isFavorite ? Colors.red : Colors.white,
+                            currentRecipe.isFavorite
+                                ? Icons.favorite
+                                : Icons.favorite_border,
+                            color: currentRecipe.isFavorite
+                                ? Colors.red
+                                : Colors.white,
                             size: 20,
                           ),
                           onPressed: () async {
@@ -157,7 +175,11 @@ class RecipeDetailModal extends ConsumerWidget {
                       child: CircleAvatar(
                         backgroundColor: Colors.black54,
                         child: IconButton(
-                          icon: const Icon(Icons.close, color: Colors.white, size: 20),
+                          icon: const Icon(
+                            Icons.close,
+                            color: Colors.white,
+                            size: 20,
+                          ),
                           onPressed: () => Navigator.pop(context),
                         ),
                       ),
@@ -176,13 +198,19 @@ class RecipeDetailModal extends ConsumerWidget {
                           top: 56, // Adjust based on safe area/app bar height
                           left: 16,
                           child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 6,
+                            ),
                             decoration: BoxDecoration(
                               color: _getDifficultyColor(recipe.difficulty),
                               borderRadius: BorderRadius.circular(20),
                             ),
                             child: Text(
-                              _getLocalizedDifficulty(context, recipe.difficulty),
+                              _getLocalizedDifficulty(
+                                context,
+                                recipe.difficulty,
+                              ),
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontWeight: FontWeight.bold,
@@ -199,7 +227,12 @@ class RecipeDetailModal extends ConsumerWidget {
                 // Content
                 SliverToBoxAdapter(
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(24, 24, 24, 100), // Extra bottom padding for floating button
+                    padding: const EdgeInsets.fromLTRB(
+                      24,
+                      24,
+                      24,
+                      100,
+                    ), // Extra bottom padding for floating button
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -224,7 +257,7 @@ class RecipeDetailModal extends ConsumerWidget {
                               const Color(0xFF009688), // Teal 500
                             ),
                             const SizedBox(width: 12),
-                             _buildChip(
+                            _buildChip(
                               context,
                               Icons.people_outline,
                               l10n.servings(recipe.servings),
@@ -238,17 +271,27 @@ class RecipeDetailModal extends ConsumerWidget {
                         // Available Ingredients
                         if (availableIngredients.isNotEmpty) ...[
                           Row(
-                           children: [
-                              const Icon(Icons.circle, size: 12, color: Color(0xFF4DB6AC)),
+                            children: [
+                              const Icon(
+                                Icons.circle,
+                                size: 12,
+                                color: Color(0xFF4DB6AC),
+                              ),
                               const SizedBox(width: 8),
                               Text(
                                 l10n.ingredientsInList,
-                                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                ),
                               ),
                             ],
                           ),
                           const SizedBox(height: 12),
-                          ...availableIngredients.map((ingredient) => _buildIngredientItem(context, ingredient, true)),
+                          ...availableIngredients.map(
+                            (ingredient) =>
+                                _buildIngredientItem(context, ingredient, true),
+                          ),
                           const SizedBox(height: 24),
                         ],
 
@@ -256,50 +299,66 @@ class RecipeDetailModal extends ConsumerWidget {
                         if (missingIngredients.isNotEmpty) ...[
                           Row(
                             children: [
-                              const Icon(Icons.local_fire_department_rounded, size: 18, color: Color(0xFFFF7043)),
+                              const Icon(
+                                Icons.local_fire_department_rounded,
+                                size: 18,
+                                color: Color(0xFFFF7043),
+                              ),
                               const SizedBox(width: 8),
                               Text(
                                 l10n.missingIngredientsSectionTitle,
-                                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                ),
                               ),
                             ],
                           ),
                           const SizedBox(height: 12),
-                          ...missingIngredients.map((ingredient) => _buildIngredientItem(
-                            context, 
-                            ingredient, 
-                            false,
-                            onAdd: () => addItems([ingredient]),
-                          )),
+                          ...missingIngredients.map(
+                            (ingredient) => _buildIngredientItem(
+                              context,
+                              ingredient,
+                              false,
+                              onAdd: () => addItems([ingredient]),
+                            ),
+                          ),
                           const SizedBox(height: 32),
                         ],
 
                         // Instructions
                         Text(
                           l10n.instructionsTitle,
-                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                         const SizedBox(height: 16),
-                        ...recipe.instructions.asMap().entries.map((entry) => Padding(
-                          padding: const EdgeInsets.only(bottom: 24),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  entry.value,
-                                  style: TextStyle(
-                                    height: 1.6,
-                                    fontSize: 15,
-                                    color: Theme.of(context).brightness == Brightness.dark
-                                        ? Colors.grey[300]
-                                        : Colors.grey[700],
+                        ...recipe.instructions.asMap().entries.map(
+                          (entry) => Padding(
+                            padding: const EdgeInsets.only(bottom: 24),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    entry.value,
+                                    style: TextStyle(
+                                      height: 1.6,
+                                      fontSize: 15,
+                                      color:
+                                          Theme.of(context).brightness ==
+                                              Brightness.dark
+                                          ? Colors.grey[300]
+                                          : Colors.grey[700],
+                                    ),
                                   ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
-                        )),
+                        ),
                       ],
                     ),
                   ),
@@ -312,7 +371,14 @@ class RecipeDetailModal extends ConsumerWidget {
               Positioned(
                 left: 24,
                 right: 24,
-                bottom: 32 + (Platform.isAndroid ? math.max(MediaQuery.of(context).viewPadding.bottom, 45.0) : 0),
+                bottom:
+                    32 +
+                    (Platform.isAndroid
+                        ? math.max(
+                            MediaQuery.of(context).viewPadding.bottom,
+                            45.0,
+                          )
+                        : 0),
                 child: SizedBox(
                   width: double.infinity,
                   height: 56,
@@ -356,7 +422,13 @@ class RecipeDetailModal extends ConsumerWidget {
     );
   }
 
-  Widget _buildChip(BuildContext context, IconData icon, String label, Color bgLight, Color color) {
+  Widget _buildChip(
+    BuildContext context,
+    IconData icon,
+    String label,
+    Color bgLight,
+    Color color,
+  ) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -382,7 +454,12 @@ class RecipeDetailModal extends ConsumerWidget {
     );
   }
 
-  Widget _buildIngredientItem(BuildContext context, String name, bool isAvailable, {VoidCallback? onAdd}) {
+  Widget _buildIngredientItem(
+    BuildContext context,
+    String name,
+    bool isAvailable, {
+    VoidCallback? onAdd,
+  }) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
@@ -398,7 +475,9 @@ class RecipeDetailModal extends ConsumerWidget {
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
               color: isAvailable
-                  ? (isDark ? Colors.green.withOpacity(0.3) : Colors.green.withOpacity(0.1))
+                  ? (isDark
+                        ? Colors.green.withOpacity(0.3)
+                        : Colors.green.withOpacity(0.1))
                   : (isDark ? Colors.grey[700]! : Colors.grey[200]!),
             ),
             boxShadow: isAvailable && !isDark
@@ -418,7 +497,9 @@ class RecipeDetailModal extends ConsumerWidget {
                 height: 24,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: isAvailable ? const Color(0xFF4DB6AC) : Colors.transparent,
+                  color: isAvailable
+                      ? const Color(0xFF4DB6AC)
+                      : Colors.transparent,
                   border: isAvailable
                       ? null
                       : Border.all(color: Colors.grey[400]!, width: 2),
@@ -433,7 +514,9 @@ class RecipeDetailModal extends ConsumerWidget {
                   name,
                   style: TextStyle(
                     fontSize: 16,
-                    fontWeight: isAvailable ? FontWeight.w500 : FontWeight.normal,
+                    fontWeight: isAvailable
+                        ? FontWeight.w500
+                        : FontWeight.normal,
                     color: isAvailable
                         ? (isDark ? Colors.white : Colors.black87)
                         : (isDark ? Colors.grey[400] : Colors.grey[600]),

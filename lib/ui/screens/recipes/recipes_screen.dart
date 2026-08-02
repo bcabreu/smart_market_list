@@ -11,9 +11,8 @@ import 'package:smart_market_list/data/models/recipe.dart';
 import 'package:smart_market_list/ui/common/animations/staggered_entry.dart';
 import 'package:smart_market_list/providers/shopping_list_provider.dart';
 import 'package:smart_market_list/providers/locale_provider.dart';
-import 'package:smart_market_list/providers/user_provider.dart';
 import 'package:smart_market_list/providers/user_profile_provider.dart';
-import 'package:smart_market_list/data/models/user_profile.dart'; // Ensure PlanType is available
+// Ensure PlanType is available
 import 'package:smart_market_list/core/services/ad_service.dart';
 import 'package:smart_market_list/l10n/generated/app_localizations.dart';
 

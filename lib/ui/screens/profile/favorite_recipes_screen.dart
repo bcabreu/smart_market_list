@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:smart_market_list/core/theme/app_colors.dart';
 import 'package:smart_market_list/providers/recipes_provider.dart';
 import 'package:smart_market_list/ui/screens/recipes/widgets/recipe_card.dart';
 import 'package:smart_market_list/ui/screens/recipes/modals/recipe_detail_modal.dart';

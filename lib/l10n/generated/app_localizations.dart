@@ -140,6 +140,18 @@ abstract class AppLocalizations {
   /// **'Promotion alerts'**
   String get notificationsSubtitle;
 
+  /// No description provided for @adPrivacyOptions.
+  ///
+  /// In en, this message translates to:
+  /// **'Ad privacy options'**
+  String get adPrivacyOptions;
+
+  /// No description provided for @adPrivacyOptionsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Review advertising consent choices'**
+  String get adPrivacyOptionsSubtitle;
+
   /// No description provided for @language.
   ///
   /// In en, this message translates to:

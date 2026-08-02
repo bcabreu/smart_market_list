@@ -1,19 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:share_plus/share_plus.dart';
 import 'package:smart_market_list/core/theme/app_colors.dart';
-import 'package:smart_market_list/providers/auth_provider.dart';
 import 'package:smart_market_list/l10n/generated/app_localizations.dart';
 import 'package:smart_market_list/providers/user_profile_provider.dart';
 import 'package:smart_market_list/providers/user_provider.dart';
 import 'package:smart_market_list/providers/sharing_provider.dart';
+import 'package:smart_market_list/core/services/backend_service.dart';
 import 'package:smart_market_list/core/services/firestore_service.dart';
-import 'package:smart_market_list/providers/subscription_provider.dart';
 import 'package:smart_market_list/ui/common/modals/paywall_modal.dart';
 
 class ShareListModal extends ConsumerStatefulWidget {
-  final String? familyId; // Optional: if null, we try to find it from user profile
-  
+  final String?
+  familyId; // Optional: if null, we try to find it from user profile
+
   const ShareListModal({super.key, this.familyId});
 
   @override
@@ -21,58 +20,61 @@ class ShareListModal extends ConsumerStatefulWidget {
 }
 
 class _ShareListModalState extends ConsumerState<ShareListModal> {
-  
   Future<void> _shareLink() async {
     final l10n = AppLocalizations.of(context)!;
-    
+
     // Get current user profile
     final user = await ref.read(userProfileProvider.future);
     if (user == null || user.familyId == null) return;
-    
+
     final familyId = widget.familyId ?? user.familyId!;
     final ownerName = user.name ?? l10n.yourFamilyMember;
 
     try {
       // Use SharingService to generate and share the link
-      await ref.read(sharingServiceProvider).shareFamilyAccess(
-        familyId: familyId,
-        title: l10n.inviteFamilyTitle,
-        messageBody: l10n.inviteFamilyMessageBody(ownerName),
-        accessLinkLabel: l10n.accessLinkLabel,
-        installAppAdvice: l10n.installAppAdvice,
-        androidLabel: l10n.androidLabel,
-        iosLabel: l10n.iosLabel,
-      );
+      await ref
+          .read(sharingServiceProvider)
+          .shareFamilyAccess(
+            familyId: familyId,
+            title: l10n.inviteFamilyTitle,
+            messageBody: l10n.inviteFamilyMessageBody(ownerName),
+            accessLinkLabel: l10n.accessLinkLabel,
+            installAppAdvice: l10n.installAppAdvice,
+            androidLabel: l10n.androidLabel,
+            iosLabel: l10n.iosLabel,
+          );
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.errorSharing(e.toString())), backgroundColor: Colors.red),
+          SnackBar(
+            content: Text(l10n.errorSharing(e.toString())),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     }
   }
 
-  Future<void> _removeMember(String familyId, String uid) async {
-    final firestore = ref.read(firestoreServiceProvider);
-    await firestore.removeFamilyMember(familyId, uid);
+  Future<void> _removeMember(String uid) async {
+    await ref.read(backendServiceProvider).removeFamilyMember(uid);
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    
+
     // Watch UserProfile to get FamilyID
     final userAsync = ref.watch(userProfileProvider);
-    
+
     return userAsync.when(
       loading: () => const Padding(
-        padding: EdgeInsets.all(50), 
-        child: Center(child: CircularProgressIndicator())
+        padding: EdgeInsets.all(50),
+        child: Center(child: CircularProgressIndicator()),
       ),
       error: (e, st) => Padding(
-        padding: const EdgeInsets.all(24), 
-        child: Text(l10n.errorLoadingProfile(e.toString()))
+        padding: const EdgeInsets.all(24),
+        child: Text(l10n.errorLoadingProfile(e.toString())),
       ),
       data: (user) {
         print("🔍 ShareListModal User: ${user?.uid}");
@@ -81,33 +83,35 @@ class _ShareListModalState extends ConsumerState<ShareListModal> {
 
         // REMOVED BLOCKING CHECK: if (user == null || user.familyId == null) ...
         // We want to allow users without familyId to see the Upgrade UI.
-        
+
         final familyId = user?.familyId;
         final firestore = ref.watch(firestoreServiceProvider);
 
         // Stream members (or empty stream if no familyId)
-        final membersStream = familyId != null 
+        final membersStream = familyId != null
             ? firestore.getFamilyMembers(familyId)
             : Stream.value(<Map<String, dynamic>>[]);
 
         return StreamBuilder<List<Map<String, dynamic>>>(
           stream: membersStream,
           builder: (context, membersSnapshot) {
-             final members = membersSnapshot.data ?? [];
-             
-             // Check Plan Type & Login Status (Moved here to be valid Dart syntax)
-             final rcPlanType = ref.watch(revenueCatPlanTypeProvider);
-             final isFamily = user?.planType == 'premium_family' || rcPlanType == 'premium_family';
-             final isLoggedIn = ref.watch(isLoggedInProvider);
-             
-             // Filter out current user
-             final otherMembers = (user != null) 
+            final members = membersSnapshot.data ?? [];
+
+            // Check Plan Type & Login Status (Moved here to be valid Dart syntax)
+            final isFamily =
+                user?.role == 'owner' &&
+                user?.planType == 'premium_family' &&
+                user?.isPremium == true;
+            final isLoggedIn = ref.watch(isLoggedInProvider);
+
+            // Filter out current user
+            final otherMembers = (user != null)
                 ? members.where((m) => m['email'] != user.email).toList()
                 : [];
-                
-             final canAdd = otherMembers.isEmpty; // Limit 1 guest
 
-             return Container(
+            final canAdd = otherMembers.isEmpty; // Limit 1 guest
+
+            return Container(
               padding: EdgeInsets.only(
                 bottom: MediaQuery.of(context).viewInsets.bottom + 24,
                 left: 24,
@@ -116,22 +120,27 @@ class _ShareListModalState extends ConsumerState<ShareListModal> {
               ),
               decoration: BoxDecoration(
                 color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(32),
+                ),
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                   // Header
+                  // Header
                   Row(
                     children: [
-                       Container(
+                      Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
                           color: AppColors.primary.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        child: Icon(Icons.people_outline_rounded, color: AppColors.primary),
+                        child: Icon(
+                          Icons.people_outline_rounded,
+                          color: AppColors.primary,
+                        ),
                       ),
                       const SizedBox(width: 16),
                       Expanded(
@@ -139,17 +148,19 @@ class _ShareListModalState extends ConsumerState<ShareListModal> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              l10n.premiumFamilyTitle, 
+                              l10n.premiumFamilyTitle,
                               style: const TextStyle(
                                 fontSize: 20,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
                             Text(
-                              l10n.shareAccessSubtitle, 
+                              l10n.shareAccessSubtitle,
                               style: TextStyle(
                                 fontSize: 14,
-                                color: isDark ? Colors.grey[400] : Colors.grey[600],
+                                color: isDark
+                                    ? Colors.grey[400]
+                                    : Colors.grey[600],
                               ),
                             ),
                           ],
@@ -159,7 +170,9 @@ class _ShareListModalState extends ConsumerState<ShareListModal> {
                         onPressed: () => Navigator.pop(context),
                         icon: const Icon(Icons.close),
                         style: IconButton.styleFrom(
-                          backgroundColor: isDark ? Colors.white.withOpacity(0.05) : Colors.grey[100],
+                          backgroundColor: isDark
+                              ? Colors.white.withOpacity(0.05)
+                              : Colors.grey[100],
                           padding: const EdgeInsets.all(8),
                         ),
                       ),
@@ -167,137 +180,168 @@ class _ShareListModalState extends ConsumerState<ShareListModal> {
                   ),
                   const SizedBox(height: 32),
 
-
                   const SizedBox(height: 32),
-                  
-                  // Check Plan Type (Logic moved to builder scope)
 
+                  // Check Plan Type (Logic moved to builder scope)
                   if (!isFamily) ...[
-                     // Logic: If user is premium_family_guest, they are a GUEST.
-                     // Free/Individual users also have familyId (personal), so we must rely on planType.
-                     if (user?.planType == 'premium_family_guest') ...[
-                        Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: Colors.blue.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(color: Colors.blue.withOpacity(0.3)),
-                          ),
-                          child: Column(
-                            children: [
-                              const Icon(Icons.shield_outlined, size: 48, color: Colors.blue),
-                              const SizedBox(height: 12),
-                              Text(
-                                l10n.guestInviteTitle, // "Apenas o Dono pode convidar"
-                                textAlign: TextAlign.center,
-                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                l10n.guestInviteMessage, // "Como membro..."
-                                textAlign: TextAlign.center,
-                                style: const TextStyle(fontSize: 14),
-                              ),
-                            ],
+                    // Logic: If user is premium_family_guest, they are a GUEST.
+                    // Free/Individual users also have familyId (personal), so we must rely on planType.
+                    if (user?.role == 'guest') ...[
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.blue.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: Colors.blue.withOpacity(0.3),
                           ),
                         ),
-                     ] else ...[
-                       // Truly Individual plan (upsell)
-                        Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: Colors.amber.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(color: Colors.amber.withOpacity(0.5)),
+                        child: Column(
+                          children: [
+                            const Icon(
+                              Icons.shield_outlined,
+                              size: 48,
+                              color: Colors.blue,
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              l10n.guestInviteTitle, // "Apenas o Dono pode convidar"
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              l10n.guestInviteMessage, // "Como membro..."
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(fontSize: 14),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ] else ...[
+                      // Truly Individual plan (upsell)
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.amber.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: Colors.amber.withOpacity(0.5),
                           ),
-                          child: Column(
-                            children: [
-                              const Icon(Icons.lock_outline, size: 48, color: Colors.amber),
-                              const SizedBox(height: 12),
-                              Text(
-                                l10n.familyPlanExclusiveFeature,
-                                textAlign: TextAlign.center,
-                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                        ),
+                        child: Column(
+                          children: [
+                            const Icon(
+                              Icons.lock_outline,
+                              size: 48,
+                              color: Colors.amber,
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              l10n.familyPlanExclusiveFeature,
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
                               ),
-                              const SizedBox(height: 8),
-                              Text(
-                                l10n.familyPlanUpgradeDescription,
-                                textAlign: TextAlign.center,
-                                style: const TextStyle(fontSize: 14),
-                              ),
-                              const SizedBox(height: 16),
-                              SizedBox(
-                                width: double.infinity,
-                                child: ElevatedButton(
-                                  onPressed: () {
-                                    Navigator.pop(context);
-                                    showModalBottomSheet(
-                                      context: context,
-                      isScrollControlled: true,
-                      backgroundColor: Colors.transparent,
-                      builder: (context) => const PaywallModal(initialTabIndex: 1), // Default to Family Tab
-                    );
-                                  },
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.amber[700],
-                                    foregroundColor: Colors.white,
-                                  ),
-                                  child: Text(l10n.upgradeToFamily),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              l10n.familyPlanUpgradeDescription,
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(fontSize: 14),
+                            ),
+                            const SizedBox(height: 16),
+                            SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton(
+                                onPressed: () {
+                                  Navigator.pop(context);
+                                  showModalBottomSheet(
+                                    context: context,
+                                    isScrollControlled: true,
+                                    backgroundColor: Colors.transparent,
+                                    builder: (context) => const PaywallModal(
+                                      initialTabIndex: 1,
+                                    ), // Default to Family Tab
+                                  );
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.amber[700],
+                                  foregroundColor: Colors.white,
                                 ),
+                                child: Text(l10n.upgradeToFamily),
                               ),
-                            ],
-                          ),
-                         ),
-                     ]
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ] else if (!isLoggedIn) ...[
-                     // FAMILY PLAN + VISITOR -> Prompt Login
-                     Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: AppColors.primary.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(color: AppColors.primary.withOpacity(0.3)),
-                          ),
-                          child: Column(
-                            children: [
-                              Icon(Icons.account_circle_outlined, size: 48, color: AppColors.primary),
-                              const SizedBox(height: 12),
-                              Text(
-                                l10n.loginRequiredTitle ?? "Login Necessário",
-                                textAlign: TextAlign.center,
-                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                "Para compartilhar sua lista e convidar membros, você precisa criar uma conta para sincronizar os dados.",
-                                textAlign: TextAlign.center,
-                                style: const TextStyle(fontSize: 14),
-                              ),
-                              const SizedBox(height: 16),
-                              SizedBox(
-                                width: double.infinity,
-                                child: ElevatedButton(
-                                  onPressed: () {
-                                    Navigator.pop(context);
-                                    // Trigger Login Flow (Usually navigate to Profile or show Login Modal)
-                                    // For now, since we are likely in Profile, we can just pop.
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(content: Text("Faça login na tela de perfil para continuar."))
-                                    );
-                                  },
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: AppColors.primary,
-                                    foregroundColor: Colors.white,
-                                  ),
-                                  child: Text(l10n.login ?? "Fazer Login"),
-                                ),
-                              ),
-                            ],
-                          ),
+                    // FAMILY PLAN + VISITOR -> Prompt Login
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: AppColors.primary.withOpacity(0.3),
                         ),
-                  ] else ...[ 
+                      ),
+                      child: Column(
+                        children: [
+                          Icon(
+                            Icons.account_circle_outlined,
+                            size: 48,
+                            color: AppColors.primary,
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            l10n.loginRequiredTitle,
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            "Para compartilhar sua lista e convidar membros, você precisa criar uma conta para sincronizar os dados.",
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(fontSize: 14),
+                          ),
+                          const SizedBox(height: 16),
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton(
+                              onPressed: () {
+                                Navigator.pop(context);
+                                // Trigger Login Flow (Usually navigate to Profile or show Login Modal)
+                                // For now, since we are likely in Profile, we can just pop.
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text(
+                                      "Faça login na tela de perfil para continuar.",
+                                    ),
+                                  ),
+                                );
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.primary,
+                                foregroundColor: Colors.white,
+                              ),
+                              child: Text(l10n.login),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ] else ...[
                     // Action Button (Share Link) -> LOGGED IN FAMILY MEMBER
-                    if (canAdd) 
+                    if (canAdd)
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton.icon(
@@ -308,7 +352,9 @@ class _ShareListModalState extends ConsumerState<ShareListModal> {
                             backgroundColor: AppColors.primary,
                             foregroundColor: Colors.white,
                             padding: const EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
                           ),
                         ),
                       )
@@ -318,23 +364,31 @@ class _ShareListModalState extends ConsumerState<ShareListModal> {
                         decoration: BoxDecoration(
                           color: Colors.orange.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: Colors.orange.withOpacity(0.3)),
+                          border: Border.all(
+                            color: Colors.orange.withOpacity(0.3),
+                          ),
                         ),
                         child: Row(
                           children: [
-                            const Icon(Icons.info_outline, color: Colors.orange),
+                            const Icon(
+                              Icons.info_outline,
+                              color: Colors.orange,
+                            ),
                             const SizedBox(width: 12),
                             Expanded(
                               child: Text(
                                 l10n.memberLimitReached,
-                                style: const TextStyle(fontSize: 12, color: Colors.orange),
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.orange,
+                                ),
                               ),
                             ),
                           ],
                         ),
                       ),
                   ],
-                  
+
                   const SizedBox(height: 32),
 
                   // Members List
@@ -347,22 +401,27 @@ class _ShareListModalState extends ConsumerState<ShareListModal> {
                     ),
                   ),
                   const SizedBox(height: 12),
-                  
+
                   if (otherMembers.isEmpty)
-                     Padding(
-                       padding: const EdgeInsets.symmetric(vertical: 8.0),
-                       child: Text(l10n.noMembersYet, style: const TextStyle(color: Colors.grey)),
-                     ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8.0),
+                      child: Text(
+                        l10n.noMembersYet,
+                        style: const TextStyle(color: Colors.grey),
+                      ),
+                    ),
 
                   ...otherMembers.map((member) {
                     final email = member['email'] ?? 'Unknown';
-                    final uid = member['uid']; 
-                    
+                    final uid = member['uid'];
+
                     return Container(
                       margin: const EdgeInsets.only(bottom: 8),
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: isDark ? Colors.white.withOpacity(0.05) : Colors.grey[50],
+                        color: isDark
+                            ? Colors.white.withOpacity(0.05)
+                            : Colors.grey[50],
                         borderRadius: BorderRadius.circular(16),
                       ),
                       child: Row(
@@ -376,8 +435,11 @@ class _ShareListModalState extends ConsumerState<ShareListModal> {
                             ),
                             alignment: Alignment.center,
                             child: Text(
-                               email.substring(0, 1).toUpperCase(),
-                               style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                              email.substring(0, 1).toUpperCase(),
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                           ),
                           const SizedBox(width: 12),
@@ -387,13 +449,17 @@ class _ShareListModalState extends ConsumerState<ShareListModal> {
                               children: [
                                 Text(
                                   member['name'] ?? l10n.unknownMember,
-                                  style: const TextStyle(fontWeight: FontWeight.w500),
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w500,
+                                  ),
                                 ),
                                 Text(
                                   email,
                                   style: TextStyle(
                                     fontSize: 12,
-                                    color: isDark ? Colors.grey[400] : Colors.grey[600]
+                                    color: isDark
+                                        ? Colors.grey[400]
+                                        : Colors.grey[600],
                                   ),
                                 ),
                               ],
@@ -401,22 +467,24 @@ class _ShareListModalState extends ConsumerState<ShareListModal> {
                           ),
                           if (uid != null && familyId != null)
                             IconButton(
-                              onPressed: () => _removeMember(familyId, uid), 
+                              onPressed: () => _removeMember(uid),
                               icon: const Icon(Icons.close, size: 18),
-                              color: isDark ? Colors.grey[400] : Colors.grey[600],
+                              color: isDark
+                                  ? Colors.grey[400]
+                                  : Colors.grey[600],
                             ),
                         ],
                       ),
                     );
-                  }).toList(),
+                  }),
 
                   const SizedBox(height: 32),
                 ],
               ),
             );
-          }
+          },
         );
-      }
+      },
     );
   }
 }

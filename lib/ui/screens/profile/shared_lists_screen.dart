@@ -4,6 +4,7 @@ import 'package:smart_market_list/core/theme/app_colors.dart';
 import 'package:smart_market_list/l10n/generated/app_localizations.dart';
 import 'package:smart_market_list/providers/shopping_list_provider.dart';
 import 'package:smart_market_list/providers/user_profile_provider.dart';
+import 'package:smart_market_list/core/services/backend_service.dart';
 import 'package:smart_market_list/core/services/firestore_service.dart';
 
 class SharedListsScreen extends ConsumerWidget {
@@ -14,10 +15,9 @@ class SharedListsScreen extends ConsumerWidget {
     final l10n = AppLocalizations.of(context)!;
     final listsAsync = ref.watch(shoppingListsProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    
+
     // Get Family Info
     final userAsync = ref.watch(userProfileProvider);
-
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -25,11 +25,14 @@ class SharedListsScreen extends ConsumerWidget {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Theme.of(context).iconTheme.color),
+          icon: Icon(
+            Icons.arrow_back,
+            color: Theme.of(context).iconTheme.color,
+          ),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          l10n.sharingListsStats.replaceAll('\n', ' '), 
+          l10n.sharingListsStats.replaceAll('\n', ' '),
           style: TextStyle(
             color: Theme.of(context).textTheme.bodyLarge?.color,
             fontWeight: FontWeight.bold,
@@ -45,7 +48,8 @@ class SharedListsScreen extends ConsumerWidget {
             data: (lists) {
               final sharedLists = lists.where((list) {
                 final hasGuests = list.members.any((m) => m != list.ownerId);
-                final amIGuest = list.ownerId != null && list.ownerId != user.uid;
+                final amIGuest =
+                    list.ownerId != null && list.ownerId != user.uid;
                 return hasGuests || amIGuest;
               }).toList();
 
@@ -54,16 +58,21 @@ class SharedListsScreen extends ConsumerWidget {
               return ListView.separated(
                 padding: const EdgeInsets.all(16),
                 itemCount: sharedLists.length,
-                separatorBuilder: (context, index) => const SizedBox(height: 16),
+                separatorBuilder: (context, index) =>
+                    const SizedBox(height: 16),
                 itemBuilder: (context, index) {
                   final list = sharedLists[index];
                   // Display explicit list members
-                  final displayMembers = list.members; 
+                  final displayMembers = list.members;
 
                   return Card(
                     elevation: 0,
-                    color: isDark ? AppColors.darkCard : AppColors.cardBackground,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    color: isDark
+                        ? AppColors.darkCard
+                        : AppColors.cardBackground,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
                     child: Padding(
                       padding: const EdgeInsets.all(16),
                       child: Column(
@@ -72,7 +81,7 @@ class SharedListsScreen extends ConsumerWidget {
                           Row(
                             children: [
                               Text(
-                                list.emoji ?? '🛒',
+                                list.emoji,
                                 style: const TextStyle(fontSize: 24),
                               ),
                               const SizedBox(width: 12),
@@ -82,12 +91,17 @@ class SharedListsScreen extends ConsumerWidget {
                                   style: TextStyle(
                                     fontSize: 18,
                                     fontWeight: FontWeight.bold,
-                                    color: isDark ? Colors.white : Colors.black87,
+                                    color: isDark
+                                        ? Colors.white
+                                        : Colors.black87,
                                   ),
                                 ),
                               ),
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 4,
+                                ),
                                 decoration: BoxDecoration(
                                   color: AppColors.primary.withOpacity(0.1),
                                   borderRadius: BorderRadius.circular(8),
@@ -107,7 +121,7 @@ class SharedListsScreen extends ConsumerWidget {
                           const Divider(),
                           const SizedBox(height: 8),
                           Text(
-                            l10n.sharingWithLabel, 
+                            l10n.sharingWithLabel,
                             style: const TextStyle(
                               fontSize: 14,
                               color: AppColors.mutedForeground,
@@ -118,15 +132,15 @@ class SharedListsScreen extends ConsumerWidget {
                             spacing: 8,
                             runSpacing: 8,
                             children: displayMembers.map((memberId) {
-                               final isOwner = list.ownerId == user.uid;
-                               final canRemove = isOwner && memberId != user.uid;
-                               return _MemberChip(
-                                 memberId: memberId,
-                                 isMe: memberId == user.uid,
-                                 canRemove: canRemove,
-                                 listFamilyId: list.familyId,
-                                 listId: list.id,
-                               );
+                              final isOwner = list.ownerId == user.uid;
+                              final canRemove = isOwner && memberId != user.uid;
+                              return _MemberChip(
+                                memberId: memberId,
+                                isMe: memberId == user.uid,
+                                canRemove: canRemove,
+                                listFamilyId: list.familyId,
+                                listId: list.id,
+                              );
                             }).toList(),
                           ),
                         ],
@@ -147,15 +161,22 @@ class SharedListsScreen extends ConsumerWidget {
   }
 
   Widget _buildEmptyState(AppLocalizations l10n) {
-     return Center(
+    return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.people_outline, size: 64, color: AppColors.mutedForeground),
+          Icon(
+            Icons.people_outline,
+            size: 64,
+            color: AppColors.mutedForeground,
+          ),
           const SizedBox(height: 16),
           Text(
-            l10n.noLists, 
-            style: const TextStyle(color: AppColors.mutedForeground, fontSize: 16),
+            l10n.noLists,
+            style: const TextStyle(
+              color: AppColors.mutedForeground,
+              fontSize: 16,
+            ),
           ),
         ],
       ),
@@ -171,7 +192,7 @@ class _MemberChip extends ConsumerWidget {
   final String listId;
 
   const _MemberChip({
-    required this.memberId, 
+    required this.memberId,
     required this.isMe,
     this.canRemove = false,
     this.listFamilyId,
@@ -182,20 +203,19 @@ class _MemberChip extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    
+
     if (isMe) {
       return Chip(
-         avatar: const CircleAvatar(
-           backgroundColor: AppColors.inputBackground, 
-           child: Icon(Icons.person, size: 14, color: AppColors.mutedForeground),
-         ),
-         label: Text(
-           l10n.me, 
-           style: const TextStyle(fontSize: 12),
-         ),
-         backgroundColor: isDark ? AppColors.darkInputBackground : AppColors.inputBackground,
-         side: BorderSide.none,
-       );
+        avatar: const CircleAvatar(
+          backgroundColor: AppColors.inputBackground,
+          child: Icon(Icons.person, size: 14, color: AppColors.mutedForeground),
+        ),
+        label: Text(l10n.me, style: const TextStyle(fontSize: 12)),
+        backgroundColor: isDark
+            ? AppColors.darkInputBackground
+            : AppColors.inputBackground,
+        side: BorderSide.none,
+      );
     }
 
     final firestore = ref.watch(firestoreServiceProvider);
@@ -204,33 +224,46 @@ class _MemberChip extends ConsumerWidget {
       future: firestore.getUserData(memberId),
       builder: (context, snapshot) {
         String label = memberId; // Fallback
-        
+
         if (snapshot.hasData && snapshot.data != null) {
           final data = snapshot.data!;
           // Try Name -> Email -> ID
-          label = data['name'] as String? ?? data['email'] as String? ?? memberId;
+          label =
+              data['name'] as String? ?? data['email'] as String? ?? memberId;
         }
 
         return Chip(
-           avatar: const CircleAvatar(
-             backgroundColor: AppColors.inputBackground, 
-             child: Icon(Icons.person, size: 14, color: AppColors.mutedForeground),
-           ),
-           label: Text(
-             label, 
-             style: const TextStyle(fontSize: 12),
-             overflow: TextOverflow.ellipsis,
-           ),
-           deleteIcon: canRemove ? const Icon(Icons.close, size: 16) : null,
-           onDeleted: canRemove ? () => _confirmRemoveMember(context, ref, label) : null,
-           backgroundColor: isDark ? AppColors.darkInputBackground : AppColors.inputBackground,
-           side: BorderSide.none,
-         );
+          avatar: const CircleAvatar(
+            backgroundColor: AppColors.inputBackground,
+            child: Icon(
+              Icons.person,
+              size: 14,
+              color: AppColors.mutedForeground,
+            ),
+          ),
+          label: Text(
+            label,
+            style: const TextStyle(fontSize: 12),
+            overflow: TextOverflow.ellipsis,
+          ),
+          deleteIcon: canRemove ? const Icon(Icons.close, size: 16) : null,
+          onDeleted: canRemove
+              ? () => _confirmRemoveMember(context, ref, label)
+              : null,
+          backgroundColor: isDark
+              ? AppColors.darkInputBackground
+              : AppColors.inputBackground,
+          side: BorderSide.none,
+        );
       },
     );
   }
 
-  Future<void> _confirmRemoveMember(BuildContext context, WidgetRef ref, String memberName) async {
+  Future<void> _confirmRemoveMember(
+    BuildContext context,
+    WidgetRef ref,
+    String memberName,
+  ) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -251,9 +284,14 @@ class _MemberChip extends ConsumerWidget {
     );
 
     if (confirmed == true && listFamilyId != null) {
-      final firestore = ref.read(firestoreServiceProvider);
-      await firestore.removeMemberFromList(listFamilyId!, listId, memberId);
-      
+      await ref
+          .read(backendServiceProvider)
+          .removeListMember(
+            familyId: listFamilyId!,
+            listId: listId,
+            memberUid: memberId,
+          );
+
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('$memberName removido da lista')),

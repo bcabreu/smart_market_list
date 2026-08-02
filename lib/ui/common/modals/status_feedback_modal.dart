@@ -26,23 +26,30 @@ class StatusFeedbackModal {
 
     switch (type) {
       case FeedbackType.success:
-        backgroundColor = isDark ? const Color(0xFF1E2C2C) : const Color(0xFFE0F7FA);
+        backgroundColor = isDark
+            ? const Color(0xFF1E2C2C)
+            : const Color(0xFFE0F7FA);
         iconColor = const Color(0xFF00BFA5); // Teal
         icon = Icons.check_circle_outline;
         break;
       case FeedbackType.error:
-        backgroundColor = isDark ? const Color(0xFF2C1E1E) : const Color(0xFFFFEBEE);
+        backgroundColor = isDark
+            ? const Color(0xFF2C1E1E)
+            : const Color(0xFFFFEBEE);
         iconColor = const Color(0xFFEF5350); // Red
         icon = Icons.error_outline;
         break;
       case FeedbackType.warning:
-        backgroundColor = isDark ? const Color(0xFF2C2515) : const Color(0xFFFFF8E1);
+        backgroundColor = isDark
+            ? const Color(0xFF2C2515)
+            : const Color(0xFFFFF8E1);
         iconColor = const Color(0xFFFFA000); // Amber
         icon = Icons.warning_amber_rounded;
         break;
       case FeedbackType.info:
-      default:
-        backgroundColor = isDark ? const Color(0xFF1E1E2C) : const Color(0xFFE3F2FD);
+        backgroundColor = isDark
+            ? const Color(0xFF1E1E2C)
+            : const Color(0xFFE3F2FD);
         iconColor = AppColors.primary;
         icon = Icons.info_outline;
         break;
@@ -58,10 +65,7 @@ class StatusFeedbackModal {
             decoration: BoxDecoration(
               color: backgroundColor,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: iconColor.withOpacity(0.3),
-                width: 1,
-              ),
+              border: Border.all(color: iconColor.withOpacity(0.3), width: 1),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withOpacity(0.05),
@@ -83,7 +87,7 @@ class StatusFeedbackModal {
                   child: Icon(icon, color: iconColor, size: 24),
                 ),
                 const SizedBox(width: 16),
-                
+
                 // Text
                 Expanded(
                   child: Column(
@@ -101,23 +105,21 @@ class StatusFeedbackModal {
                       const SizedBox(height: 4),
                       Text(
                         message,
-                        style: TextStyle(
-                          color: subtitleColor,
-                          fontSize: 14,
-                        ),
+                        style: TextStyle(color: subtitleColor, fontSize: 14),
                       ),
                     ],
                   ),
                 ),
-                
+
                 // Close/Forward Icon
                 if (onTap != null)
-                   Icon(Icons.arrow_forward_ios, color: subtitleColor, size: 16)
+                  Icon(Icons.arrow_forward_ios, color: subtitleColor, size: 16)
                 else
-                   InkWell(
-                     onTap: () => ScaffoldMessenger.of(context).hideCurrentSnackBar(),
-                     child: Icon(Icons.close, color: subtitleColor, size: 20),
-                   )
+                  InkWell(
+                    onTap: () =>
+                        ScaffoldMessenger.of(context).hideCurrentSnackBar(),
+                    child: Icon(Icons.close, color: subtitleColor, size: 20),
+                  ),
               ],
             ),
           ),

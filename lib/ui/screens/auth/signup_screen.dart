@@ -7,10 +7,7 @@ import 'package:smart_market_list/ui/screens/auth/widgets/social_login_buttons.d
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:smart_market_list/providers/user_provider.dart';
-import 'package:smart_market_list/providers/user_profile_provider.dart';
 import 'package:smart_market_list/providers/auth_provider.dart';
-import 'package:smart_market_list/core/services/sharing_service.dart';
-import 'package:smart_market_list/providers/sharing_provider.dart';
 import 'package:smart_market_list/ui/common/modals/loading_dialog.dart';
 import 'package:smart_market_list/ui/common/modals/status_feedback_modal.dart';
 
@@ -25,7 +22,8 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _confirmPasswordController = TextEditingController();
+  final TextEditingController _confirmPasswordController =
+      TextEditingController();
 
   @override
   void dispose() {
@@ -46,93 +44,30 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
     if (name.isEmpty || email.isEmpty || password.isEmpty) return;
 
     if (password != confirm) {
-        StatusFeedbackModal.show(
-          context,
-          title: l10n.errorTitle,
-          message: l10n.passwordsDoNotMatch,
-          type: FeedbackType.error,
-        );
-        return;
+      StatusFeedbackModal.show(
+        context,
+        title: l10n.errorTitle,
+        message: l10n.passwordsDoNotMatch,
+        type: FeedbackType.error,
+      );
+      return;
     }
 
     FocusScope.of(context).unfocus();
     LoadingDialog.show(context, l10n.processing);
 
     try {
-      await ref.read(authServiceProvider).signUp(email: email, password: password);
-      await ref.read(authServiceProvider).updateDisplayName(name); // Persist name to Firebase
-      
+      await ref
+          .read(authServiceProvider)
+          .signUp(email: email, password: password);
+      await ref
+          .read(authServiceProvider)
+          .updateDisplayName(name); // Persist name to Firebase
+
       // Update global state
       await ref.read(userNameProvider.notifier).setName(name);
       await ref.read(userEmailProvider.notifier).setEmail(email);
       await ref.read(isLoggedInProvider.notifier).setLoggedIn(true);
-      
-      // Check for pending Deep Link Joins (Universal Links)
-      if (SharingService.pendingListId != null && SharingService.pendingFamilyId != null) {
-         try {
-           final currentUser = ref.read(authServiceProvider).currentUser;
-           if (currentUser != null) {
-              await ref.read(sharingServiceProvider).joinList(
-                SharingService.pendingListId!, 
-                SharingService.pendingFamilyId!, 
-                currentUser.uid
-              );
-              
-              // Clear pending
-              SharingService.pendingListId = null;
-              SharingService.pendingFamilyId = null;
-              
-              if (mounted) {
-                 StatusFeedbackModal.show(
-                   context,
-                   title: l10n.successTitle,
-                   message: l10n.accountCreatedAndListAdded,
-                   type: FeedbackType.success,
-                 );
-              }
-           }
-         } catch (e) {
-           print('Error joining pending list: $e');
-         }
-      } else if (SharingService.pendingFamilyId != null) {
-         // Pending Family Join (without list)
-         try {
-           final currentUser = ref.read(authServiceProvider).currentUser;
-           if (currentUser != null) {
-              await ref.read(sharingServiceProvider).joinFamily(
-                SharingService.pendingFamilyId!, 
-                currentUser.uid,
-                inviteCode: SharingService.pendingInviteCode,
-              );
-              
-              // Clear pending
-              SharingService.pendingFamilyId = null;
-              SharingService.pendingInviteCode = null;
-              SharingService.pendingListId = null; // Just in case
-              
-              if (mounted) {
-                 StatusFeedbackModal.show(
-                   context,
-                   title: l10n.welcomeToFamilyTitle,
-                   message: l10n.welcomeToFamilyMessage,
-                   type: FeedbackType.success,
-                 );
-                 // Refresh profile
-                 ref.refresh(userProfileProvider);
-              }
-           }
-         } catch (e) {
-           print('Error joining pending family: $e');
-           if (mounted) {
-             StatusFeedbackModal.show(
-               context,
-               title: l10n.errorTitle,
-               message: l10n.joinFamilyError(e.toString()),
-               type: FeedbackType.error,
-             );
-           }
-         }
-      }
 
       if (mounted) {
         LoadingDialog.hide(context);
@@ -141,14 +76,15 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
     } catch (e) {
       if (mounted) {
         LoadingDialog.hide(context);
-        
+
         String errorMessage = e.toString();
         if (errorMessage.contains('email-already-in-use')) {
-           errorMessage = l10n.emailAlreadyInUse;
+          errorMessage = l10n.emailAlreadyInUse;
         } else if (errorMessage.contains('invalid-email')) {
-           errorMessage = l10n.invalidEmailError;
+          errorMessage = l10n.invalidEmailError;
         } else if (errorMessage.contains('weak-password')) {
-           errorMessage = 'A senha é muito fraca.'; // TODO: Add to arb if needed, or rely on generic
+          errorMessage =
+              'A senha é muito fraca.'; // TODO: Add to arb if needed, or rely on generic
         }
 
         StatusFeedbackModal.show(
@@ -172,7 +108,10 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Theme.of(context).iconTheme.color),
+          icon: Icon(
+            Icons.arrow_back,
+            color: Theme.of(context).iconTheme.color,
+          ),
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -201,7 +140,6 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                 ),
               ),
               const SizedBox(height: 32), // Reduced from 48
-
               // Inputs
               AuthTextField(
                 controller: _nameController,
@@ -235,9 +173,8 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                 isPassword: true,
                 textInputAction: TextInputAction.done,
               ),
-              
-              const SizedBox(height: 24), // Reduced from 32
 
+              const SizedBox(height: 24), // Reduced from 32
               // Sign Up Button
               ElevatedButton(
                 onPressed: _signUp,
@@ -261,11 +198,14 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
               ),
 
               const SizedBox(height: 24), // Reduced from 40
-
               // Social Login
               Row(
                 children: [
-                  Expanded(child: Divider(color: isDark ? Colors.white24 : Colors.black12)),
+                  Expanded(
+                    child: Divider(
+                      color: isDark ? Colors.white24 : Colors.black12,
+                    ),
+                  ),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     child: Text(
@@ -277,14 +217,17 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                       ),
                     ),
                   ),
-                  Expanded(child: Divider(color: isDark ? Colors.white24 : Colors.black12)),
+                  Expanded(
+                    child: Divider(
+                      color: isDark ? Colors.white24 : Colors.black12,
+                    ),
+                  ),
                 ],
               ),
               const SizedBox(height: 16), // Reduced from 24
               const SocialLoginButtons(),
 
               const SizedBox(height: 24), // Reduced from 40
-
               // Footer
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -299,7 +242,9 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                     onPressed: () {
                       Navigator.pushReplacement(
                         context,
-                        MaterialPageRoute(builder: (context) => const LoginScreen()),
+                        MaterialPageRoute(
+                          builder: (context) => const LoginScreen(),
+                        ),
                       );
                     },
                     style: TextButton.styleFrom(
